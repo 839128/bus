@@ -23,38 +23,50 @@
  * THE SOFTWARE.                                                                 *
  *                                                                               *
  ********************************************************************************/
-package org.miaixz.bus.pager.dialect.rowbounds;
+package org.miaixz.bus.pager.plugin;
 
 import org.apache.ibatis.cache.CacheKey;
-import org.apache.ibatis.session.RowBounds;
-import org.miaixz.bus.pager.dialect.AbstractRowBounds;
+import org.apache.ibatis.mapping.BoundSql;
+
+import java.util.List;
 
 /**
- * informix 基于 RowBounds 的分页
- *
  * @author Kimi Liu
  * @since Java 17+
  */
-public class InformixRowBounds extends AbstractRowBounds {
+public class BoundSqlChain implements BoundSqlHandler.Chain {
+
+    private final BoundSqlHandler.Chain original;
+    private final List<BoundSqlHandler> interceptors;
+
+    private int index = 0;
+    private boolean executable;
+
+    public BoundSqlChain(BoundSqlHandler.Chain original, List<BoundSqlHandler> interceptors) {
+        this(original, interceptors, false);
+    }
+
+    private BoundSqlChain(BoundSqlHandler.Chain original, List<BoundSqlHandler> interceptors, boolean executable) {
+        this.original = original;
+        this.interceptors = interceptors;
+        this.executable = executable;
+    }
 
     @Override
-    public String getPageSql(String sql, RowBounds rowBounds, CacheKey pageKey) {
-        StringBuilder sqlBuilder = new StringBuilder(sql.length() + 40);
-        sqlBuilder.append("SELECT ");
-        if (rowBounds.getOffset() > 0) {
-            sqlBuilder.append(" SKIP ");
-            sqlBuilder.append(rowBounds.getOffset());
-            pageKey.update(rowBounds.getOffset());
+    public BoundSql doBoundSql(BoundSqlHandler.Type type, BoundSql boundSql, CacheKey cacheKey) {
+        if (executable) {
+            return _doBoundSql(type, boundSql, cacheKey);
+        } else {
+            return new BoundSqlChain(original, interceptors, true).doBoundSql(type, boundSql, cacheKey);
         }
-        if (rowBounds.getLimit() > 0) {
-            sqlBuilder.append(" FIRST ");
-            sqlBuilder.append(rowBounds.getLimit());
-            pageKey.update(rowBounds.getLimit());
+    }
+
+    private BoundSql _doBoundSql(BoundSqlHandler.Type type, BoundSql boundSql, CacheKey cacheKey) {
+        if (this.interceptors == null || this.interceptors.size() == this.index) {
+            return this.original != null ? this.original.doBoundSql(type, boundSql, cacheKey) : boundSql;
+        } else {
+            return this.interceptors.get(this.index++).boundSql(type, boundSql, cacheKey, this);
         }
-        sqlBuilder.append(" * FROM ( \n");
-        sqlBuilder.append(sql);
-        sqlBuilder.append("\n ) TEMP_T");
-        return sqlBuilder.toString();
     }
 
 }

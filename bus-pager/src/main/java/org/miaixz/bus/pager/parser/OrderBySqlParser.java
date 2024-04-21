@@ -23,38 +23,16 @@
  * THE SOFTWARE.                                                                 *
  *                                                                               *
  ********************************************************************************/
-package org.miaixz.bus.pager.dialect.rowbounds;
-
-import org.apache.ibatis.cache.CacheKey;
-import org.apache.ibatis.session.RowBounds;
-import org.miaixz.bus.pager.dialect.AbstractRowBounds;
+package org.miaixz.bus.pager.parser;
 
 /**
- * informix 基于 RowBounds 的分页
+ * 处理 Order by
  *
  * @author Kimi Liu
  * @since Java 17+
  */
-public class InformixRowBounds extends AbstractRowBounds {
+public interface OrderBySqlParser {
 
-    @Override
-    public String getPageSql(String sql, RowBounds rowBounds, CacheKey pageKey) {
-        StringBuilder sqlBuilder = new StringBuilder(sql.length() + 40);
-        sqlBuilder.append("SELECT ");
-        if (rowBounds.getOffset() > 0) {
-            sqlBuilder.append(" SKIP ");
-            sqlBuilder.append(rowBounds.getOffset());
-            pageKey.update(rowBounds.getOffset());
-        }
-        if (rowBounds.getLimit() > 0) {
-            sqlBuilder.append(" FIRST ");
-            sqlBuilder.append(rowBounds.getLimit());
-            pageKey.update(rowBounds.getLimit());
-        }
-        sqlBuilder.append(" * FROM ( \n");
-        sqlBuilder.append(sql);
-        sqlBuilder.append("\n ) TEMP_T");
-        return sqlBuilder.toString();
-    }
+    String converToOrderBySql(String sql, String orderBy);
 
 }

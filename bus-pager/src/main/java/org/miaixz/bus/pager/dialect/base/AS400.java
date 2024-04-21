@@ -23,38 +23,35 @@
  * THE SOFTWARE.                                                                 *
  *                                                                               *
  ********************************************************************************/
-package org.miaixz.bus.pager.dialect.rowbounds;
+package org.miaixz.bus.pager.dialect.base;
 
 import org.apache.ibatis.cache.CacheKey;
-import org.apache.ibatis.session.RowBounds;
-import org.miaixz.bus.pager.dialect.AbstractRowBounds;
+import org.apache.ibatis.mapping.BoundSql;
+import org.apache.ibatis.mapping.MappedStatement;
+import org.miaixz.bus.pager.Page;
+import org.miaixz.bus.pager.dialect.AbstractPaging;
+
+import java.util.Map;
 
 /**
- * informix 基于 RowBounds 的分页
- *
- * @author Kimi Liu
- * @since Java 17+
+ * @author bluezealot
  */
-public class InformixRowBounds extends AbstractRowBounds {
+@SuppressWarnings("rawtypes")
+public class AS400 extends AbstractPaging {
 
     @Override
-    public String getPageSql(String sql, RowBounds rowBounds, CacheKey pageKey) {
-        StringBuilder sqlBuilder = new StringBuilder(sql.length() + 40);
-        sqlBuilder.append("SELECT ");
-        if (rowBounds.getOffset() > 0) {
-            sqlBuilder.append(" SKIP ");
-            sqlBuilder.append(rowBounds.getOffset());
-            pageKey.update(rowBounds.getOffset());
-        }
-        if (rowBounds.getLimit() > 0) {
-            sqlBuilder.append(" FIRST ");
-            sqlBuilder.append(rowBounds.getLimit());
-            pageKey.update(rowBounds.getLimit());
-        }
-        sqlBuilder.append(" * FROM ( \n");
-        sqlBuilder.append(sql);
-        sqlBuilder.append("\n ) TEMP_T");
-        return sqlBuilder.toString();
+    public Object processPageParameter(MappedStatement ms, Map<String, Object> paramMap,
+                                       Page page, BoundSql boundSql, CacheKey pageKey) {
+        paramMap.put(PAGEPARAMETER_FIRST, page.getStartRow());
+        paramMap.put(PAGEPARAMETER_SECOND, page.getPageSize());
+        pageKey.update(page.getStartRow());
+        pageKey.update(page.getPageSize());
+        handleParameter(boundSql, ms, long.class, int.class);
+        return paramMap;
     }
 
+    @Override
+    public String getPageSql(String sql, Page page, CacheKey pageKey) {
+        return sql + " OFFSET ? ROWS FETCH FIRST ? ROWS ONLY";
+    }
 }

@@ -23,38 +23,40 @@
  * THE SOFTWARE.                                                                 *
  *                                                                               *
  ********************************************************************************/
-package org.miaixz.bus.pager.dialect.rowbounds;
+package org.miaixz.bus.pager.plugin;
 
-import org.apache.ibatis.cache.CacheKey;
-import org.apache.ibatis.session.RowBounds;
-import org.miaixz.bus.pager.dialect.AbstractRowBounds;
+import org.miaixz.bus.core.toolkit.StringKit;
+import org.miaixz.bus.pager.Builder;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
 
 /**
- * informix 基于 RowBounds 的分页
- *
  * @author Kimi Liu
  * @since Java 17+
  */
-public class InformixRowBounds extends AbstractRowBounds {
+public class PageBoundSqlHandler {
 
-    @Override
-    public String getPageSql(String sql, RowBounds rowBounds, CacheKey pageKey) {
-        StringBuilder sqlBuilder = new StringBuilder(sql.length() + 40);
-        sqlBuilder.append("SELECT ");
-        if (rowBounds.getOffset() > 0) {
-            sqlBuilder.append(" SKIP ");
-            sqlBuilder.append(rowBounds.getOffset());
-            pageKey.update(rowBounds.getOffset());
+    private BoundSqlHandler.Chain chain;
+
+    public void setProperties(Properties properties) {
+        // 初始化 boundSqlInterceptorChain
+        String boundSqlInterceptorStr = properties.getProperty("boundSqlInterceptors");
+        if (StringKit.isNotEmpty(boundSqlInterceptorStr)) {
+            String[] boundSqlInterceptors = boundSqlInterceptorStr.split("[;|,]");
+            List<BoundSqlHandler> list = new ArrayList<>();
+            for (int i = 0; i < boundSqlInterceptors.length; i++) {
+                list.add(Builder.newInstance(boundSqlInterceptors[i], properties));
+            }
+            if (list.size() > 0) {
+                chain = new BoundSqlChain(null, list);
+            }
         }
-        if (rowBounds.getLimit() > 0) {
-            sqlBuilder.append(" FIRST ");
-            sqlBuilder.append(rowBounds.getLimit());
-            pageKey.update(rowBounds.getLimit());
-        }
-        sqlBuilder.append(" * FROM ( \n");
-        sqlBuilder.append(sql);
-        sqlBuilder.append("\n ) TEMP_T");
-        return sqlBuilder.toString();
+    }
+
+    public BoundSqlHandler.Chain getChain() {
+        return chain;
     }
 
 }

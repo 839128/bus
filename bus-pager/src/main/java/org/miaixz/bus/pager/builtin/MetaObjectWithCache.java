@@ -23,38 +23,34 @@
  * THE SOFTWARE.                                                                 *
  *                                                                               *
  ********************************************************************************/
-package org.miaixz.bus.pager.dialect.rowbounds;
+package org.miaixz.bus.pager.builtin;
 
-import org.apache.ibatis.cache.CacheKey;
-import org.apache.ibatis.session.RowBounds;
-import org.miaixz.bus.pager.dialect.AbstractRowBounds;
+import org.apache.ibatis.reflection.DefaultReflectorFactory;
+import org.apache.ibatis.reflection.MetaObject;
+import org.apache.ibatis.reflection.ReflectorFactory;
+import org.apache.ibatis.reflection.factory.DefaultObjectFactory;
+import org.apache.ibatis.reflection.factory.ObjectFactory;
+import org.apache.ibatis.reflection.wrapper.DefaultObjectWrapperFactory;
+import org.apache.ibatis.reflection.wrapper.ObjectWrapperFactory;
+import org.miaixz.bus.core.exception.PageException;
 
 /**
- * informix 基于 RowBounds 的分页
+ * 反射带缓存，提高反射性能
  *
- * @author Kimi Liu
- * @since Java 17+
+ * @author liuzh
  */
-public class InformixRowBounds extends AbstractRowBounds {
+public class MetaObjectWithCache {
 
-    @Override
-    public String getPageSql(String sql, RowBounds rowBounds, CacheKey pageKey) {
-        StringBuilder sqlBuilder = new StringBuilder(sql.length() + 40);
-        sqlBuilder.append("SELECT ");
-        if (rowBounds.getOffset() > 0) {
-            sqlBuilder.append(" SKIP ");
-            sqlBuilder.append(rowBounds.getOffset());
-            pageKey.update(rowBounds.getOffset());
+    public static final ObjectFactory DEFAULT_OBJECT_FACTORY = new DefaultObjectFactory();
+    public static final ObjectWrapperFactory DEFAULT_OBJECT_WRAPPER_FACTORY = new DefaultObjectWrapperFactory();
+    public static final ReflectorFactory DEFAULT_REFLECTOR_FACTORY = new DefaultReflectorFactory();
+
+    public static MetaObject forObject(Object object) {
+        try {
+            return MetaObject.forObject(object, DEFAULT_OBJECT_FACTORY, DEFAULT_OBJECT_WRAPPER_FACTORY, DEFAULT_REFLECTOR_FACTORY);
+        } catch (Exception e) {
+            throw new PageException(e);
         }
-        if (rowBounds.getLimit() > 0) {
-            sqlBuilder.append(" FIRST ");
-            sqlBuilder.append(rowBounds.getLimit());
-            pageKey.update(rowBounds.getLimit());
-        }
-        sqlBuilder.append(" * FROM ( \n");
-        sqlBuilder.append(sql);
-        sqlBuilder.append("\n ) TEMP_T");
-        return sqlBuilder.toString();
     }
 
 }

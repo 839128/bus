@@ -23,38 +23,59 @@
  * THE SOFTWARE.                                                                 *
  *                                                                               *
  ********************************************************************************/
-package org.miaixz.bus.pager.dialect.rowbounds;
-
-import org.apache.ibatis.cache.CacheKey;
-import org.apache.ibatis.session.RowBounds;
-import org.miaixz.bus.pager.dialect.AbstractRowBounds;
+package org.miaixz.bus.pager;
 
 /**
- * informix 基于 RowBounds 的分页
+ * 抽象类，自己的查询类可以继承该类，可以更直接的控制分页参数
  *
  * @author Kimi Liu
  * @since Java 17+
  */
-public class InformixRowBounds extends AbstractRowBounds {
+public class PageParam implements Paging {
+
+    private Integer pageNo;
+    private Integer pageSize;
+    private String orderBy;
+
+    public PageParam() {
+    }
+
+    public PageParam(Integer pageNo, Integer pageSize) {
+        this.pageNo = pageNo;
+        this.pageSize = pageSize;
+    }
+
+    public PageParam(Integer pageNo, Integer pageSize, String orderBy) {
+        this.pageNo = pageNo;
+        this.pageSize = pageSize;
+        this.orderBy = orderBy;
+    }
 
     @Override
-    public String getPageSql(String sql, RowBounds rowBounds, CacheKey pageKey) {
-        StringBuilder sqlBuilder = new StringBuilder(sql.length() + 40);
-        sqlBuilder.append("SELECT ");
-        if (rowBounds.getOffset() > 0) {
-            sqlBuilder.append(" SKIP ");
-            sqlBuilder.append(rowBounds.getOffset());
-            pageKey.update(rowBounds.getOffset());
-        }
-        if (rowBounds.getLimit() > 0) {
-            sqlBuilder.append(" FIRST ");
-            sqlBuilder.append(rowBounds.getLimit());
-            pageKey.update(rowBounds.getLimit());
-        }
-        sqlBuilder.append(" * FROM ( \n");
-        sqlBuilder.append(sql);
-        sqlBuilder.append("\n ) TEMP_T");
-        return sqlBuilder.toString();
+    public Integer getPageNo() {
+        return pageNo;
+    }
+
+    public void setPageNo(Integer pageNo) {
+        this.pageNo = pageNo;
+    }
+
+    @Override
+    public Integer getPageSize() {
+        return pageSize;
+    }
+
+    public void setPageSize(Integer pageSize) {
+        this.pageSize = pageSize;
+    }
+
+    @Override
+    public String getOrderBy() {
+        return orderBy;
+    }
+
+    public void setOrderBy(String orderBy) {
+        this.orderBy = orderBy;
     }
 
 }
