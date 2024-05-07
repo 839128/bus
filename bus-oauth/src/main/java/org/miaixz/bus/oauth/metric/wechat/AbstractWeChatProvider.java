@@ -23,80 +23,44 @@
  * THE SOFTWARE.                                                                 *
  *                                                                               *
  ********************************************************************************/
-package org.miaixz.bus.oauth.metric.afdian;
+package org.miaixz.bus.oauth.metric.wechat;
 
-import com.alibaba.fastjson.JSONObject;
 import org.miaixz.bus.cache.metric.ExtendCache;
 import org.miaixz.bus.core.lang.Gender;
-import org.miaixz.bus.http.Httpx;
-import org.miaixz.bus.oauth.Builder;
+import org.miaixz.bus.core.toolkit.StringKit;
+import org.miaixz.bus.oauth.Complex;
 import org.miaixz.bus.oauth.Context;
-import org.miaixz.bus.oauth.Registry;
-import org.miaixz.bus.oauth.magic.AccToken;
-import org.miaixz.bus.oauth.magic.Callback;
-import org.miaixz.bus.oauth.magic.Property;
 import org.miaixz.bus.oauth.metric.DefaultProvider;
 
-import java.util.HashMap;
-import java.util.Map;
-
 /**
- * 爱发电 登录
+ * 微信 登录
  *
  * @author Kimi Liu
  * @since Java 17+
  */
-public class AfDianProvider extends DefaultProvider {
+public abstract class AbstractWeChatProvider extends DefaultProvider {
 
-    public AfDianProvider(Context context) {
-        super(context, Registry.AFDIAN);
+    public AbstractWeChatProvider(Context context, Complex complex) {
+        super(context, complex);
     }
 
-    public AfDianProvider(Context context, ExtendCache authorizeCache) {
-        super(context, Registry.AFDIAN, authorizeCache);
+
+    public AbstractWeChatProvider(Context context, Complex complex, ExtendCache authorizeCache) {
+        super(context, complex, authorizeCache);
     }
 
-    @Override
-    protected AccToken getAccessToken(Callback authCallback) {
-        Map<String, Object> params = new HashMap<>();
-        params.put("grant_type", "authorization_code");
-        params.put("client_id", context.getAppKey());
-        params.put("client_secret", context.getAppSecret());
-        params.put("code", authCallback.getCode());
-        params.put("redirect_uri", context.getRedirectUri());
-
-        String response = Httpx.post(Registry.AFDIAN.accessToken(), params);
-
-        JSONObject accessTokenObject = JSONObject.parseObject(response);
-        String userId = accessTokenObject.getJSONObject("data").getString("user_id");
-        return AccToken.builder().userId(userId).build();
-    }
-
-    @Override
-    protected Property getUserInfo(AccToken accToken) {
-        return Property.builder()
-                .uuid(accToken.getUserId())
-                .gender(Gender.UNKNOWN)
-                .token(accToken)
-                .source(complex.toString())
-                .build();
-    }
 
     /**
-     * 返回带{@code state}参数的授权url，授权回调时会带上这个{@code state}
+     * 获取微信平台用户的实际性别，0表示未定义，1表示男性，2表示女性
      *
-     * @param state state 验证授权流程的参数，可以防止csrf
-     * @return 返回授权地址
+     * @param originalGender 用户第三方标注的原始性别
+     * @return 用户性别
      */
-    @Override
-    public String authorize(String state) {
-        return Builder.fromUrl(complex.authorize())
-                .queryParam("response_type", "code")
-                .queryParam("scope", "basic")
-                .queryParam("client_id", context.getAppKey())
-                .queryParam("redirect_uri", context.getRedirectUri())
-                .queryParam("state", getRealState(state))
-                .build();
+    public static Gender getWechatRealGender(String originalGender) {
+        if (StringKit.isEmpty(originalGender) || "0".equals(originalGender)) {
+            return Gender.UNKNOWN;
+        }
+        return Gender.of(originalGender);
     }
 
 }
