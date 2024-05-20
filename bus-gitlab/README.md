@@ -60,17 +60,17 @@ file:<br />
 ```
 dependencies {
     ...
-    compile group: 'org.aoju', name: 'bus-gitlab', version: 'x.x.x'
+    compile group: 'org.miaixz', name: 'bus-gitlab', version: 'x.x.x'
 }
 ```
 
 **Maven: pom.xml**
 
-```
+```xml
 <dependency>
-    <groupId>org.aoju</groupId>
+    <groupId>org.miaixz</groupId>
     <artifactId>bus-gitlab</artifactId>
-    <version>8.0.0</version>
+    <version>x.x.x</version>
 </dependency>
 ```
 

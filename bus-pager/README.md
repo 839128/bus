@@ -28,7 +28,7 @@
 
 你可以从下面的地址中下载最新版本的 jar 包
 
-- https://repo1.maven.org/maven2/org/aoju/bus-pager/
+- https://repo1.maven.org/maven2/org/miaixz/bus-pager/
 
 由于使用了sql 解析工具，你还需要下载 jsqlparser.jar(需要和bus-pager依赖的版本一致) ：
 
@@ -41,9 +41,9 @@
 ```xml  
 
 <dependency>
-    <groupId>org.aoju</groupId>
+    <groupId>org.miaixz</groupId>
     <artifactId>bus-pager</artifactId>
-    <version>8.0.0</version>
+    <version>x.x.x</version>
 </dependency>
 ```  
 
@@ -51,7 +51,7 @@
 
 ### 2. 配置拦截器插件
 
-特别注意，新版拦截器是 `org.aoju.bus.pager.plugin.PageInterceptor`。
+特别注意，新版拦截器是 `org.miaixz.bus.pager.plugin.PageInterceptor`。
 
 ```xml
 
@@ -59,7 +59,7 @@
     <!-- 注意其他配置 -->
     <property name="plugins">
         <array>
-            <bean class="org.aoju.bus.pager.plugin.PageInterceptor">
+            <bean class="org.miaixz.bus.pager.plugin.PageInterceptor">
                 <property name="properties">
                     <!--使用下面的方式配置参数，一行配置一个 -->
                     <value>
@@ -79,7 +79,7 @@
 分页插件可选参数如下：
 
 - `dialect`：默认情况下会使用 Page
-  方式进行分页，如果想要实现自己的分页逻辑，可以实现 `Dialect`(`org.aoju.bus.pager.dialect.Dialect`)
+  方式进行分页，如果想要实现自己的分页逻辑，可以实现 `Dialect`(`org.miaixz.bus.pager.dialect.Dialect`)
   接口，然后配置该属性为实现类的全限定名称。
 
 **下面几个参数都是针对默认 dialect 情况下的参数。使用自定义 dialect 实现时，下面的参数没有任何作用。**
@@ -109,7 +109,7 @@
 
 7. `supportMethodsArguments`：支持通过 Mapper 接口参数来传递分页参数，默认值`false`
    ，分页插件会从查询方法的参数值中，自动根据上面 `params` 配置的字段中取值，查找到合适的值时就会自动分页。
-   使用方法可以参考测试代码中的 `org.aoju.bus.pager.test.basic` 包下的 `ArgumentsMapTest` 和 `ArgumentsObjTest`。
+   使用方法可以参考测试代码中的 `org.miaixz.bus.pager.test.basic` 包下的 `ArgumentsMapTest` 和 `ArgumentsObjTest`。
 
 8. `autoRuntimeDialect`：默认值为 `false`。设置为 `true` 时，允许在运行时根据多数据源自动识别对应方言的分页
    （不支持自动选择`sqlserver2012`，只能使用`sqlserver`
@@ -174,15 +174,21 @@
 
 ```java
 //第一种，RowBounds方式的调用
-List<User> list=sqlSession.selectList("x.y.selectIf",null,new RowBounds(0,10));
+List<User> list = sqlSession.selectList("x.y.selectIf", null, new RowBounds(0, 10));
 
 //第二种，Mapper接口方式的调用，推荐这种使用方式。
-        PageContext.startPage(1,10);
-        List<User> list=userMapper.selectIf(1);
+        PageContext.
+
+startPage(1,10);
+
+List<User> list = userMapper.selectIf(1);
 
 //第三种，Mapper接口方式的调用，推荐这种使用方式。
-        PageContext.offsetPage(1,10);
-        List<User> list=userMapper.selectIf(1);
+        PageContext.
+
+offsetPage(1,10);
+
+List<User> list = userMapper.selectIf(1);
 
 //第四种，参数方法调用
 //存在以下 Mapper 接口方法，你不需要在 xml 处理后两个参数
@@ -192,9 +198,10 @@ public interface CountryMapper {
             @Param("PageNo") int PageNo,
             @Param("pageSize") int pageSize);
 }
-    //配置supportMethodsArguments=true
+
+//配置supportMethodsArguments=true
 //在代码中直接调用：
-    List<User> list = userMapper.selectByPageNoSize(user, 1, 10);
+List<User> list = userMapper.selectByPageNoSize(user, 1, 10);
 
 //第五种，参数对象
 //如果 PageNo 和 pageSize 存在于 User 对象中，只要参数有值，也会被分页
@@ -210,39 +217,54 @@ public class User {
 public interface CountryMapper {
     List<User> selectByPageNoSize(User user);
 }
-    //当 user 中的 null != PageNo && null != pageSize 时，会自动分页
-    List<User> list = userMapper.selectByPageNoSize(user);
 
-    //第六种，ISelect 接口方式
+//当 user 中的 null != PageNo && null != pageSize 时，会自动分页
+List<User> list = userMapper.selectByPageNoSize(user);
+
+//第六种，Querying 接口方式
 //jdk6,7用法，创建接口
-    Page<User> page = PageContext.startPage(1, 10).doSelectPage(new ISelect() {
-        @Override
-        public void doSelect() {
-            userMapper.selectGroupBy();
-        }
-    });
-    //jdk8 lambda用法
-    Page<User> page = PageContext.startPage(1, 10).doSelectPage(() -> userMapper.selectGroupBy());
+Page<User> page = PageContext.startPage(1, 10).doSelectPage(new ISelect() {
+    @Override
+    public void doSelect() {
+        userMapper.selectGroupBy();
+    }
+});
+//jdk8 lambda用法
+Page<User> page = PageContext.startPage(1, 10).doSelectPage(() -> userMapper.selectGroupBy());
 
 //也可以直接返回Page，注意doSelectPage方法和doSelectPage
-page=PageContext.startPage(1,10).doSelectPage(new ISelect(){
-@Override
-public void doSelect(){
+page=PageContext.
+
+startPage(1,10).
+
+doSelectPage(new ISelect() {
+    @Override
+    public void doSelect () {
         userMapper.selectGroupBy();
-        }
-        });
+    }
+});
 //对应的lambda用法
-        Page=PageContext.startPage(1,10).doSelectPage(()->userMapper.selectGroupBy());
+Page=PageContext.
+
+startPage(1,10).
+
+doSelectPage(()->userMapper.
+
+selectGroupBy());
 
 //count查询，返回一个查询语句的count数
-        long total=PageContext.count(new ISelect(){
-@Override
-public void doSelect(){
+long total = PageContext.count(new ISelect() {
+    @Override
+    public void doSelect() {
         userMapper.selectLike(user);
-        }
-        });
+    }
+});
 //lambda
-        total=PageContext.count(()->userMapper.selectLike(user));
+total=PageContext.
+
+count(()->userMapper.
+
+selectLike(user));
 ```  
 
 下面对最常用的方式进行详细介绍
@@ -296,20 +318,32 @@ PageContext.startPage(1,10);
 //request: url?PageNo=1&pageSize=10
 //支持 ServletRequest,Map,POJO 对象，需要配合 params 参数
 PageContext.startPage(request);
+
 //紧跟着的第一个select方法会被分页
-        List<User> list=userMapper.selectIf(1);
+List<User> list = userMapper.selectIf(1);
 
 //后面的不会被分页，除非再次调用PageContext.startPage
-        List<User> list2=userMapper.selectIf(null);
+List<User> list2 = userMapper.selectIf(null);
+
 //list1
-        assertEquals(2,list.get(0).getId());
-        assertEquals(10,list.size());
+assertEquals(2,list.get(0).
+
+getId());
+
+assertEquals(10,list.size());
+
 //分页时，实际返回的结果list类型是Page<E>，如果想取出分页信息，需要强制转换为Page<E>，
 //或者使用Page类（下面的例子有介绍）
-        assertEquals(182,((Page)list).getTotal());
+assertEquals(182,((Page)list).
+
+getTotal());
+
 //list2
-        assertEquals(1,list2.get(0).getId());
-        assertEquals(182,list2.size());
+assertEquals(1,list2.get(0).
+
+getId());
+
+assertEquals(182,list2.size());
 ```  
 
 ##### 例三，使用`Page`的用法：
@@ -343,8 +377,8 @@ PageContext.startPage(1,10);
 ```xml
 
 <plugins>
-    <!-- org.aoju.bus.pager为PageContext类所在包名 -->
-    <plugin interceptor="org.aoju.bus.pager.plugin.PageInterceptor">
+    <!-- org.miaixz.bus.pager为PageContext类所在包名 -->
+    <plugin interceptor="org.miaixz.bus.pager.plugin.PageInterceptor">
         <!-- 使用下面的方式配置参数，后面会有所有的参数介绍 -->
         <property name="supportMethodsArguments" value="true"/>
         <property name="params" value="PageNo=PageNoKey;pageSize=pageSizeKey;"/>
@@ -356,9 +390,9 @@ PageContext.startPage(1,10);
 
 ```java
 List<User> selectByPageNoSize(
-@Param("user") User user,
-@Param("PageNoKey") int PageNo,
-@Param("pageSizeKey") int pageSize);
+        @Param("user") User user,
+        @Param("PageNoKey") int PageNo,
+        @Param("pageSizeKey") int pageSize);
 ```
 
 当调用这个方法时，由于同时发现了 `PageNoKey` 和 `pageSizeKey` 参数，这个方法就会被分页。params 提供的几个参数都可以这样使用。
