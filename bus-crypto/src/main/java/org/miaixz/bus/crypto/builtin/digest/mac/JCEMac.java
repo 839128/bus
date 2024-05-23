@@ -23,58 +23,35 @@
  * THE SOFTWARE.                                                                 *
  *                                                                               *
  ********************************************************************************/
-package org.miaixz.bus.crypto.center;
+package org.miaixz.bus.crypto.builtin.digest.mac;
 
-import org.miaixz.bus.core.lang.Algorithm;
-import org.miaixz.bus.crypto.builtin.digest.mac.Mac;
-import org.miaixz.bus.crypto.builtin.digest.mac.MacFactory;
+import org.miaixz.bus.core.lang.exception.CryptoException;
+import org.miaixz.bus.core.lang.wrapper.SimpleWrapper;
+import org.miaixz.bus.crypto.Builder;
+import org.miaixz.bus.crypto.Keeper;
 
+import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.Key;
 import java.security.spec.AlgorithmParameterSpec;
 
 /**
- * HMAC摘要算法
- * HMAC，全称为“Hash Message Authentication Code”，中文名“散列消息鉴别码”
- * 主要是利用哈希算法，以一个密钥和一个消息为输入，生成一个消息摘要作为输出。
- * 一般的，消息鉴别码用于验证传输于两个共 同享有一个密钥的单位之间的消息。
- * HMAC 可以与任何迭代散列函数捆绑使用。MD5 和 SHA-1 就是这种散列函数。HMAC 还可以使用一个用于计算和确认消息鉴别值的密钥。
- * 注意：此对象实例化后为非线程安全！
+ * JDK提供的的MAC算法实现引擎，使用{@link javax.crypto.Mac} 实现摘要
+ * 当引入BouncyCastle库时自动使用其作为Provider
  *
  * @author Kimi Liu
  * @since Java 17+
  */
-public class HMac extends org.miaixz.bus.crypto.center.Mac {
-
-    private static final long serialVersionUID = -1L;
-
-    /**
-     * 构造，自动生成密钥
-     *
-     * @param algorithm 算法 {@link Algorithm}
-     */
-    public HMac(final Algorithm algorithm) {
-        this(algorithm, (Key) null);
-    }
+public class JCEMac extends SimpleWrapper<javax.crypto.Mac> implements Mac {
 
     /**
      * 构造
      *
-     * @param algorithm 算法 {@link Algorithm}
+     * @param algorithm 算法
      * @param key       密钥
      */
-    public HMac(final Algorithm algorithm, final byte[] key) {
-        this(algorithm.getValue(), key);
-    }
-
-    /**
-     * 构造
-     *
-     * @param algorithm 算法 {@link Algorithm}
-     * @param key       密钥
-     */
-    public HMac(final Algorithm algorithm, final Key key) {
-        this(algorithm.getValue(), key);
+    public JCEMac(final String algorithm, final byte[] key) {
+        this(algorithm, (null == key) ? null : new SecretKeySpec(key, algorithm));
     }
 
     /**
@@ -83,17 +60,7 @@ public class HMac extends org.miaixz.bus.crypto.center.Mac {
      * @param algorithm 算法
      * @param key       密钥
      */
-    public HMac(final String algorithm, final byte[] key) {
-        this(algorithm, new SecretKeySpec(key, algorithm));
-    }
-
-    /**
-     * 构造
-     *
-     * @param algorithm 算法
-     * @param key       密钥
-     */
-    public HMac(final String algorithm, final Key key) {
+    public JCEMac(final String algorithm, final Key key) {
         this(algorithm, key, null);
     }
 
@@ -104,17 +71,65 @@ public class HMac extends org.miaixz.bus.crypto.center.Mac {
      * @param key       密钥
      * @param spec      {@link AlgorithmParameterSpec}
      */
-    public HMac(final String algorithm, final Key key, final AlgorithmParameterSpec spec) {
-        this(MacFactory.createEngine(algorithm, key, spec));
+    public JCEMac(final String algorithm, final Key key, final AlgorithmParameterSpec spec) {
+        super(initMac(algorithm, key, spec));
     }
 
     /**
-     * 构造
+     * 初始化
      *
-     * @param engine MAC算法实现引擎
+     * @param algorithm 算法
+     * @param key       密钥 {@link SecretKey}
+     * @param spec      {@link AlgorithmParameterSpec}
+     * @return this
+     * @throws CryptoException Cause by IOException
      */
-    public HMac(final Mac engine) {
-        super(engine);
+    private static javax.crypto.Mac initMac(final String algorithm, Key key, final AlgorithmParameterSpec spec) {
+        final javax.crypto.Mac mac;
+        try {
+            mac = Builder.createMac(algorithm);
+            if (null == key) {
+                key = Keeper.generateKey(algorithm);
+            }
+            if (null != spec) {
+                mac.init(key, spec);
+            } else {
+                mac.init(key);
+            }
+        } catch (final Exception e) {
+            throw new CryptoException(e);
+        }
+        return mac;
+    }
+
+    @Override
+    public void update(final byte[] in) {
+        this.raw.update(in);
+    }
+
+    @Override
+    public void update(final byte[] in, final int inOff, final int len) {
+        this.raw.update(in, inOff, len);
+    }
+
+    @Override
+    public byte[] doFinal() {
+        return this.raw.doFinal();
+    }
+
+    @Override
+    public void reset() {
+        this.raw.reset();
+    }
+
+    @Override
+    public int getMacLength() {
+        return this.raw.getMacLength();
+    }
+
+    @Override
+    public String getAlgorithm() {
+        return this.raw.getAlgorithm();
     }
 
 }
