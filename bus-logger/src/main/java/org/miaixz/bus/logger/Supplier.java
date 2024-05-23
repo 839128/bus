@@ -23,35 +23,90 @@
  * THE SOFTWARE.                                                                 *
  *                                                                               *
  ********************************************************************************/
-package org.miaixz.bus.logger.metric.jboss;
+package org.miaixz.bus.logger;
 
-import org.miaixz.bus.logger.Supplier;
-import org.miaixz.bus.logger.magic.AbstractFactory;
+import org.miaixz.bus.core.xyz.CallerKit;
+import org.miaixz.bus.logger.magic.level.Error;
+import org.miaixz.bus.logger.magic.level.*;
 
 /**
- * jboss-logging
+ * 日志统一接口
  *
  * @author Kimi Liu
  * @since Java 17+
  */
-public class JbossFactory extends AbstractFactory {
+public interface Supplier extends Trace, Debug, Info, Warn, Error {
 
     /**
-     * 构造
+     * 获得Log
+     *
+     * @param clazz 日志发出的类
+     * @return the supplier
      */
-    public JbossFactory() {
-        super("JBoss Logging");
-        check(org.jboss.logging.Logger.class);
+    static Supplier get(final Class<?> clazz) {
+        return Registry.get(clazz);
     }
 
-    @Override
-    public Supplier create(final String name) {
-        return new JbossProvider(name);
+    /**
+     * 获得Log
+     *
+     * @param name 自定义的日志发出者名称
+     * @return the supplier
+     */
+    static Supplier get(final String name) {
+        return Registry.get(name);
     }
 
-    @Override
-    public Supplier create(final Class<?> clazz) {
-        return new JbossProvider(clazz);
+    /**
+     * 获得日志，自动判定日志发出者
+     *
+     * @return the supplier
+     */
+    static Supplier get() {
+        return Registry.get(CallerKit.getCallers());
     }
+
+    /**
+     * @return 日志对象的Name
+     */
+    String getName();
+
+    /**
+     * 是否开启指定日志
+     *
+     * @param level 日志级别
+     * @return 是否开启指定级别
+     */
+    boolean isEnabled(Level level);
+
+    /**
+     * 打印指定级别的日志
+     *
+     * @param level  级别
+     * @param format 消息模板
+     * @param args   参数
+     */
+    void log(Level level, String format, Object... args);
+
+    /**
+     * 打印指定级别的日志
+     *
+     * @param level  级别
+     * @param t      错误对象
+     * @param format 消息模板
+     * @param args   参数
+     */
+    void log(Level level, Throwable t, String format, Object... args);
+
+    /**
+     * 打印ERROR等级的日志
+     *
+     * @param fqcn   完全限定类名(Fully Qualified Class Name)，用于定位日志位置
+     * @param level  级别
+     * @param t      错误对象
+     * @param format 消息模板
+     * @param args   参数
+     */
+    void log(String fqcn, Level level, Throwable t, String format, Object... args);
 
 }
