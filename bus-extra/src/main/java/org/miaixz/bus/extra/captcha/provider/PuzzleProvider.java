@@ -2,7 +2,7 @@
  *                                                                               *
  * The MIT License (MIT)                                                         *
  *                                                                               *
- * Copyright (c) 2015-2024 miaixz.org justauth and other contributors.           *
+ * Copyright (c) 2015-2023 aoju.org and other contributors.                      *
  *                                                                               *
  * Permission is hereby granted, free of charge, to any person obtaining a copy  *
  * of this software and associated documentation files (the "Software"), to deal *
@@ -23,37 +23,62 @@
  * THE SOFTWARE.                                                                 *
  *                                                                               *
  ********************************************************************************/
-package org.miaixz.bus.oauth.metric.wechat.ee;
+package org.miaixz.bus.extra.captcha.provider;
 
-import org.miaixz.bus.cache.metric.ExtendCache;
-import org.miaixz.bus.oauth.Builder;
-import org.miaixz.bus.oauth.Context;
-import org.miaixz.bus.oauth.Registry;
+import org.miaixz.bus.core.lang.Symbol;
+import org.miaixz.bus.extra.captcha.AbstractProvider;
+import org.miaixz.bus.extra.captcha.strategy.CodeStrategy;
+
+import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- * 企业微信 二维码登录
+ * 滑动验证码
  *
  * @author Kimi Liu
  * @since Java 17+
  */
-public class WeChatEeQrcodeProvider extends AbstractWeChatEeProvider {
+public class PuzzleProvider extends AbstractProvider {
 
-    public WeChatEeQrcodeProvider(Context context) {
-        super(context, Registry.WECHAT_EE);
+    public PuzzleProvider(int width, int height, int codeCount, int interfereCount) {
+        super(width, height, codeCount, interfereCount);
     }
 
-    public WeChatEeQrcodeProvider(Context context, ExtendCache authorizeCache) {
-        super(context, Registry.WECHAT_EE, authorizeCache);
+    public PuzzleProvider(int width, int height, CodeStrategy generator, int interfereCount) {
+        super(width, height, generator, interfereCount);
     }
 
     @Override
-    public String authorize(String state) {
-        return Builder.fromUrl(complex.authorize())
-                .queryParam("appid", context.getAppKey())
-                .queryParam("agentid", context.getUnionId())
-                .queryParam("redirect_uri", context.getRedirectUri())
-                .queryParam("state", getRealState(state))
-                .build();
+    protected Image createImage(String code) {
+        return null;
+    }
+
+    @Override
+    public String get() {
+        return null;
+    }
+
+    @Override
+    public boolean verify(String inputCode) {
+        List<Integer> list = new ArrayList<>();
+        for (int i = 0; i < inputCode.length(); i++) {
+            char c = inputCode.charAt(i);
+            if (c >= Symbol.C_ZERO && c <= Symbol.C_NINE) {
+                list.add(Integer.valueOf(String.valueOf(c)));
+            }
+        }
+        int sum = 0;
+        for (Integer data : list) {
+            sum += data;
+        }
+        double avg = sum * 1.0 / list.size();
+        double sum2 = 0.0;
+        for (Integer data : list) {
+            sum2 += Math.pow(data - avg, 2);
+        }
+        double stddev = sum2 / list.size();
+        return stddev != 0;
     }
 
 }
