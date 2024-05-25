@@ -23,65 +23,27 @@
  * THE SOFTWARE.                                                                 *
  *                                                                               *
  ********************************************************************************/
-package org.miaixz.bus.core.center.date;
-
-import org.miaixz.bus.core.center.date.culture.Various;
-import org.miaixz.bus.core.lang.range.Range;
-import org.miaixz.bus.core.xyz.DateKit;
-
-import java.util.Date;
+package org.miaixz.bus.core.center.date.culture;
 
 /**
- * 日期范围
+ * 修改类型
  *
  * @author Kimi Liu
  * @since Java 17+
  */
-public class Boundary extends Range<DateTime> {
-
-    private static final long serialVersionUID = -1L;
+public enum Modify {
+    /**
+     * 取指定日期短的起始值.
+     */
+    TRUNCATE,
 
     /**
-     * 构造，包含开始和结束日期时间
-     *
-     * @param start 起始日期时间（包括）
-     * @param end   结束日期时间（包括）
-     * @param unit  步进单位
+     * 指定日期属性按照四舍五入处理
      */
-    public Boundary(final Date start, final Date end, final Various unit) {
-        this(start, end, unit, 1);
-    }
+    ROUND,
 
     /**
-     * 构造，包含开始和结束日期时间
-     *
-     * @param start 起始日期时间（包括）
-     * @param end   结束日期时间（包括）
-     * @param unit  步进单位
-     * @param step  步进数
+     * 指定日期属性按照进一法处理
      */
-    public Boundary(final Date start, final Date end, final Various unit, final int step) {
-        this(start, end, unit, step, true, true);
-    }
-
-    /**
-     * 构造
-     *
-     * @param start          起始日期时间
-     * @param end            结束日期时间
-     * @param unit           步进单位
-     * @param step           步进数
-     * @param isIncludeStart 是否包含开始的时间
-     * @param isIncludeEnd   是否包含结束的时间
-     */
-    public Boundary(final Date start, final Date end, final Various unit, final int step, final boolean isIncludeStart, final boolean isIncludeEnd) {
-        super(DateKit.date(start), DateKit.date(end), (current, end1, index) -> {
-            final DateTime dt = DateKit.date(start).offsetNew(unit, (index + 1) * step);
-            if (dt.isAfter(end1)) {
-                return null;
-            }
-            return dt;
-        }, isIncludeStart, isIncludeEnd);
-    }
-
+    CEILING
 }

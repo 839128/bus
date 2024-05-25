@@ -25,7 +25,7 @@
  ********************************************************************************/
 package org.miaixz.bus.core.center.date;
 
-import org.miaixz.bus.core.lang.Fields;
+import org.miaixz.bus.core.center.date.culture.Week;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -263,10 +263,10 @@ public class Almanac extends Resolver {
      * 获取{@link LocalDate}对应的星期值
      *
      * @param localDate 日期{@link LocalDate}
-     * @return {@link Fields.Week}
+     * @return {@link Week}
      */
-    public static Fields.Week dayOfWeek(final LocalDate localDate) {
-        return Fields.Week.of(localDate.getDayOfWeek());
+    public static Week dayOfWeek(final LocalDate localDate) {
+        return Week.of(localDate.getDayOfWeek());
     }
 
     /**

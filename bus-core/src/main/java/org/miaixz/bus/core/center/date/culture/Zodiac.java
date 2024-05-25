@@ -23,43 +23,135 @@
  * THE SOFTWARE.                                                                 *
  *                                                                               *
  ********************************************************************************/
-package org.miaixz.bus.core.center.date.chinese;
+package org.miaixz.bus.core.center.date.culture;
+
+import org.miaixz.bus.core.lang.Normal;
+import org.miaixz.bus.core.xyz.DateKit;
+
+import java.util.Calendar;
+import java.util.Date;
 
 /**
- * 农历月份表示
- * 规范参考：<a href="https://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=E107EA4DE9725EDF819F33C60A44B296">GB/T 33661-2017</a> 的6.2 农历月的命名法。
+ * 生肖
  *
  * @author Kimi Liu
  * @since Java 17+
  */
-public class ChineseMonth {
-
-    private static final String[] MONTH_NAME = {"正", "二", "三", "四", "五", "六", "七", "八", "九", "十", "十一", "十二"};
-    private static final String[] MONTH_NAME_TRADITIONAL = {"正", "二", "三", "四", "五", "六", "七", "八", "九", "寒", "冬", "腊"};
+public enum Zodiac {
 
     /**
-     * 当前农历月份是否为闰月
-     *
-     * @param year  农历年
-     * @param month 农历月
-     * @return 是否为闰月
+     * 猴
      */
-    public static boolean isLeapMonth(final int year, final int month) {
-        return month == LunarInfo.leapMonth(year);
+    MONKEY(8, "猴"),
+    /**
+     * 鸡
+     */
+    HICKEN(9, "鸡"),
+    /**
+     * 狗
+     */
+    DOG(10, "狗"),
+    /**
+     * 猪
+     */
+    PIG(11, "猪"),
+    /**
+     * 鼠
+     */
+    MOUSE(0, "鼠"),
+
+    /**
+     * 牛
+     */
+    OX(1, "牛"),
+
+    /**
+     * 虎
+     */
+    TIGER(2, "虎"),
+
+    /**
+     * 兔
+     */
+    RABBIT(3, "兔"),
+    /**
+     * 龙
+     */
+    LOONG(4, "龙"),
+    /**
+     * 蛇
+     */
+    SNAKE(5, "蛇"),
+    /**
+     * 马
+     */
+    HORSE(6, "马"),
+    /**
+     * 羊
+     */
+    SHEEP(7, "羊");
+
+    private static final Zodiac[] ENUMS = Zodiac.values();
+
+    /**
+     * 编码
+     */
+    private final long code;
+    /**
+     * 名称
+     */
+    private final String desc;
+
+    Zodiac(long code, String desc) {
+        this.code = code;
+        this.desc = desc;
     }
 
     /**
-     * 获得农历月称呼
-     * 当为传统表示时，表示为二月，腊月，或者润正月等
-     * 当为非传统表示时，二月，十二月，或者润一月等
+     * 通过生日计算生肖，只计算1900年后出生的人
      *
-     * @param isLeapMonth   是否闰月
-     * @param month         月份，从1开始，如果是闰月，应传入需要显示的月份
-     * @param isTraditional 是否传统表示，例如一月传统表示为正月
-     * @return 返回农历月份称呼
+     * @param date 出生日期（年需农历）
+     * @return 星座名
      */
-    public static String getChineseMonthName(final boolean isLeapMonth, final int month, final boolean isTraditional) {
-        return (isLeapMonth ? "闰" : "") + (isTraditional ? MONTH_NAME_TRADITIONAL : MONTH_NAME)[month - 1] + "月";
+    public static String getDesc(final Date date) {
+        return getDesc(DateKit.calendar(date));
+    }
+
+    /**
+     * 通过生日计算生肖，只计算1900年后出生的人
+     *
+     * @param calendar 出生日期（年需农历）
+     * @return 星座名
+     */
+    public static String getDesc(final Calendar calendar) {
+        if (null == calendar) {
+            return null;
+        }
+        return getDesc(calendar.get(Calendar.YEAR));
+    }
+
+    /**
+     * 计算生肖
+     *
+     * @param year 农历年
+     * @return 生肖名
+     */
+    public static String getDesc(final int year) {
+        return ENUMS[year % Normal._12].desc;
+    }
+
+    /**
+     * @return 单位对应的编码
+     */
+    public long getCode() {
+        return this.code;
+    }
+
+    /**
+     * @return 对应的名称
+     */
+    public String getDesc() {
+        return this.desc;
     }
 
 }

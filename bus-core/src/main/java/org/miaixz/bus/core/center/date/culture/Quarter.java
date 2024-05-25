@@ -23,65 +23,97 @@
  * THE SOFTWARE.                                                                 *
  *                                                                               *
  ********************************************************************************/
-package org.miaixz.bus.core.center.date;
-
-import org.miaixz.bus.core.center.date.culture.Various;
-import org.miaixz.bus.core.lang.range.Range;
-import org.miaixz.bus.core.xyz.DateKit;
-
-import java.util.Date;
+package org.miaixz.bus.core.center.date.culture;
 
 /**
- * 日期范围
+ * 季度枚举
  *
  * @author Kimi Liu
+ * @see #Q1
+ * @see #Q2
+ * @see #Q3
+ * @see #Q4
  * @since Java 17+
  */
-public class Boundary extends Range<DateTime> {
-
-    private static final long serialVersionUID = -1L;
+public enum Quarter {
 
     /**
-     * 构造，包含开始和结束日期时间
-     *
-     * @param start 起始日期时间（包括）
-     * @param end   结束日期时间（包括）
-     * @param unit  步进单位
+     * 一季度
      */
-    public Boundary(final Date start, final Date end, final Various unit) {
-        this(start, end, unit, 1);
+    Q1(1, "一季度"),
+    /**
+     * 二季度
+     */
+    Q2(2, "二季度"),
+    /**
+     * 三季度
+     */
+    Q3(3, "三季度"),
+    /**
+     * 四季度
+     */
+    Q4(4, "四季度");
+
+    private static final Quarter[] ENUMS = Quarter.values();
+
+    private final int code;
+    private final String desc;
+
+    Quarter(final int code, final String desc) {
+        this.code = code;
+        this.desc = desc;
     }
 
     /**
-     * 构造，包含开始和结束日期时间
+     * 将 季度int转换为Season枚举对象
      *
-     * @param start 起始日期时间（包括）
-     * @param end   结束日期时间（包括）
-     * @param unit  步进单位
-     * @param step  步进数
+     * @param intValue 季度int表示
+     * @return {@code Quarter}
+     * @see #Q1
+     * @see #Q2
+     * @see #Q3
+     * @see #Q4
      */
-    public Boundary(final Date start, final Date end, final Various unit, final int step) {
-        this(start, end, unit, step, true, true);
-    }
-
-    /**
-     * 构造
-     *
-     * @param start          起始日期时间
-     * @param end            结束日期时间
-     * @param unit           步进单位
-     * @param step           步进数
-     * @param isIncludeStart 是否包含开始的时间
-     * @param isIncludeEnd   是否包含结束的时间
-     */
-    public Boundary(final Date start, final Date end, final Various unit, final int step, final boolean isIncludeStart, final boolean isIncludeEnd) {
-        super(DateKit.date(start), DateKit.date(end), (current, end1, index) -> {
-            final DateTime dt = DateKit.date(start).offsetNew(unit, (index + 1) * step);
-            if (dt.isAfter(end1)) {
+    public static Quarter of(final int intValue) {
+        switch (intValue) {
+            case 1:
+                return Q1;
+            case 2:
+                return Q2;
+            case 3:
+                return Q3;
+            case 4:
+                return Q4;
+            default:
                 return null;
-            }
-            return dt;
-        }, isIncludeStart, isIncludeEnd);
+        }
+    }
+
+    /**
+     * 获取季度值
+     *
+     * @return 季度值
+     */
+    public int getCode() {
+        return this.code;
+    }
+
+    /**
+     * 获取季度值
+     *
+     * @return 季度值
+     */
+    public int getDesc() {
+        return this.code;
+    }
+
+    /**
+     * 获取季度值
+     *
+     * @return 季度值
+     */
+    public String getDesc(int code) {
+        return ENUMS[code].desc;
     }
 
 }
