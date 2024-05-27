@@ -84,16 +84,16 @@ public enum Week {
     /**
      * 星期对应描述
      */
-    private final String desc;
+    private final String name;
 
     /**
      * 构造
      *
      * @param code 星期对应{@link Calendar} 中的Week值
      */
-    Week(final int code, final String desc) {
+    Week(final int code, final String name) {
         this.code = code;
-        this.desc = desc;
+        this.name = name;
     }
 
     /**
@@ -185,7 +185,7 @@ public enum Week {
      * @return 星期的中文名
      */
     public static String getDesc(final int code, String prefix) {
-        return prefix + ENUMS[code].desc;
+        return prefix + ENUMS[code].name;
     }
 
     /**
@@ -215,8 +215,8 @@ public enum Week {
      *
      * @return 星期的中文名
      */
-    public String getDesc() {
-        return this.desc;
+    public String getName() {
+        return this.name;
     }
 
     /**

@@ -25,6 +25,7 @@
  ********************************************************************************/
 package org.miaixz.bus.core.center.date;
 
+import org.miaixz.bus.core.center.date.culture.Month;
 import org.miaixz.bus.core.center.date.culture.*;
 import org.miaixz.bus.core.center.date.format.CustomFormat;
 import org.miaixz.bus.core.center.date.format.FormatBuilder;
@@ -43,10 +44,7 @@ import org.miaixz.bus.core.xyz.ZoneKit;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
@@ -688,10 +686,9 @@ public class DateTime extends Date {
      * 是否闰年
      *
      * @return 是否闰年
-     * @see DateKit#isLeapYear(int)
      */
     public boolean isLeapYear() {
-        return DateKit.isLeapYear(year());
+        return Year.isLeap(year());
     }
 
     /**

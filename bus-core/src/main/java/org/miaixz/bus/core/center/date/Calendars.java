@@ -36,7 +36,6 @@ import org.miaixz.bus.core.lang.Assert;
 import org.miaixz.bus.core.lang.exception.DateException;
 import org.miaixz.bus.core.math.ChineseNumberFormatter;
 import org.miaixz.bus.core.xyz.CompareKit;
-import org.miaixz.bus.core.xyz.DateKit;
 import org.miaixz.bus.core.xyz.ObjectKit;
 import org.miaixz.bus.core.xyz.StringKit;
 
@@ -498,7 +497,7 @@ public class Calendars extends Almanac {
         final int month = calendar.get(Various.MONTH.getValue()) / 3 * 3 + 2;
 
         final Calendar resultCal = Calendar.getInstance(calendar.getTimeZone());
-        resultCal.set(year, month, Month.of(month).getLastDay(DateKit.isLeapYear(year)));
+        resultCal.set(year, month, Month.of(month).getLastDay(Almanac.isLeapYear(year)));
 
         return endOfDay(resultCal);
     }

@@ -100,11 +100,11 @@ public enum Zodiac {
     /**
      * 名称
      */
-    private final String desc;
+    private final String name;
 
-    Zodiac(long code, String desc) {
+    Zodiac(long code, String name) {
         this.code = code;
-        this.desc = desc;
+        this.name = name;
     }
 
     /**
@@ -137,7 +137,7 @@ public enum Zodiac {
      * @return 生肖名
      */
     public static String getDesc(final int year) {
-        return ENUMS[year % Normal._12].desc;
+        return ENUMS[year % Normal._12].name;
     }
 
     /**
@@ -150,8 +150,8 @@ public enum Zodiac {
     /**
      * @return 对应的名称
      */
-    public String getDesc() {
-        return this.desc;
+    public String getName() {
+        return this.name;
     }
 
 }

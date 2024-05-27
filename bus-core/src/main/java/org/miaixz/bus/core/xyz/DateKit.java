@@ -140,16 +140,6 @@ public class DateKit extends Calendars {
     }
 
     /**
-     * 是否闰年
-     *
-     * @param year 年
-     * @return 是否闰年
-     */
-    public static boolean isLeapYear(final int year) {
-        return Year.isLeap(year);
-    }
-
-    /**
      * 当前日期是否在日期指定范围内
      * 起始日期和结束日期可以互换
      *

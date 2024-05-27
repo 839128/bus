@@ -99,11 +99,11 @@ public enum Constellation {
     /**
      * 名称
      */
-    private final String desc;
+    private final String name;
 
-    Constellation(long code, String desc) {
+    Constellation(long code, String name) {
         this.code = code;
-        this.desc = desc;
+        this.name = name;
     }
 
     /**
@@ -211,7 +211,7 @@ public enum Constellation {
      */
     public static String getDesc(int month, int day) {
         int code = getCode(month, day);
-        return ENUMS[code].desc;
+        return ENUMS[code].name;
     }
 
     /**
@@ -224,15 +224,15 @@ public enum Constellation {
     /**
      * @return 对应的名称
      */
-    public String getDesc() {
-        return this.desc;
+    public String getName() {
+        return this.name;
     }
 
     /**
      * @return 对应的名称
      */
     public String getDesc(int code) {
-        return this.desc;
+        return this.name;
     }
 
 }

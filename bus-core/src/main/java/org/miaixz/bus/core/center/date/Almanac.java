@@ -27,10 +27,7 @@ package org.miaixz.bus.core.center.date;
 
 import org.miaixz.bus.core.center.date.culture.Week;
 
-import java.time.DayOfWeek;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.time.*;
 import java.time.chrono.ChronoLocalDate;
 import java.time.chrono.ChronoLocalDateTime;
 import java.time.temporal.*;
@@ -161,6 +158,15 @@ public class Almanac extends Resolver {
     public static boolean isWeekend(final LocalDate localDate) {
         final DayOfWeek dayOfWeek = localDate.getDayOfWeek();
         return DayOfWeek.SATURDAY == dayOfWeek || DayOfWeek.SUNDAY == dayOfWeek;
+    }
+
+    /**
+     * 是否闰年
+     *
+     * @return 是否闰年
+     */
+    public static boolean isLeapYear(final int year) {
+        return Year.isLeap(year);
     }
 
     /**
@@ -296,6 +302,20 @@ public class Almanac extends Resolver {
      */
     public <T extends Temporal> T offset(final T temporal, final DayOfWeek dayOfWeek, final boolean isPrevious) {
         return (T) temporal.with(isPrevious ? TemporalAdjusters.previous(dayOfWeek) : TemporalAdjusters.next(dayOfWeek));
+    }
+
+    /**
+     * 获取最大时间，提供参数是否将毫秒归零
+     * <ul>
+     *     <li>如果{@code truncateMillisecond}为{@code false}，返回时间最大值，为：23:59:59,999</li>
+     *     <li>如果{@code truncateMillisecond}为{@code true}，返回时间最大值，为：23:59:59,000</li>
+     * </ul>
+     *
+     * @param truncateMillisecond 是否毫秒归零
+     * @return {@link LocalTime}时间最大值
+     */
+    public static LocalTime max(final boolean truncateMillisecond) {
+        return truncateMillisecond ? MAX_HMS : LocalTime.MAX;
     }
 
 }

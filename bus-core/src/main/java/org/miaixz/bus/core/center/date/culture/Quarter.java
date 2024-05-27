@@ -56,12 +56,18 @@ public enum Quarter {
 
     private static final Quarter[] ENUMS = Quarter.values();
 
+    /**
+     * 编码
+     */
     private final int code;
-    private final String desc;
+    /**
+     * 名称
+     */
+    private final String name;
 
-    Quarter(final int code, final String desc) {
+    Quarter(final int code, final String name) {
         this.code = code;
-        this.desc = desc;
+        this.name = name;
     }
 
     /**
@@ -103,7 +109,7 @@ public enum Quarter {
      *
      * @return 季度值
      */
-    public int getDesc() {
+    public int getName() {
         return this.code;
     }
 
@@ -113,7 +119,7 @@ public enum Quarter {
      * @return 季度值
      */
     public String getDesc(int code) {
-        return ENUMS[code].desc;
+        return ENUMS[code].name;
     }
 
 }
