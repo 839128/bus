@@ -99,7 +99,7 @@ public class PathCopier extends SrcToDestCopier<Path, PathCopier> {
      * @return Path
      * @throws InternalException IO异常
      */
-    private static Path _copyContent(final Path src, final Path target, final CopyOption... options) throws InternalException {
+    private static Path copyContent(final Path src, final Path target, final CopyOption... options) throws InternalException {
         try {
             Files.walkFileTree(src, new CopyVisitor(src, target, options));
         } catch (final IOException e) {
@@ -152,14 +152,14 @@ public class PathCopier extends SrcToDestCopier<Path, PathCopier> {
         if (PathResolve.isDirectory(src)) {
             if (PathResolve.exists(target, false)) {
                 if (PathResolve.isDirectory(target)) {
-                    return _copyContent(src, target.resolve(src.getFileName()), options);
+                    return copyContent(src, target.resolve(src.getFileName()), options);
                 } else {
                     // src目录，target文件，无法拷贝
                     throw new IllegalArgumentException("Can not copier directory to a file!");
                 }
             } else {
                 // 目标不存在，按照重命名对待
-                return _copyContent(src, target, options);
+                return copyContent(src, target, options);
             }
         }
         return copyFile(src, target, options);
@@ -182,7 +182,7 @@ public class PathCopier extends SrcToDestCopier<Path, PathCopier> {
      */
     public Path copyContent() throws InternalException {
         if (PathResolve.isDirectory(src, false)) {
-            return _copyContent(src, target, options);
+            return copyContent(src, target, options);
         }
         return copyFile(src, target, options);
     }

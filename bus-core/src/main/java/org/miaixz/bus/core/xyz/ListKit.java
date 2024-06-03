@@ -678,4 +678,75 @@ public class ListKit {
         return resList;
     }
 
+    /**
+     * 对指定List分页取值
+     *
+     * @param <T>      集合元素类型
+     * @param pageNo   页码,从1开始计数,0和1效果相同
+     * @param pageSize 每页的条目数
+     * @param list     列表
+     * @return 分页后的段落内容
+     */
+    public static <T> List<T> page(int pageNo, int pageSize, List<T> list) {
+        if (CollKit.isEmpty(list)) {
+            return new ArrayList<>(0);
+        }
+
+        int resultSize = list.size();
+        // 每页条目数大于总数直接返回所有
+        if (resultSize <= pageSize) {
+            if (pageNo <= 1) {
+                return unmodifiable(list);
+            } else {
+                // 越界直接返回空
+                return new ArrayList<>(0);
+            }
+        }
+
+        if (pageNo < 1) {
+            pageNo = 1;
+        }
+
+        if (pageSize < 1) {
+            pageSize = 0;
+        }
+
+        int start = (pageNo - 1) * pageSize;
+        int end = start + pageSize;
+
+
+        final int[] startEnd = new int[]{start, end};
+        if (startEnd[1] > resultSize) {
+            startEnd[1] = resultSize;
+            if (startEnd[0] > startEnd[1]) {
+                return new ArrayList<>(0);
+            }
+        }
+        return sub(list, startEnd[0], startEnd[1]);
+    }
+
+    /**
+     * 将元素移动到指定列表的新位置。
+     * <ul>
+     *     <li>如果元素不在列表中，则将其添加到新位置。</li>
+     *     <li>如果元素已在列表中，则先移除它，然后再将其添加到新位置。</li>
+     * </ul>
+     *
+     * @param list        原始列表，元素将在这个列表上进行操作。
+     * @param element     需要移动的元素。
+     * @param newPosition 元素的新位置，从0开始计数，位置计算是以移除元素后的列表位置计算的
+     * @param <T>         列表和元素的通用类型。
+     * @return the list
+     */
+    public static <T> List<T> move(final List<T> list, final T element, final int newPosition) {
+        Assert.notNull(list);
+        if (!list.contains(element)) {
+            list.add(newPosition, element);
+        } else {
+            list.remove(element);
+            list.add(newPosition, element);
+        }
+        return list;
+    }
+
 }

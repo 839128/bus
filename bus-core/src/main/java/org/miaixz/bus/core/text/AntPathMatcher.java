@@ -47,7 +47,7 @@ import java.util.regex.Pattern;
  * <li>{@code {bus:[a-z]+}} 匹配以"bus"命名的正则 {@code [a-z]+}</li>
  * </ul>
  *
- * <p>例子: </p>
+ * <p>示例: </p>
  * <ul>
  * <li>{@code com/t?st.jsp} &mdash; 匹配 {@code com/test.jsp} 或 {@code com/tast.jsp} 或 {@code com/txst.jsp}</li>
  * <li>{@code com/*.jsp} &mdash; 匹配{@code com}目录下全部 {@code .jsp}文件</li>
@@ -679,9 +679,9 @@ public class AntPathMatcher {
                         this.variableNames.add(matcher.group(1));
                     } else {
                         final String variablePattern = match.substring(colonIdx + 1, match.length() - 1);
-                        patternBuilder.append('(');
+                        patternBuilder.append(Symbol.C_PARENTHESE_LEFT);
                         patternBuilder.append(variablePattern);
-                        patternBuilder.append(')');
+                        patternBuilder.append(Symbol.C_PARENTHESE_RIGHT);
                         final String variableName = match.substring(1, colonIdx);
                         this.variableNames.add(variableName);
                     }
