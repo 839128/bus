@@ -23,111 +23,44 @@
  * THE SOFTWARE.                                                                 *
  *                                                                               *
  ********************************************************************************/
-package org.miaixz.bus.notify.magic;
+package org.miaixz.bus.notify.metric.cloopen;
 
-import lombok.Getter;
-import lombok.Setter;
+import org.miaixz.bus.core.xyz.MapKit;
+import org.miaixz.bus.extra.json.JsonKit;
+import org.miaixz.bus.http.Httpx;
+import org.miaixz.bus.notify.Context;
+import org.miaixz.bus.notify.magic.ErrorCode;
+import org.miaixz.bus.notify.magic.Message;
+import org.miaixz.bus.notify.metric.AbstractProvider;
 
 import java.util.Map;
 
 /**
- * 消息模版
+ * 容联云短信实现
  *
- * @author Justubborn
+ * @author Kimi Liu
  * @since Java 17+
  */
-@Getter
-@Setter
-public class Property {
+public class CloopenSmsProvider extends AbstractProvider<CloopenProperty, Context> {
 
-    /**
-     * 地址
-     */
-    protected String url;
-
-    /**
-     * 发送者
-     */
-    protected String sender;
-
-    /**
-     * 接收者
-     * 采用','风格
-     */
-    protected String receive;
-
-    /**
-     * 主题
-     */
-    protected String subject;
-
-    /**
-     * 内容  Limit 28K
-     */
-    protected String content;
-
-    /**
-     * 模版/模版ID
-     */
-    protected String template;
-
-    /**
-     * 签名/签名ID
-     */
-    protected String signature;
-
-    /**
-     * 模版参数
-     */
-    protected String params;
-
-    /**
-     * 扩展字段
-     */
-    protected Map<String, Object> extend;
-
-    /**
-     * 内容类型
-     */
-    protected Type type;
-
-    /**
-     * 发送模型
-     */
-    protected Mode mode;
-
-    public enum Type {
-        /**
-         * html
-         */
-        HTML,
-        /**
-         * 文本
-         */
-        TEXT,
-        /**
-         * 语音
-         */
-        VOICE,
-        /**
-         * 文件
-         */
-        FILE,
-        /**
-         * 文件
-         */
-        OTHER
+    public CloopenSmsProvider(Context context) {
+        super(context);
     }
 
-    public enum Mode {
-        /**
-         * 单发
-         */
-        SINGLE,
-        /**
-         * 批量
-         */
-        BATCH
+    @Override
+    public Message send(CloopenProperty entity) {
+        Map<String, Object> bodys = MapKit.newHashMap(4, true);
+        bodys.put("to", String.join(",", entity.getReceive()));
+        bodys.put("appId", this.context.getAppKey());
+        bodys.put("templateId", entity.getTemplate());
+        bodys.put("datas", entity.getContent());
+
+        String response = Httpx.post(entity.getUrl(), bodys);
+        String errcode = JsonKit.getValue(response, "errcode");
+        return Message.builder()
+                .errcode("200".equals(errcode) ? ErrorCode.SUCCESS.getCode() : errcode)
+                .errmsg(JsonKit.getValue(response, "errmsg"))
+                .build();
     }
 
 }

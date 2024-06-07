@@ -23,10 +23,15 @@
  * THE SOFTWARE.                                                                 *
  *                                                                               *
  ********************************************************************************/
-package org.miaixz.bus.notify.metric.tencent;
+package org.miaixz.bus.notify.metric.emay;
 
-import org.miaixz.bus.core.lang.Symbol;
-import org.miaixz.bus.core.xyz.StringKit;
+import org.miaixz.bus.core.lang.Charset;
+import org.miaixz.bus.core.lang.Http;
+import org.miaixz.bus.core.lang.MediaType;
+import org.miaixz.bus.core.net.url.UrlEncoder;
+import org.miaixz.bus.core.xyz.DateKit;
+import org.miaixz.bus.core.xyz.MapKit;
+import org.miaixz.bus.crypto.Builder;
 import org.miaixz.bus.extra.json.JsonKit;
 import org.miaixz.bus.http.Httpx;
 import org.miaixz.bus.notify.Context;
@@ -34,39 +39,47 @@ import org.miaixz.bus.notify.magic.ErrorCode;
 import org.miaixz.bus.notify.magic.Message;
 import org.miaixz.bus.notify.metric.AbstractProvider;
 
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 腾讯云短信
+ * 亿美短信实现
  *
  * @author Kimi Liu
  * @since Java 17+
  */
-public class TencentSmsProvider extends AbstractProvider<TencentProperty, Context> {
+public class EmaySmsProvider extends AbstractProvider<EmayProperty, Context> {
 
-    public TencentSmsProvider(Context properties) {
-        super(properties);
+    public EmaySmsProvider(Context context) {
+        super(context);
+    }
+
+    private static Map<String, Object> getParamsMap(String appId, String secretKey, String phone, String message) {
+        Map<String, Object> params = new HashMap<>();
+        // 时间戳(必填)  格式：yyyyMMddHHmmss
+        String timestamp = DateKit.format(new Date(), DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+        String sign = Builder.md5(appId + secretKey + timestamp);
+        params.put("appId", appId);
+        params.put("timestamp", timestamp);
+        params.put("sign", sign);
+        params.put("mobiles", phone);
+        params.put("content", UrlEncoder.encodeAll(message, Charset.UTF_8));
+        return params;
     }
 
     @Override
-    public Message send(TencentProperty entity) {
-        Map<String, Object> bodys = new HashMap<>();
-        bodys.put("SmsSdkAppid", entity.getSmsAppId());
-        bodys.put("Sign", entity.getSignature());
-        bodys.put("TemplateID", entity.getTemplate());
-        bodys.put("TemplateParamSet", StringKit.splitToArray(entity.getParams(), Symbol.COMMA));
-        bodys.put("PhoneNumberSet", StringKit.splitToArray(entity.getReceive(), Symbol.COMMA));
+    public Message send(EmayProperty entity) {
+        Map<String, Object> bodys = getParamsMap(context.getAppKey(), context.getAppSecret(), entity.getReceive(), entity.getContent());
+        Map<String, String> headers = MapKit.newHashMap(1, true);
+        headers.put("Content-Type", MediaType.APPLICATION_FORM_URLENCODED);
 
-        String response = Httpx.post(entity.getUrl(), bodys);
-        int status = JsonKit.getValue(response, "status");
-
-        String errcode = status == 200 ? ErrorCode.SUCCESS.getCode() : ErrorCode.FAILURE.getCode();
-        String errmsg = status == 200 ? ErrorCode.SUCCESS.getMsg() : ErrorCode.FAILURE.getMsg();
-
+        String response = Httpx.post(entity.getUrl(), bodys, headers);
+        String errcode = JsonKit.getValue(response, "errcode");
         return Message.builder()
-                .errcode(errcode)
-                .errmsg(errmsg)
+                .errcode(String.valueOf(Http.HTTP_OK).equals(errcode) ? ErrorCode.SUCCESS.getCode() : errcode)
+                .errmsg(JsonKit.getValue(response, "errmsg"))
                 .build();
     }
 

@@ -23,111 +23,39 @@
  * THE SOFTWARE.                                                                 *
  *                                                                               *
  ********************************************************************************/
-package org.miaixz.bus.notify.magic;
+package org.miaixz.bus.notify.metric.unisms;
 
 import lombok.Getter;
 import lombok.Setter;
-
-import java.util.Map;
+import org.miaixz.bus.notify.magic.Property;
 
 /**
- * 消息模版
+ * 合一短信
  *
- * @author Justubborn
+ * @author Kimi Liu
  * @since Java 17+
  */
 @Getter
 @Setter
-public class Property {
+public class UniProperty extends Property {
 
     /**
-     * 地址
+     * 是否为简易模式
      */
-    protected String url;
+    private boolean simple = true;
 
     /**
-     * 发送者
+     * 模板变量名称
      */
-    protected String sender;
+    private String templateName;
+
+    private int retryInterval;
+    private int maxRetries;
 
     /**
-     * 接收者
-     * 采用','风格
+     * 默认请求地址
+     * 不同区域，可切换请求地址，也可以不修改
      */
-    protected String receive;
-
-    /**
-     * 主题
-     */
-    protected String subject;
-
-    /**
-     * 内容  Limit 28K
-     */
-    protected String content;
-
-    /**
-     * 模版/模版ID
-     */
-    protected String template;
-
-    /**
-     * 签名/签名ID
-     */
-    protected String signature;
-
-    /**
-     * 模版参数
-     */
-    protected String params;
-
-    /**
-     * 扩展字段
-     */
-    protected Map<String, Object> extend;
-
-    /**
-     * 内容类型
-     */
-    protected Type type;
-
-    /**
-     * 发送模型
-     */
-    protected Mode mode;
-
-    public enum Type {
-        /**
-         * html
-         */
-        HTML,
-        /**
-         * 文本
-         */
-        TEXT,
-        /**
-         * 语音
-         */
-        VOICE,
-        /**
-         * 文件
-         */
-        FILE,
-        /**
-         * 文件
-         */
-        OTHER
-    }
-
-    public enum Mode {
-        /**
-         * 单发
-         */
-        SINGLE,
-        /**
-         * 批量
-         */
-        BATCH
-    }
+    private String endpoint = "https://uni.apistd.com";
 
 }
