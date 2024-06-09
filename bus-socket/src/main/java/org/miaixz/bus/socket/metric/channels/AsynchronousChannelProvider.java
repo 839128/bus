@@ -25,45 +25,66 @@
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
  */
-package org.miaixz.bus.socket;
+package org.miaixz.bus.socket.metric.channels;
+
+import java.io.IOException;
+import java.nio.channels.AsynchronousSocketChannel;
+import java.nio.channels.SocketChannel;
+import java.util.concurrent.*;
 
 /**
- * 群组
+ * 异步通道提供程序
  *
  * @author Kimi Liu
  * @since Java 17+
  */
-public interface GroupIo {
+public final class AsynchronousChannelProvider extends java.nio.channels.spi.AsynchronousChannelProvider {
 
     /**
-     * 将Session加入群组group
-     *
-     * @param group   群组信息
-     * @param session 会话
+     * 读监听信号
      */
-    void join(String group, Session session);
-
+    public static final int READ_MONITOR_SIGNAL = -2;
     /**
-     * 群发消息
-     *
-     * @param group 群组信息
-     * @param data  发送内容
+     * 可读信号
      */
-    void write(String group, byte[] data);
-
+    public static final int READABLE_SIGNAL = -3;
     /**
-     * 将Session从群众group中移除
-     *
-     * @param group   群组信息
-     * @param session 会话
+     * 低内存模式
      */
-    void remove(String group, Session session);
+    private final boolean lowMemory;
 
-    /**
-     * Session从所有群组中退出
-     *
-     * @param session 会话
-     */
-    void remove(Session session);
+    public AsynchronousChannelProvider(boolean lowMemory) {
+        this.lowMemory = lowMemory;
+    }
+
+    @Override
+    public java.nio.channels.AsynchronousChannelGroup openAsynchronousChannelGroup(int nThreads, ThreadFactory threadFactory) throws IOException {
+        return new AsynchronousChannelGroup(this, new ThreadPoolExecutor(nThreads, nThreads,
+                0L, TimeUnit.MILLISECONDS,
+                new ArrayBlockingQueue<>(nThreads),
+                threadFactory), nThreads);
+    }
+
+    @Override
+    public java.nio.channels.AsynchronousChannelGroup openAsynchronousChannelGroup(ExecutorService executor, int initialSize) throws IOException {
+        return new AsynchronousChannelGroup(this, executor, initialSize);
+    }
+
+    @Override
+    public java.nio.channels.AsynchronousServerSocketChannel openAsynchronousServerSocketChannel(java.nio.channels.AsynchronousChannelGroup group) throws IOException {
+        return new AsynchronousServerSocketChannel(checkAndGet(group), lowMemory);
+    }
+
+    @Override
+    public AsynchronousSocketChannel openAsynchronousSocketChannel(java.nio.channels.AsynchronousChannelGroup group) throws IOException {
+        return new AsynchronousClientChannel(checkAndGet(group), SocketChannel.open(), lowMemory);
+    }
+
+    private AsynchronousChannelGroup checkAndGet(java.nio.channels.AsynchronousChannelGroup group) {
+        if (!(group instanceof AsynchronousChannelGroup)) {
+            throw new RuntimeException("invalid class");
+        }
+        return (AsynchronousChannelGroup) group;
+    }
 
 }

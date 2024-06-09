@@ -25,45 +25,73 @@
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
  */
-package org.miaixz.bus.socket;
+package org.miaixz.bus.socket.plugin;
+
+import org.miaixz.bus.logger.Logger;
+
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.nio.channels.AsynchronousSocketChannel;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
- * 群组
+ * 黑名单插件,会拒绝与黑名单中的IP建立连接
  *
  * @author Kimi Liu
  * @since Java 17+
  */
-public interface GroupIo {
+public final class BlackListPlugin<T> extends AbstractPlugin<T> {
+
+    private ConcurrentLinkedQueue<BlackListRule> ipBlackList = new ConcurrentLinkedQueue<>();
+
+    @Override
+    public AsynchronousSocketChannel shouldAccept(AsynchronousSocketChannel channel) {
+        InetSocketAddress inetSocketAddress = null;
+        try {
+            inetSocketAddress = (InetSocketAddress) channel.getRemoteAddress();
+        } catch (IOException e) {
+            Logger.error("get remote address error.", e);
+        }
+        if (inetSocketAddress == null) {
+            return channel;
+        }
+        for (BlackListRule rule : ipBlackList) {
+            if (!rule.access(inetSocketAddress)) {
+                return null;
+            }
+        }
+        return channel;
+    }
 
     /**
-     * 将Session加入群组group
+     * 添加黑名单失败规则
      *
-     * @param group   群组信息
-     * @param session 会话
+     * @param rule 规则
      */
-    void join(String group, Session session);
+    public void addRule(BlackListRule rule) {
+        ipBlackList.add(rule);
+    }
 
     /**
-     * 群发消息
+     * 移除黑名单规则
      *
-     * @param group 群组信息
-     * @param data  发送内容
+     * @param rule 规则
      */
-    void write(String group, byte[] data);
+    public void removeRule(BlackListRule rule) {
+        ipBlackList.remove(rule);
+    }
 
     /**
-     * 将Session从群众group中移除
-     *
-     * @param group   群组信息
-     * @param session 会话
+     * 黑名单规则定义
      */
-    void remove(String group, Session session);
-
-    /**
-     * Session从所有群组中退出
-     *
-     * @param session 会话
-     */
-    void remove(Session session);
+    public interface BlackListRule {
+        /**
+         * 是否允许建立连接
+         *
+         * @param address 地址
+         * @return the true/false
+         */
+        boolean access(InetSocketAddress address);
+    }
 
 }

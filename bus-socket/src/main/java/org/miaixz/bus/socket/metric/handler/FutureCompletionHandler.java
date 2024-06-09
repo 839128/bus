@@ -25,45 +25,89 @@
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
  */
-package org.miaixz.bus.socket;
+package org.miaixz.bus.socket.metric.handler;
+
+import java.nio.channels.CompletionHandler;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
- * 群组
- *
+ * @param <V>
+ * @param <A>
  * @author Kimi Liu
  * @since Java 17+
  */
-public interface GroupIo {
+public final class FutureCompletionHandler<V, A> implements CompletionHandler<V, A>, Future<V> {
 
-    /**
-     * 将Session加入群组group
-     *
-     * @param group   群组信息
-     * @param session 会话
-     */
-    void join(String group, Session session);
+    private V result;
+    private boolean done = false;
+    private boolean cancel = false;
+    private Throwable exception;
 
-    /**
-     * 群发消息
-     *
-     * @param group 群组信息
-     * @param data  发送内容
-     */
-    void write(String group, byte[] data);
+    @Override
+    public void completed(V result, A selectionKey) {
+        this.result = result;
+        done = true;
+        synchronized (this) {
+            this.notify();
+        }
+    }
 
-    /**
-     * 将Session从群众group中移除
-     *
-     * @param group   群组信息
-     * @param session 会话
-     */
-    void remove(String group, Session session);
+    @Override
+    public void failed(Throwable exc, A attachment) {
+        exception = exc;
+        done = true;
+    }
 
-    /**
-     * Session从所有群组中退出
-     *
-     * @param session 会话
-     */
-    void remove(Session session);
+    @Override
+    public boolean cancel(boolean mayInterruptIfRunning) {
+        if (done || cancel) {
+            return false;
+        }
+        cancel = true;
+        done = true;
+        synchronized (this) {
+            notify();
+        }
+        return true;
+    }
+
+    @Override
+    public boolean isCancelled() {
+        return cancel;
+    }
+
+    @Override
+    public boolean isDone() {
+        return done;
+    }
+
+    @Override
+    public synchronized V get() throws InterruptedException, ExecutionException {
+        if (done) {
+            if (exception != null) {
+                throw new ExecutionException(exception);
+            }
+            return result;
+        } else {
+            wait();
+        }
+        return get();
+    }
+
+    @Override
+    public synchronized V get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+        if (done) {
+            return get();
+        } else {
+            wait(unit.toMillis(timeout));
+        }
+        if (done) {
+            return get();
+        }
+        throw new TimeoutException();
+    }
 
 }

@@ -25,45 +25,62 @@
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
  */
-package org.miaixz.bus.socket;
+package org.miaixz.bus.socket.secure.ssl.factory;
+
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.X509TrustManager;
+import java.io.InputStream;
+import java.security.KeyStore;
+import java.security.SecureRandom;
+import java.security.cert.X509Certificate;
 
 /**
- * 群组
- *
  * @author Kimi Liu
  * @since Java 17+
  */
-public interface GroupIo {
+public class ClientSSLContextFactory implements SSLContextFactory {
 
-    /**
-     * 将Session加入群组group
-     *
-     * @param group   群组信息
-     * @param session 会话
-     */
-    void join(String group, Session session);
+    private InputStream trustInputStream;
+    private String trustPassword;
 
-    /**
-     * 群发消息
-     *
-     * @param group 群组信息
-     * @param data  发送内容
-     */
-    void write(String group, byte[] data);
+    public ClientSSLContextFactory() {
+    }
 
-    /**
-     * 将Session从群众group中移除
-     *
-     * @param group   群组信息
-     * @param session 会话
-     */
-    void remove(String group, Session session);
+    public ClientSSLContextFactory(InputStream trustInputStream, String trustPassword) {
+        this.trustInputStream = trustInputStream;
+        this.trustPassword = trustPassword;
+    }
 
-    /**
-     * Session从所有群组中退出
-     *
-     * @param session 会话
-     */
-    void remove(Session session);
+    @Override
+    public SSLContext create() throws Exception {
+        TrustManager[] trustManagers;
+        if (trustInputStream != null) {
+            KeyStore ts = KeyStore.getInstance("JKS");
+            ts.load(trustInputStream, trustPassword.toCharArray());
+            TrustManagerFactory tmf = TrustManagerFactory.getInstance("SunX509");
+            tmf.init(ts);
+            trustManagers = tmf.getTrustManagers();
+        } else {
+            trustManagers = new TrustManager[]{new X509TrustManager() {
+                @Override
+                public void checkClientTrusted(X509Certificate[] x509Certificates, String s) {
+                }
+
+                @Override
+                public void checkServerTrusted(X509Certificate[] x509Certificates, String s) {
+                }
+
+                @Override
+                public X509Certificate[] getAcceptedIssuers() {
+                    return new X509Certificate[0];
+                }
+            }};
+        }
+        SSLContext sslContext = SSLContext.getInstance("TLS");
+        sslContext.init(null, trustManagers, new SecureRandom());
+        return sslContext;
+    }
 
 }

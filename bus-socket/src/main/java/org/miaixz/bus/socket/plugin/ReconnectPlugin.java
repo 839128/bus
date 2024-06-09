@@ -25,45 +25,55 @@
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
  */
-package org.miaixz.bus.socket;
+package org.miaixz.bus.socket.plugin;
+
+import org.miaixz.bus.socket.Session;
+import org.miaixz.bus.socket.Status;
+import org.miaixz.bus.socket.accord.AioClient;
+
+import java.nio.channels.AsynchronousChannelGroup;
 
 /**
- * 群组
+ * 断链重连插件
  *
  * @author Kimi Liu
  * @since Java 17+
  */
-public interface GroupIo {
+class ReconnectPlugin extends AbstractPlugin {
 
-    /**
-     * 将Session加入群组group
-     *
-     * @param group   群组信息
-     * @param session 会话
-     */
-    void join(String group, Session session);
+    private final AsynchronousChannelGroup asynchronousChannelGroup;
+    private final AioClient client;
+    private boolean shutdown = false;
 
-    /**
-     * 群发消息
-     *
-     * @param group 群组信息
-     * @param data  发送内容
-     */
-    void write(String group, byte[] data);
+    public ReconnectPlugin(AioClient client) {
+        this(client, null);
+    }
 
-    /**
-     * 将Session从群众group中移除
-     *
-     * @param group   群组信息
-     * @param session 会话
-     */
-    void remove(String group, Session session);
+    public ReconnectPlugin(AioClient client, AsynchronousChannelGroup asynchronousChannelGroup) {
+        this.client = client;
+        this.asynchronousChannelGroup = asynchronousChannelGroup;
+    }
 
-    /**
-     * Session从所有群组中退出
-     *
-     * @param session 会话
-     */
-    void remove(Session session);
+    @Override
+    public void stateEvent(Status status, Session session, Throwable throwable) {
+        if (status != Status.SESSION_CLOSED || shutdown) {
+            return;
+        }
+        try {
+            if (asynchronousChannelGroup == null) {
+                client.start();
+            } else {
+                client.start(asynchronousChannelGroup);
+            }
+        } catch (Exception e) {
+            shutdown = true;
+            e.printStackTrace();
+        }
+
+    }
+
+    public void shutdown() {
+        shutdown = true;
+    }
 
 }

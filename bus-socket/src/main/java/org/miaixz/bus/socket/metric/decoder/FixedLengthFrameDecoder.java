@@ -25,45 +25,52 @@
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
  */
-package org.miaixz.bus.socket;
+package org.miaixz.bus.socket.metric.decoder;
+
+import java.nio.ByteBuffer;
 
 /**
- * 群组
+ * 指定长度的解码器
  *
  * @author Kimi Liu
  * @since Java 17+
  */
-public interface GroupIo {
+public class FixedLengthFrameDecoder implements SocketDecoder {
 
-    /**
-     * 将Session加入群组group
-     *
-     * @param group   群组信息
-     * @param session 会话
-     */
-    void join(String group, Session session);
+    private ByteBuffer buffer;
+    private boolean finishRead;
 
-    /**
-     * 群发消息
-     *
-     * @param group 群组信息
-     * @param data  发送内容
-     */
-    void write(String group, byte[] data);
+    public FixedLengthFrameDecoder(int frameLength) {
+        if (frameLength <= 0) {
+            throw new IllegalArgumentException("frameLength must be a positive integer: " + frameLength);
+        } else {
+            buffer = ByteBuffer.allocate(frameLength);
+        }
+    }
 
-    /**
-     * 将Session从群众group中移除
-     *
-     * @param group   群组信息
-     * @param session 会话
-     */
-    void remove(String group, Session session);
+    public boolean decode(ByteBuffer byteBuffer) {
+        if (finishRead) {
+            throw new RuntimeException("delimiter has finish read");
+        }
+        if (buffer.remaining() >= byteBuffer.remaining()) {
+            buffer.put(byteBuffer);
+        } else {
+            int limit = byteBuffer.limit();
+            byteBuffer.limit(byteBuffer.position() + buffer.remaining());
+            buffer.put(byteBuffer);
+            byteBuffer.limit(limit);
+        }
 
-    /**
-     * Session从所有群组中退出
-     *
-     * @param session 会话
-     */
-    void remove(Session session);
+        if (buffer.hasRemaining()) {
+            return false;
+        }
+        buffer.flip();
+        finishRead = true;
+        return true;
+    }
+
+    public ByteBuffer getBuffer() {
+        return buffer;
+    }
 
 }

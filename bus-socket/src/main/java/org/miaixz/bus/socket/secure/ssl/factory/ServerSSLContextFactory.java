@@ -25,45 +25,42 @@
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
  */
-package org.miaixz.bus.socket;
+package org.miaixz.bus.socket.secure.ssl.factory;
+
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import java.io.InputStream;
+import java.security.KeyStore;
+import java.security.SecureRandom;
 
 /**
- * 群组
- *
  * @author Kimi Liu
  * @since Java 17+
  */
-public interface GroupIo {
+public class ServerSSLContextFactory implements SSLContextFactory {
 
-    /**
-     * 将Session加入群组group
-     *
-     * @param group   群组信息
-     * @param session 会话
-     */
-    void join(String group, Session session);
+    private final InputStream keyStoreInputStream;
+    private final String keyStorePassword;
+    private final String keyPassword;
 
-    /**
-     * 群发消息
-     *
-     * @param group 群组信息
-     * @param data  发送内容
-     */
-    void write(String group, byte[] data);
+    public ServerSSLContextFactory(InputStream keyStoreInputStream, String keyStorePassword, String keyPassword) {
+        this.keyStoreInputStream = keyStoreInputStream;
+        this.keyStorePassword = keyStorePassword;
+        this.keyPassword = keyPassword;
+    }
 
-    /**
-     * 将Session从群众group中移除
-     *
-     * @param group   群组信息
-     * @param session 会话
-     */
-    void remove(String group, Session session);
+    @Override
+    public SSLContext create() throws Exception {
+        KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
+        KeyStore ks = KeyStore.getInstance("JKS");
+        ks.load(keyStoreInputStream, keyStorePassword.toCharArray());
+        kmf.init(ks, keyPassword.toCharArray());
+        KeyManager[] keyManagers = kmf.getKeyManagers();
 
-    /**
-     * Session从所有群组中退出
-     *
-     * @param session 会话
-     */
-    void remove(Session session);
+        SSLContext sslContext = SSLContext.getInstance("TLS");
+        sslContext.init(keyManagers, null, new SecureRandom());
+        return sslContext;
+    }
 
 }

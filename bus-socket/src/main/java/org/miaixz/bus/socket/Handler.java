@@ -28,42 +28,36 @@
 package org.miaixz.bus.socket;
 
 /**
- * 群组
+ * 消息处理
+ * <p>
+ * 通过实现该接口，对完成解码的消息进行业务处理。
+ * </p>
  *
+ * @param <T> 消息对象实体类型
  * @author Kimi Liu
  * @since Java 17+
  */
-public interface GroupIo {
+public interface Handler<T> {
 
     /**
-     * 将Session加入群组group
+     * 处理接收到的消息
      *
-     * @param group   群组信息
-     * @param session 会话
+     * @param session 通信会话
+     * @param data    待处理的业务消息
      */
-    void join(String group, Session session);
+    void process(Session session, T data);
 
     /**
-     * 群发消息
+     * 状态机事件,当枚举事件发生时由框架触发该方法
      *
-     * @param group 群组信息
-     * @param data  发送内容
+     * @param session   本次触发状态机的Session对象
+     * @param status    状态枚举
+     * @param throwable 异常对象，如果存在的话
      */
-    void write(String group, byte[] data);
-
-    /**
-     * 将Session从群众group中移除
-     *
-     * @param group   群组信息
-     * @param session 会话
-     */
-    void remove(String group, Session session);
-
-    /**
-     * Session从所有群组中退出
-     *
-     * @param session 会话
-     */
-    void remove(Session session);
+    default void stateEvent(Session session, Status status, Throwable throwable) {
+        if (status == Status.DECODE_EXCEPTION || status == Status.PROCESS_EXCEPTION) {
+            throwable.printStackTrace();
+        }
+    }
 
 }

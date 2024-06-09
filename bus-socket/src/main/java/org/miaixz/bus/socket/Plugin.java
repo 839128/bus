@@ -28,42 +28,33 @@
 package org.miaixz.bus.socket;
 
 /**
- * 群组
+ * 插件
  *
+ * @param <T> 消息对象实体类型
  * @author Kimi Liu
  * @since Java 17+
  */
-public interface GroupIo {
+public interface Plugin<T> extends Monitor {
 
     /**
-     * 将Session加入群组group
-     *
-     * @param group   群组信息
-     * @param session 会话
-     */
-    void join(String group, Session session);
-
-    /**
-     * 群发消息
-     *
-     * @param group 群组信息
-     * @param data  发送内容
-     */
-    void write(String group, byte[] data);
-
-    /**
-     * 将Session从群众group中移除
-     *
-     * @param group   群组信息
-     * @param session 会话
-     */
-    void remove(String group, Session session);
-
-    /**
-     * Session从所有群组中退出
+     * 对请求消息进行预处理，并决策是否进行后续的Handler处理
+     * 若返回false，则当前消息将被忽略。
+     * 若返回true，该消息会正常秩序Handler.process
      *
      * @param session 会话
+     * @param data    待处理的业务消息
+     * @return the true/false
      */
-    void remove(Session session);
+    boolean process(Session session, T data);
+
+    /**
+     * 监听状态机事件
+     *
+     * @param status    状态
+     * @param session   会话
+     * @param throwable 异常
+     * @see Handler#stateEvent(Session, Status, Throwable)
+     */
+    void stateEvent(Status status, Session session, Throwable throwable);
 
 }

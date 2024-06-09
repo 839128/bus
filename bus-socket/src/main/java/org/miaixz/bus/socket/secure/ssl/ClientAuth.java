@@ -25,45 +25,28 @@
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
  */
-package org.miaixz.bus.socket;
+package org.miaixz.bus.socket.secure.ssl;
 
 /**
- * 群组
+ * 配置引擎请求客户端验证
+ * 此选项只对服务器模式的引擎有用
  *
  * @author Kimi Liu
  * @since Java 17+
  */
-public interface GroupIo {
-
+public enum ClientAuth {
     /**
-     * 将Session加入群组group
-     *
-     * @param group   群组信息
-     * @param session 会话
+     * 不需要客户端验证
      */
-    void join(String group, Session session);
-
+    NONE,
     /**
-     * 群发消息
-     *
-     * @param group 群组信息
-     * @param data  发送内容
+     * 请求的客户端验证
+     * 如果设置了此选项并且客户端选择不提供其自身的验证信息，则协商将会继续
      */
-    void write(String group, byte[] data);
-
+    OPTIONAL,
     /**
-     * 将Session从群众group中移除
-     *
-     * @param group   群组信息
-     * @param session 会话
+     * 必须的客户端验证
+     * 如果设置了此选项并且客户端选择不提供其自身的验证信息，则协商将会停止且引擎将开始它的关闭过程
      */
-    void remove(String group, Session session);
-
-    /**
-     * Session从所有群组中退出
-     *
-     * @param session 会话
-     */
-    void remove(Session session);
-
+    REQUIRE
 }

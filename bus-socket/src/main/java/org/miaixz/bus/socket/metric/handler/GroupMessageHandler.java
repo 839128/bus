@@ -25,45 +25,77 @@
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
  */
-package org.miaixz.bus.socket;
+package org.miaixz.bus.socket.metric.handler;
+
+import org.miaixz.bus.socket.GroupIo;
+import org.miaixz.bus.socket.Handler;
+import org.miaixz.bus.socket.Session;
+
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * 群组
+ * 抽象群组消息处理
  *
  * @author Kimi Liu
  * @since Java 17+
  */
-public interface GroupIo {
+abstract class GroupMessageHandler<T> implements Handler<T>, GroupIo {
+
+    private Map<String, GroupUnit> sessionGroup = new ConcurrentHashMap<>();
 
     /**
      * 将Session加入群组group
      *
-     * @param group   群组信息
+     * @param group 群组
      * @param session 会话
      */
-    void join(String group, Session session);
+    @Override
+    public final synchronized void join(String group, Session session) {
+        GroupUnit groupUnit = sessionGroup.get(group);
+        if (groupUnit == null) {
+            groupUnit = new GroupUnit();
+            sessionGroup.put(group, groupUnit);
+        }
+        groupUnit.groupList.add(session);
+    }
 
-    /**
-     * 群发消息
-     *
-     * @param group 群组信息
-     * @param data  发送内容
-     */
-    void write(String group, byte[] data);
+    @Override
+    public final synchronized void remove(String group, Session session) {
+        GroupUnit groupUnit = sessionGroup.get(group);
+        if (groupUnit == null) {
+            return;
+        }
+        groupUnit.groupList.remove(session);
+        if (groupUnit.groupList.isEmpty()) {
+            sessionGroup.remove(group);
+        }
+    }
 
-    /**
-     * 将Session从群众group中移除
-     *
-     * @param group   群组信息
-     * @param session 会话
-     */
-    void remove(String group, Session session);
+    @Override
+    public final void remove(Session session) {
+        for (String group : sessionGroup.keySet()) {
+            remove(group, session);
+        }
+    }
 
-    /**
-     * Session从所有群组中退出
-     *
-     * @param session 会话
-     */
-    void remove(Session session);
+    @Override
+    public void write(String group, byte[] data) {
+        GroupUnit groupUnit = sessionGroup.get(group);
+        for (Session session : groupUnit.groupList) {
+            try {
+                session.writeBuffer().write(data);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private class GroupUnit {
+        Set<Session> groupList = new HashSet<>();
+    }
 
 }

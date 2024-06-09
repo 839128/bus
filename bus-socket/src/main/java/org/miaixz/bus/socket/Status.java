@@ -27,43 +27,68 @@
  */
 package org.miaixz.bus.socket;
 
+import java.nio.ByteBuffer;
+
 /**
- * 群组
+ * 列举了当前所关注的各类状态枚举
+ *
+ * <p>当前枚举的各状态机事件在发生后都会及时触发{@link Handler#stateEvent(Session, Status, Throwable)}方法。
+ * 因此用户在实现的{@linkplain Handler}接口中可对自己关心的状态机事件进行处理。
+ * </p>
  *
  * @author Kimi Liu
+ * @see Handler
  * @since Java 17+
  */
-public interface GroupIo {
-
+public enum Status {
     /**
-     * 将Session加入群组group
-     *
-     * @param group   群组信息
-     * @param session 会话
+     * 连接已建立并构建Session对象
      */
-    void join(String group, Session session);
-
+    NEW_SESSION,
     /**
-     * 群发消息
-     *
-     * @param group 群组信息
-     * @param data  发送内容
+     * 读通道已被关闭。
+     * 通常由以下几种情况会触发该状态：
+     * <ol>
+     * <li>对端主动关闭write通道，致使本通常满足了EOF条件</li>
+     * <li>当前Session处理完读操作后检测到自身正处于{@link Status#SESSION_CLOSING}状态</li>
+     * </ol>
      */
-    void write(String group, byte[] data);
-
+    INPUT_SHUTDOWN,
     /**
-     * 将Session从群众group中移除
-     *
-     * @param group   群组信息
-     * @param session 会话
+     * 业务处理异常
+     * 执行{@link Handler#process(Session, Object)}期间发生未捕获的异常
      */
-    void remove(String group, Session session);
-
+    PROCESS_EXCEPTION,
     /**
-     * Session从所有群组中退出
-     *
-     * @param session 会话
+     * 协议解码异常
+     * 执行{@link Protocol#decode(ByteBuffer, Session)}期间发生未捕获的异常
      */
-    void remove(Session session);
-
+    DECODE_EXCEPTION,
+    /**
+     * 读操作异常
+     * 在底层服务执行read操作期间因发生异常情况触发了{@link java.nio.channels.CompletionHandler#failed(Throwable, Object)}
+     */
+    INPUT_EXCEPTION,
+    /**
+     * 写操作异常。
+     * 在底层服务执行write操作期间因发生异常情况触发了{@link java.nio.channels.CompletionHandler#failed(Throwable, Object)}
+     */
+    OUTPUT_EXCEPTION,
+    /**
+     * 会话正在关闭中
+     * 执行了{@link Session#close(boolean immediate)}方法，并且当前还存在待输出的数据
+     */
+    SESSION_CLOSING,
+    /**
+     * 会话关闭成功
+     */
+    SESSION_CLOSED,
+    /**
+     * 拒绝接受连接,仅Server端有效
+     */
+    REJECT_ACCEPT,
+    /**
+     * 服务端接受连接异常
+     */
+    ACCEPT_EXCEPTION
 }

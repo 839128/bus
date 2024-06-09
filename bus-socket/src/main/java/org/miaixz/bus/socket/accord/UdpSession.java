@@ -25,45 +25,75 @@
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
  */
-package org.miaixz.bus.socket;
+package org.miaixz.bus.socket.accord;
+
+import org.miaixz.bus.socket.Session;
+import org.miaixz.bus.socket.Status;
+import org.miaixz.bus.socket.buffer.BufferPage;
+import org.miaixz.bus.socket.buffer.WriteBuffer;
+
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
+import java.nio.ByteBuffer;
 
 /**
- * 群组
- *
  * @author Kimi Liu
  * @since Java 17+
  */
-public interface GroupIo {
+public final class UdpSession extends Session {
+
+    private final UdpChannel udpChannel;
+
+    private final SocketAddress remote;
+
+    private final WriteBuffer byteBuf;
+
+    public UdpSession(final UdpChannel udpChannel, final SocketAddress remote, BufferPage bufferPage) {
+        this.udpChannel = udpChannel;
+        this.remote = remote;
+        this.byteBuf = new WriteBuffer(bufferPage, buffer -> udpChannel.write(buffer, UdpSession.this), udpChannel.context.getWriteBufferSize(), 1);
+        udpChannel.context.getProcessor().stateEvent(this, Status.NEW_SESSION, null);
+    }
+
+    @Override
+    public WriteBuffer writeBuffer() {
+        return byteBuf;
+    }
+
+    @Override
+    public ByteBuffer readBuffer() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void awaitRead() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void signalRead() {
+        throw new UnsupportedOperationException();
+    }
 
     /**
-     * 将Session加入群组group
+     * 为确保消息尽可能发送，UDP不支持立即close
      *
-     * @param group   群组信息
-     * @param session 会话
+     * @param immediate true:立即关闭,false:响应消息发送完后关闭
      */
-    void join(String group, Session session);
+    @Override
+    public void close(boolean immediate) {
+        byteBuf.flush();
+    }
 
-    /**
-     * 群发消息
-     *
-     * @param group 群组信息
-     * @param data  发送内容
-     */
-    void write(String group, byte[] data);
+    @Override
+    public InetSocketAddress getLocalAddress() throws IOException {
+        return (InetSocketAddress) udpChannel.getChannel().getLocalAddress();
+    }
 
-    /**
-     * 将Session从群众group中移除
-     *
-     * @param group   群组信息
-     * @param session 会话
-     */
-    void remove(String group, Session session);
-
-    /**
-     * Session从所有群组中退出
-     *
-     * @param session 会话
-     */
-    void remove(Session session);
+    @Override
+    public InetSocketAddress getRemoteAddress() {
+        return (InetSocketAddress) remote;
+    }
 
 }
