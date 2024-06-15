@@ -25,49 +25,95 @@
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
  */
-package org.miaixz.bus.crypto.center;
+package org.miaixz.bus.core.io.stream;
 
-import org.miaixz.bus.core.lang.Algorithm;
-import org.miaixz.bus.core.xyz.RandomKit;
-import org.miaixz.bus.crypto.Keeper;
-import org.miaixz.bus.crypto.builtin.symmetric.Crypto;
+import org.miaixz.bus.core.lang.Symbol;
+import org.miaixz.bus.core.lang.exception.InternalException;
 
-import javax.crypto.spec.IvParameterSpec;
+import java.io.Closeable;
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
- * ChaCha20算法实现
- * ChaCha系列流密码，作为salsa密码的改良版，具有更强的抵抗密码分析攻击的特性，“20”表示该算法有20轮的加密计算。
+ * 行数计数器
  *
  * @author Kimi Liu
  * @since Java 17+
  */
-public class ChaCha20 extends Crypto {
+public class LineCounter implements Closeable {
 
-    private static final long serialVersionUID = -1L;
+    private final InputStream is;
+    private final int bufferSize;
+
+    private int count = -1;
 
     /**
      * 构造
      *
-     * @param key 密钥
-     * @param iv  加盐，12bytes（64bit）
+     * @param is         输入流
+     * @param bufferSize 缓存大小，小于1则使用默认的1024
      */
-    public ChaCha20(final byte[] key, final byte[] iv) {
-        super(Algorithm.CHACHA20.getValue(),
-                Keeper.generateKey(Algorithm.CHACHA20.getValue(), key),
-                generateIvParam(iv));
+    public LineCounter(final InputStream is, final int bufferSize) {
+        this.is = is;
+        this.bufferSize = bufferSize < 1 ? 1024 : bufferSize;
     }
 
     /**
-     * 生成加盐参数
+     * 获取行数
      *
-     * @param iv 加盐
-     * @return {@link IvParameterSpec}
+     * @return 行数
      */
-    private static IvParameterSpec generateIvParam(byte[] iv) {
-        if (null == iv) {
-            iv = RandomKit.randomBytes(12);
+    public int getCount() {
+        if (this.count < 0) {
+            try {
+                this.count = count();
+            } catch (final IOException e) {
+                throw new InternalException(e);
+            }
         }
-        return new IvParameterSpec(iv);
+        return this.count;
+    }
+
+    @Override
+    public void close() throws IOException {
+        if (null != this.is) {
+            this.is.close();
+        }
+    }
+
+    private int count() throws IOException {
+        final byte[] c = new byte[bufferSize];
+        int readChars = is.read(c);
+        if (readChars == -1) {
+            // 空文件，返回0
+            return 0;
+        }
+
+        // 起始行为1
+        // 如果只有一行，无换行符，则读取结束后返回1
+        // 如果多行，最后一行无换行符，最后一行需要单独计数
+        // 如果多行，最后一行有换行符，则空行算作一行
+        int count = 1;
+        while (readChars == bufferSize) {
+            for (int i = 0; i < bufferSize; i++) {
+                if (c[i] == Symbol.C_LF) {
+                    ++count;
+                }
+            }
+            readChars = is.read(c);
+        }
+
+        // 计算剩余字符数
+        while (readChars != -1) {
+            for (int i = 0; i < readChars; i++) {
+                if (c[i] == Symbol.C_LF) {
+                    ++count;
+                }
+            }
+            readChars = is.read(c);
+        }
+
+        return count;
     }
 
 }

@@ -1,4 +1,4 @@
-package org.miaixz.bus.notify.magic;
+package org.miaixz.bus.storage.magic;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

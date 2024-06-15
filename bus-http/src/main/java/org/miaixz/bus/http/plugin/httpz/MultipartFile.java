@@ -25,28 +25,47 @@
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
  */
-package org.miaixz.bus.validate.metric;
+package org.miaixz.bus.http.plugin.httpz;
 
-import org.miaixz.bus.core.lang.Validator;
-import org.miaixz.bus.core.xyz.ObjectKit;
-import org.miaixz.bus.validate.Context;
-import org.miaixz.bus.validate.magic.Matcher;
-import org.miaixz.bus.validate.magic.annotation.IPAddress;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.io.File;
+import java.io.InputStream;
 
 /**
- * IP地址校验
+ * 文件上传
  *
  * @author Kimi Liu
  * @since Java 17+
  */
-public class IPAddressMatcher implements Matcher<Object, IPAddress> {
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public class MultipartFile {
 
-    @Override
-    public boolean on(Object object, IPAddress annotation, Context context) {
-        if (ObjectKit.isEmpty(object)) {
-            return false;
-        }
-        return Validator.isIpv4(object.toString()) || Validator.isIpv6(object.toString());
-    }
+    /**
+     * 文件名称
+     */
+    public String name;
+    /**
+     * 拆分信息
+     */
+    public String part;
+    /**
+     * 文件内容
+     */
+    public byte[] content;
+    /**
+     * 文件主体
+     */
+    public File file;
+    /**
+     * 文件输入流
+     */
+    public InputStream in;
 
 }
