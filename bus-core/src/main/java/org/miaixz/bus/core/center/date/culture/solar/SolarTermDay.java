@@ -3,7 +3,7 @@
  ~                                                                               ~
  ~ The MIT License (MIT)                                                         ~
  ~                                                                               ~
- ~ Copyright (c) 2015-2024 miaixz.org OSHI and other contributors.               ~
+ ~ Copyright (c) 2015-2024 miaixz.org 6tail and other contributors.              ~
  ~                                                                               ~
  ~ Permission is hereby granted, free of charge, to any person obtaining a copy  ~
  ~ of this software and associated documentation files (the "Software"), to deal ~
@@ -24,61 +24,30 @@
  ~ THE SOFTWARE.                                                                 ~
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
- */
-package org.miaixz.bus.health.windows.driver.wmi;
+*/
+package org.miaixz.bus.core.center.date.culture.solar;
 
-import com.sun.jna.platform.win32.COM.WbemcliUtil.WmiQuery;
-import com.sun.jna.platform.win32.COM.WbemcliUtil.WmiResult;
-import org.miaixz.bus.core.annotation.ThreadSafe;
-import org.miaixz.bus.health.windows.WmiQueryHandler;
-
-import java.util.Objects;
+import org.miaixz.bus.core.center.date.culture.Replenish;
 
 /**
- * Utility to query WMI class {@code Win32_PhysicalMemory}
+ * 节气第几天
  *
  * @author Kimi Liu
  * @since Java 17+
  */
-@ThreadSafe
-public final class Win32PhysicalMemory {
+public class SolarTermDay extends Replenish {
 
-    private static final String WIN32_PHYSICAL_MEMORY = "Win32_PhysicalMemory";
+    public SolarTermDay(SolarTerms solarTerm, int dayIndex) {
+        super(solarTerm, dayIndex);
+    }
 
     /**
-     * Queries physical memory info for Win10 and later.
+     * 节气
      *
-     * @return Information regarding physical memory.
+     * @return 节气
      */
-    public static WmiResult<PhysicalMemoryProperty> queryphysicalMemory() {
-        WmiQuery<PhysicalMemoryProperty> physicalMemoryQuery = new WmiQuery<>(WIN32_PHYSICAL_MEMORY,
-                PhysicalMemoryProperty.class);
-        return Objects.requireNonNull(WmiQueryHandler.createInstance()).queryWMI(physicalMemoryQuery);
-    }
-
-    /**
-     * Queries physical memory info for Win8 and earlier.
-     *
-     * @return Information regarding physical memory.
-     */
-    public static WmiResult<PhysicalMemoryPropertyWin8> queryphysicalMemoryWin8() {
-        WmiQuery<PhysicalMemoryPropertyWin8> physicalMemoryQuery = new WmiQuery<>(WIN32_PHYSICAL_MEMORY,
-                PhysicalMemoryPropertyWin8.class);
-        return Objects.requireNonNull(WmiQueryHandler.createInstance()).queryWMI(physicalMemoryQuery);
-    }
-
-    /**
-     * Physical Memory properties for Win10 and later.
-     */
-    public enum PhysicalMemoryProperty {
-        BANKLABEL, CAPACITY, SPEED, MANUFACTURER, PARTNUMBER, SMBIOSMEMORYTYPE, SERIALNUMBER
-    }
-
-    /**
-     * Physical Memory properties for Win8 and earlier.
-     */
-    public enum PhysicalMemoryPropertyWin8 {
-        BANKLABEL, CAPACITY, SPEED, MANUFACTURER, MEMORYTYPE, PARTNUMBER, SERIALNUMBER
+    public SolarTerms getSolarTerm() {
+        return (SolarTerms) tradition;
     }
 
 }
