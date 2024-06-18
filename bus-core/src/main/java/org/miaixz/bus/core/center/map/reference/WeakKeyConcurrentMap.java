@@ -25,45 +25,53 @@
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
  */
-package org.miaixz.bus.core.beans;
+package org.miaixz.bus.core.center.map.reference;
 
-import org.miaixz.bus.core.center.map.reference.WeakConcurrentMap;
+import org.miaixz.bus.core.center.map.concurrent.SafeConcurrentHashMap;
+import org.miaixz.bus.core.lang.ref.Ref;
+import org.miaixz.bus.core.lang.ref.StrongObject;
+import org.miaixz.bus.core.lang.ref.WeakObject;
 
-import java.util.function.Supplier;
+import java.lang.ref.ReferenceQueue;
+import java.util.concurrent.ConcurrentMap;
 
 /**
- * Bean属性缓存
- * 缓存用于防止多次反射造成的性能问题
+ * 线程安全的WeakMap实现
+ * 键为Weak引用，即，在GC时发现弱引用会回收其对象
  *
+ * @param <K> 键类型
+ * @param <V> 值类型
  * @author Kimi Liu
  * @since Java 17+
  */
-public enum BeanDescCache {
+public class WeakKeyConcurrentMap<K, V> extends ReferenceConcurrentMap<K, V> {
+
+    private static final long serialVersionUID = 1L;
 
     /**
-     * 单例
+     * 构造
      */
-    INSTANCE;
-
-    private final WeakConcurrentMap<Class<?>, BeanDesc> bdCache = new WeakConcurrentMap<>();
-
-    /**
-     * 获得属性名和{@link BeanDesc}Map映射
-     *
-     * @param beanClass Bean的类
-     * @param supplier  对象不存在时创建对象的函数
-     * @param <T>       BeanDesc子类
-     * @return 属性名和 {@link BeanDesc}映射
-     */
-    public <T extends BeanDesc> T getBeanDesc(final Class<?> beanClass, final Supplier<T> supplier) {
-        return (T) bdCache.computeIfAbsent(beanClass, (key) -> supplier.get());
+    public WeakKeyConcurrentMap() {
+        this(new SafeConcurrentHashMap<>());
     }
 
     /**
-     * 清空全局的Bean属性缓存
+     * 构造
+     *
+     * @param raw {@link ConcurrentMap}实现
      */
-    public void clear() {
-        this.bdCache.clear();
+    public WeakKeyConcurrentMap(final ConcurrentMap<Ref<K>, Ref<V>> raw) {
+        super(raw);
+    }
+
+    @Override
+    Ref<K> wrapKey(final K key, final ReferenceQueue<? super K> queue) {
+        return new WeakObject<>(key, queue);
+    }
+
+    @Override
+    Ref<V> wrapValue(final V value, final ReferenceQueue<? super V> queue) {
+        return new StrongObject<>(value);
     }
 
 }
