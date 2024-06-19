@@ -25,55 +25,49 @@
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
  */
-package org.miaixz.bus.notify.metric.jdcloud;
-
-import org.miaixz.bus.core.lang.MediaType;
-import org.miaixz.bus.core.net.Header;
-import org.miaixz.bus.core.net.Http;
-import org.miaixz.bus.extra.json.JsonKit;
-import org.miaixz.bus.http.Httpx;
-import org.miaixz.bus.notify.Context;
-import org.miaixz.bus.notify.magic.ErrorCode;
-import org.miaixz.bus.notify.magic.Message;
-import org.miaixz.bus.notify.metric.AbstractProvider;
-
-import java.util.HashMap;
-import java.util.Map;
+package org.miaixz.bus.http.metric.http;
 
 /**
- * 京东云短信
+ * 错误码信息
  *
  * @author Kimi Liu
  * @since Java 17+
  */
-public class JdcloudSmsProvider extends AbstractProvider<JdcloudMaterial, Context> {
+public enum Http2ErrorCode {
 
-    public JdcloudSmsProvider(Context context) {
-        super(context);
+    NO_ERROR(0),
+
+    PROTOCOL_ERROR(1),
+
+    INTERNAL_ERROR(2),
+
+    FLOW_CONTROL_ERROR(3),
+
+    REFUSED_STREAM(7),
+
+    CANCEL(8),
+
+    COMPRESSION_ERROR(9),
+
+    CONNECT_ERROR(0xa),
+
+    ENHANCE_YOUR_CALM(0xb),
+
+    INADEQUATE_SECURITY(0xc),
+
+    HTTP_1_1_REQUIRED(0xd);
+
+    public final int httpCode;
+
+    Http2ErrorCode(int httpCode) {
+        this.httpCode = httpCode;
     }
 
-    @Override
-    public Message send(JdcloudMaterial entity) {
-        Map<String, String> bodys = new HashMap<>();
-        bodys.put("regionId", this.getUrl(entity));
-        bodys.put("templateId", entity.getTemplate());
-        bodys.put("params", entity.getParams());
-        bodys.put("phoneList", entity.getReceive());
-        bodys.put("signId", entity.getSignature());
-
-        Map<String, String> headers = new HashMap<>();
-        headers.put(Header.CONTENT_TYPE, MediaType.APPLICATION_JSON);
-
-        String response = Httpx.post(this.getUrl(entity), bodys, headers);
-        int status = JsonKit.getValue(response, "statusCode");
-
-        String errcode = status == Http.HTTP_OK ? ErrorCode.SUCCESS.getCode() : ErrorCode.FAILURE.getCode();
-        String errmsg = status == Http.HTTP_OK ? ErrorCode.SUCCESS.getDesc() : ErrorCode.FAILURE.getDesc();
-
-        return Message.builder()
-                .errcode(errcode)
-                .errmsg(errmsg)
-                .build();
+    public static Http2ErrorCode fromHttp2(int code) {
+        for (Http2ErrorCode errorCode : Http2ErrorCode.values()) {
+            if (errorCode.httpCode == code) return errorCode;
+        }
+        return null;
     }
 
 }
