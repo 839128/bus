@@ -3,7 +3,7 @@
  ~                                                                               ~
  ~ The MIT License (MIT)                                                         ~
  ~                                                                               ~
- ~ Copyright (c) 2015-2024 miaixz.org and other contributors.                    ~
+ ~ Copyright (c) 2015-2024 miaixz.org 6tail and other contributors.              ~
  ~                                                                               ~
  ~ Permission is hereby granted, free of charge, to any person obtaining a copy  ~
  ~ of this software and associated documentation files (the "Software"), to deal ~
@@ -24,71 +24,35 @@
  ~ THE SOFTWARE.                                                                 ~
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
- */
-package org.miaixz.bus.http.metric.anget;
+*/
+package org.miaixz.bus.core.center.date.culture.cn.plumrain;
 
-import org.miaixz.bus.core.lang.Normal;
-import org.miaixz.bus.core.xyz.ListKit;
-import org.miaixz.bus.core.xyz.PatternKit;
-
-import java.util.List;
-import java.util.regex.Pattern;
+import org.miaixz.bus.core.center.date.culture.Replenish;
 
 /**
- * 浏览器解析引擎
+ * 梅雨天
  *
  * @author Kimi Liu
  * @since Java 17+
  */
-public class Engine extends UserAgent {
+public class PlumRainDay extends Replenish {
 
-    /**
-     * 未知
-     */
-    public static final Engine UNKNOWN = new Engine(Normal.UNKNOWN, null);
-
-    /**
-     * 支持的引擎类型
-     */
-    public static final List<Engine> ENGINES = ListKit.view(
-            new Engine("Trident", "trident"),
-            new Engine("Webkit", "webkit"),
-            new Engine("Chrome", "chrome"),
-            new Engine("Opera", "opera"),
-            new Engine("Presto", "presto"),
-            new Engine("Gecko", "gecko"),
-            new Engine("KHTML", "khtml"),
-            new Engine("Konqueror", "konqueror"),
-            new Engine("MIDP", "MIDP")
-    );
-
-    /**
-     * 匹配正则
-     */
-    private final Pattern pattern;
-
-    /**
-     * 构造
-     *
-     * @param name  引擎名称
-     * @param rule 关键字或表达式
-     */
-    public Engine(String name, String rule) {
-        super(name, rule);
-        this.pattern = Pattern.compile(name + "[/\\- ]([\\w.\\-]+)", Pattern.CASE_INSENSITIVE);
+    public PlumRainDay(PlumRain plumRain, int dayIndex) {
+        super(plumRain, dayIndex);
     }
 
     /**
-     * 获取引擎版本
+     * 梅雨
      *
-     * @param userAgentString User-Agent字符串
-     * @return 版本
+     * @return 梅雨
      */
-    public String getVersion(final String userAgentString) {
-        if (isUnknown()) {
-            return null;
-        }
-        return PatternKit.getGroup1(this.pattern, userAgentString);
+    public PlumRain getPlumRain() {
+        return (PlumRain) tradition;
+    }
+
+    @Override
+    public String toString() {
+        return getPlumRain().getIndex() == 0 ? super.toString() : tradition.getName();
     }
 
 }
