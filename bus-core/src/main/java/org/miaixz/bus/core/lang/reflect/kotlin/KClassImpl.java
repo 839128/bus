@@ -25,37 +25,40 @@
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
  */
-package org.miaixz.bus.goalie.metric;
+package org.miaixz.bus.core.lang.reflect.kotlin;
+
+import org.miaixz.bus.core.xyz.ClassKit;
+import org.miaixz.bus.core.xyz.MethodKit;
+import org.miaixz.bus.core.xyz.ReflectKit;
+
+import java.lang.reflect.Method;
+import java.util.List;
 
 /**
- * 自定义错误码
+ * kotlin.reflect.jvm.internal.KClassImpl包装
+ *
  * @author Kimi Liu
  * @since Java 17+
  */
-public class ErrorCode extends org.miaixz.bus.core.basics.normal.ErrorCode {
+public class KClassImpl {
 
-    /**
-     * 没有API权限
-     */
-    public static String EM_80010001 = "80010001";
-    /**
-     * 没有角色
-     */
-    public static String EM_80010002 = "80010002";
-    /**
-     * 服务端超时
-     */
-    public static String EM_80010003 = "80010003";
-    /**
-     * 服务端未响应
-     */
-    public static String EM_80010004 = "80010004";
+    private static final Class<?> KCLASS_IMPL_CLASS;
+    private static final Method METHOD_GET_CONSTRUCTORS;
 
     static {
-        register(EM_80010001, "没有API权限");
-        register(EM_80010002, "没有角色");
-        register(EM_80010003, "服务端超时");
-        register(EM_80010004, "服务端未响应");
+        KCLASS_IMPL_CLASS = ClassKit.loadClass("kotlin.reflect.jvm.internal.KClassImpl");
+        METHOD_GET_CONSTRUCTORS = MethodKit.getMethod(KCLASS_IMPL_CLASS, "getConstructors");
+    }
+
+    /**
+     * 获取Kotlin类的所有构造方法
+     *
+     * @param targetType kotlin类
+     * @return 构造列表
+     */
+    public static List<?> getConstructors(final Class<?> targetType) {
+        final Object kClassImpl = ReflectKit.newInstance(KCLASS_IMPL_CLASS, targetType);
+        return MethodKit.invoke(kClassImpl, METHOD_GET_CONSTRUCTORS);
     }
 
 }

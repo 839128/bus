@@ -25,89 +25,79 @@
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
  */
-package org.miaixz.bus.core.center.map;
+package org.miaixz.bus.core.text;
 
-import org.miaixz.bus.core.lang.Normal;
 import org.miaixz.bus.core.xyz.StringKit;
 
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Function;
+import java.util.function.BiPredicate;
 
 /**
- * 驼峰Key风格的Map
- * 对KEY转换为驼峰，get("int_value")和get("intValue")获得的值相同，put进入的值也会被覆盖
+ * 字符串区域匹配器，用于匹配字串是头部匹配还是尾部匹配，亦或者是某个位置的匹配。
+ * offset用于锚定开始或结束位置，正数表示从开始偏移，负数表示从后偏移
+ * <pre>
+ *     a  b  c  d  e  f
+ *     |  |        |  |
+ *     0  1  c  d -2 -1
+ * </pre>
  *
- * @param <K> 键类型
- * @param <V> 值类型
  * @author Kimi Liu
  * @since Java 17+
  */
-public class CamelCaseMap<K, V> extends FunctionKeyMap<K, V> {
+public class OffsetMatcher implements BiPredicate<CharSequence, CharSequence>, Serializable {
 
     private static final long serialVersionUID = -1L;
 
+    private final boolean ignoreCase;
+    private final boolean ignoreEquals;
+    /**
+     * 匹配位置，正数表示从开始偏移，负数表示从后偏移
+     */
+    private final int offset;
+
     /**
      * 构造
+     *
+     * @param ignoreCase   是否忽略大小写
+     * @param ignoreEquals 是否忽略字符串相等的情况
+     * @param isPrefix     {@code true}表示检查开头匹配，{@code false}检查末尾匹配
      */
-    public CamelCaseMap() {
-        this(Normal._16);
+    public OffsetMatcher(final boolean ignoreCase, final boolean ignoreEquals, final boolean isPrefix) {
+        this(ignoreCase, ignoreEquals, isPrefix ? 0 : -1);
     }
 
     /**
      * 构造
      *
-     * @param initialCapacity 初始大小
+     * @param ignoreCase   是否忽略大小写
+     * @param ignoreEquals 是否忽略字符串相等的情况
+     * @param offset       匹配位置，正数表示从开始偏移，负数表示从后偏移
      */
-    public CamelCaseMap(final int initialCapacity) {
-        this(initialCapacity, Normal.DEFAULT_LOAD_FACTOR);
+    public OffsetMatcher(final boolean ignoreCase, final boolean ignoreEquals, final int offset) {
+        this.ignoreCase = ignoreCase;
+        this.ignoreEquals = ignoreEquals;
+        this.offset = offset;
     }
 
-    /**
-     * 构造
-     *
-     * @param m Map
-     */
-    public CamelCaseMap(final Map<? extends K, ? extends V> m) {
-        this(Normal.DEFAULT_LOAD_FACTOR, m);
-    }
-
-    /**
-     * 构造
-     *
-     * @param loadFactor 加载因子
-     * @param m          初始Map，数据会被默认拷贝到一个新的HashMap中
-     */
-    public CamelCaseMap(final float loadFactor, final Map<? extends K, ? extends V> m) {
-        this(m.size(), loadFactor);
-        this.putAll(m);
-    }
-
-    /**
-     * 构造
-     *
-     * @param initialCapacity 初始大小
-     * @param loadFactor      加载因子
-     */
-    public CamelCaseMap(final int initialCapacity, final float loadFactor) {
-        this(MapBuilder.of(new HashMap<>(initialCapacity, loadFactor)));
-    }
-
-    /**
-     * 构造
-     * 注意此构造将传入的Map作为被包装的Map，针对任何修改，传入的Map都会被同样修改。
-     *
-     * @param emptyMapBuilder Map构造器，必须构造空的Map
-     */
-    CamelCaseMap(final MapBuilder<K, V> emptyMapBuilder) {
-        // 使Function可以被序列化
-        super(emptyMapBuilder.build(), (Function<Object, K> & Serializable) (key) -> {
-            if (key instanceof CharSequence) {
-                key = StringKit.toCamelCase(key.toString());
+    @Override
+    public boolean test(final CharSequence text, final CharSequence check) {
+        if (null == text || null == check) {
+            if (ignoreEquals) {
+                return false;
             }
-            return (K) key;
-        });
+            return null == text && null == check;
+        }
+
+        final int strToCheckLength = check.length();
+        final int toffset = this.offset >= 0 ?
+                this.offset : text.length() - strToCheckLength + this.offset + 1;
+        final boolean matches = text.toString()
+                .regionMatches(ignoreCase, toffset, check.toString(), 0, strToCheckLength);
+
+        if (matches) {
+            return (!ignoreEquals) || (!StringKit.equals(text, check, ignoreCase));
+        }
+        return false;
     }
 
 }

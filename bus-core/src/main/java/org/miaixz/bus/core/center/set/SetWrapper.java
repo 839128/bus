@@ -25,62 +25,125 @@
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
  */
-package org.miaixz.bus.core.center;
+package org.miaixz.bus.core.center.set;
 
+import org.miaixz.bus.core.lang.wrapper.SimpleWrapper;
+
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.Set;
 import java.util.Spliterator;
 import java.util.function.Consumer;
-import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 /**
- * 使用给定的转换函数，转换源{@link Spliterator}为新类型的{@link Spliterator}
+ * Set包装类
+ * 提供列表包装，用于在执行列表方法前后自定义处理逻辑
  *
- * @param <F> 源元素类型
- * @param <T> 目标元素类型
+ * @param <E> 元素类型
  * @author Kimi Liu
  * @since Java 17+
  */
-public class TransSpliterator<F, T> implements Spliterator<T> {
-
-    private final Spliterator<F> from;
-    private final Function<? super F, ? extends T> function;
+public class SetWrapper<E> extends SimpleWrapper<Set<E>> implements Set<E> {
 
     /**
      * 构造
      *
-     * @param from 源iterator
-     * @param function        函数
+     * @param raw 原始对象
      */
-    public TransSpliterator(final Spliterator<F> from, final Function<? super F, ? extends T> function) {
-        this.from = from;
-        this.function = function;
+    public SetWrapper(final Set<E> raw) {
+        super(raw);
     }
 
     @Override
-    public boolean tryAdvance(final Consumer<? super T> action) {
-        return from.tryAdvance(
-                fromElement -> action.accept(function.apply(fromElement)));
+    public int size() {
+        return raw.size();
     }
 
     @Override
-    public void forEachRemaining(final Consumer<? super T> action) {
-        from.forEachRemaining(fromElement -> action.accept(function.apply(fromElement)));
+    public boolean isEmpty() {
+        return raw.isEmpty();
     }
 
     @Override
-    public Spliterator<T> trySplit() {
-        final Spliterator<F> fromSplit = from.trySplit();
-        return (fromSplit != null) ? new TransSpliterator<>(fromSplit, function) : null;
+    public boolean contains(final Object o) {
+        return raw.contains(o);
     }
 
     @Override
-    public long estimateSize() {
-        return from.estimateSize();
+    public Iterator<E> iterator() {
+        return raw.iterator();
     }
 
     @Override
-    public int characteristics() {
-        return from.characteristics()
-                & ~(Spliterator.DISTINCT | Spliterator.NONNULL | Spliterator.SORTED);
+    public void forEach(final Consumer<? super E> action) {
+        raw.forEach(action);
+    }
+
+    @Override
+    public Object[] toArray() {
+        return new Object[0];
+    }
+
+    @Override
+    public <T> T[] toArray(final T[] a) {
+        return raw.toArray(a);
+    }
+
+    @Override
+    public boolean add(final E e) {
+        return raw.add(e);
+    }
+
+    @Override
+    public boolean remove(final Object o) {
+        return raw.remove(o);
+    }
+
+    @Override
+    public boolean containsAll(final Collection<?> c) {
+        return raw.containsAll(c);
+    }
+
+    @Override
+    public boolean addAll(final Collection<? extends E> c) {
+        return raw.addAll(c);
+    }
+
+    @Override
+    public boolean retainAll(final Collection<?> c) {
+        return raw.retainAll(c);
+    }
+
+    @Override
+    public boolean removeAll(final Collection<?> c) {
+        return raw.removeAll(c);
+    }
+
+    @Override
+    public boolean removeIf(final Predicate<? super E> filter) {
+        return raw.removeIf(filter);
+    }
+
+    @Override
+    public void clear() {
+        raw.clear();
+    }
+
+    @Override
+    public Spliterator<E> spliterator() {
+        return raw.spliterator();
+    }
+
+    @Override
+    public Stream<E> stream() {
+        return raw.stream();
+    }
+
+    @Override
+    public Stream<E> parallelStream() {
+        return raw.parallelStream();
     }
 
 }

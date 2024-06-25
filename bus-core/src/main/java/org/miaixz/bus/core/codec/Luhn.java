@@ -25,87 +25,79 @@
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
  */
-package org.miaixz.bus.core.basics.entity;
+package org.miaixz.bus.core.codec;
 
-import jakarta.persistence.Id;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.experimental.SuperBuilder;
-import org.miaixz.bus.core.lang.Normal;
-import org.miaixz.bus.core.xyz.FieldKit;
-
-import java.io.Serializable;
+import org.miaixz.bus.core.center.regex.Pattern;
+import org.miaixz.bus.core.xyz.PatternKit;
+import org.miaixz.bus.core.xyz.StringKit;
 
 /**
- * Entity 实体
+ * Luhn算法，也称为“模10”算法，是一种简单的校验和（Checksum）算法，在ISO/IEC 7812-1中定义，校验步骤如下：
+ * <ol>
+ *     <li>从右边第1个数字（校验数字）开始偶数位乘以2，如果小于10，直接返回，否则将个位数和十位数相加</li>
+ *     <li>把步骤1种获得的乘积的各位数字与原号码中未乘2的各位数字相加</li>
+ *     <li>如果步骤2得到的总和模10为0，则校验通过</li>
+ * </ol>
  *
  * @author Kimi Liu
  * @since Java 17+
  */
-@Getter
-@Setter
-@SuperBuilder
-@NoArgsConstructor
-@AllArgsConstructor
-public class Entity implements Serializable {
-
-    private static final long serialVersionUID = 1L;
+public class Luhn {
 
     /**
-     * 数据主键
-     */
-    @Id
-    protected String id;
-
-    /**
-     * 根据主键属性,判断主键是否值为空
+     * 校验字符串
      *
-     * @param <T>    对象
-     * @param entity 反射对象
-     * @param field  属性
-     * @return 主键为空, 则返回false；主键有值,返回true
+     * @param text 含校验数字的字符串
+     * @return true - 校验通过，false-校验不通过
+     * @throws IllegalArgumentException 如果字符串为空或不是8~19位的数字
      */
-    public <T> boolean isPKNotNull(T entity, String field) {
-        if (!FieldKit.hasField(entity.getClass(), field)) {
+    public static boolean check(final String text) {
+        if (StringKit.isBlank(text)) {
             return false;
         }
-        Object value = FieldKit.getFieldValue(entity, field);
-        return null != value && !Normal.EMPTY.equals(value);
-    }
-
-    /**
-     * 依据对象的属性获取对象值
-     *
-     * @param <T>    对象
-     * @param entity 反射对象
-     * @param field  属性数组
-     * @return 返回对象属性值
-     */
-    public <T> Object getValue(T entity, String field) {
-        if (FieldKit.hasField(entity.getClass(), field)) {
-            Object value = FieldKit.getFieldValue(entity, field);
-            return null != value ? value.toString() : null;
+        if (!PatternKit.isMatch(Pattern.NUMBERS_PATTERN, text)) {
+            // 必须为全数字
+            return false;
         }
-        return null;
+        return sum(text) % 10 == 0;
     }
 
     /**
-     * 依据对象的属性数组和值数组对进行赋值
+     * 计算校验位数字
+     * 忽略已有的校验位数字，根据前N位计算最后一位校验位数字
      *
-     * @param <T>    对象
-     * @param entity 反射对象
-     * @param fields 属性数组
-     * @param value  值数组
+     * @param str            被检查的数字
+     * @param withCheckDigit 是否含有校验位
+     * @return 校验位数字
      */
-    public <T> void setValue(T entity, String[] fields, Object[] value) {
-        for (int i = 0; i < fields.length; i++) {
-            String field = fields[i];
-            if (FieldKit.hasField(entity.getClass(), field)) {
-                FieldKit.setFieldValue(entity, field, value[i]);
+    public static int getCheckDigit(String str, final boolean withCheckDigit) {
+        if (withCheckDigit) {
+            str = str.substring(0, str.length() - 1);
+        }
+        return 10 - (sum(str + "0") % 10);
+    }
+
+    /**
+     * 根据Luhn算法计算字符串各位数字之和
+     *
+     * @param text 需要校验的数字字符串
+     * @return 数字之和
+     */
+    private static int sum(final String text) {
+        final char[] strArray = text.toCharArray();
+        final int n = strArray.length;
+        int sum = strArray[n - 1] - '0';
+        ;
+        for (int i = 2; i <= n; i++) {
+            int a = strArray[n - i] - '0';
+            // 偶数位乘以2
+            if ((i & 1) == 0) {
+                a *= 2;
             }
+            // 十位数和个位数相加，如果不是偶数位，不乘以2，则十位数为0
+            sum += a / 10 + a % 10;
         }
+        return sum;
     }
 
 }
