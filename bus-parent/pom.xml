@@ -37,7 +37,7 @@
     <packaging>pom</packaging>
 
     <name>${project.artifactId}</name>
-    <description>Bus Core</description>
+    <description>Bus parent</description>
     <url>https://github.com/839128/bus</url>
 
     <parent>
