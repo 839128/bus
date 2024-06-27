@@ -39,6 +39,7 @@
     <name>${project.artifactId}</name>
     <description>Bus Core</description>
     <url>https://github.com/839128/bus</url>
+    <inceptionYear>2015</inceptionYear>
 
     <licenses>
         <license>

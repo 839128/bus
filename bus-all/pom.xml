@@ -39,6 +39,7 @@
     <name>${project.artifactId}</name>
     <description>Bus All In One</description>
     <url>https://github.com/839128/bus</url>
+    <inceptionYear>2015</inceptionYear>
 
     <licenses>
         <license>
