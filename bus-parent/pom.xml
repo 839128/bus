@@ -33,7 +33,7 @@
 
     <groupId>org.miaixz</groupId>
     <artifactId>bus-parent</artifactId>
-    <version>8.0.3</version>
+    <version>8.0.5</version>
     <packaging>pom</packaging>
 
     <name>${project.artifactId}</name>
@@ -138,7 +138,7 @@
         <qiniu.oss.version>7.15.1</qiniu.oss.version>
         <qcloud.oss.version>5.6.213</qcloud.oss.version>
         <upyun.oss.version>4.2.3</upyun.oss.version>
-        <bus.version>8.0.3</bus.version>
+        <bus.version>8.0.5</bus.version>
         <spring.boot.version>3.3.1</spring.boot.version>
     </properties>
 
