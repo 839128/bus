@@ -45,6 +45,7 @@
         <artifactId>spring-boot-dependencies</artifactId>
         <version>3.3.1</version>
     </parent>
+    <inceptionYear>2015</inceptionYear>
 
     <licenses>
         <license>

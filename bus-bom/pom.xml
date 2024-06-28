@@ -33,12 +33,13 @@
 
     <groupId>org.miaixz</groupId>
     <artifactId>bus-bom</artifactId>
-    <version>8.0.3</version>
+    <version>8.0.5</version>
     <packaging>jar</packaging>
 
     <name>${project.artifactId}</name>
     <description>Bus Bom</description>
     <url>https://github.com/839128/bus</url>
+    <inceptionYear>2015</inceptionYear>
 
     <licenses>
         <license>
