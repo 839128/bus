@@ -25,7 +25,7 @@
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
  */
-package org.miaixz.bus;
+package org.miaixz.bus.bom;
 
 /**
  * <p>
@@ -45,7 +45,7 @@ package org.miaixz.bus;
  * @author Kimi Liu
  * @since Java 17+
  */
-public class Bus extends Version {
+public class Version extends org.miaixz.bus.core.Version {
 
     /**
      * 版本对象，格式：tok+ ( '-' tok+)? ( '+' tok+)?，版本之间使用'.'或'-'分隔，版本号可能包含'+'
@@ -59,7 +59,7 @@ public class Bus extends Version {
      *
      * @param v 版本字符串
      */
-    public Bus(String v) {
+    public Version(String v) {
         super(v);
     }
 
