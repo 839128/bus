@@ -26,26 +26,25 @@
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 -->
-<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xmlns="http://maven.apache.org/POM/4.0.0"
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-
-    <groupId>org.miaixz</groupId>
-    <artifactId>bus-parent</artifactId>
-    <version>8.0.6</version>
-    <packaging>pom</packaging>
-
-    <name>${project.artifactId}</name>
-    <description>Bus parent</description>
-    <url>https://github.com/839128/bus</url>
-    <inceptionYear>2015</inceptionYear>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-dependencies</artifactId>
         <version>3.3.1</version>
     </parent>
+
+    <groupId>org.miaixz</groupId>
+    <artifactId>bus-parent</artifactId>
+    <version>8.0.8</version>
+    <packaging>pom</packaging>
+
+    <name>${project.artifactId}</name>
+    <description>Bus parent</description>
+    <url>https://github.com/839128/bus</url>
+    <inceptionYear>2015</inceptionYear>
 
     <licenses>
         <license>
@@ -54,18 +53,18 @@
         </license>
     </licenses>
 
-    <scm>
-        <connection>scm:git@github.com:839128/bus.git</connection>
-        <developerConnection>scm:git@github.com:839128/bus.git</developerConnection>
-        <url>git@github.com:839128/bus.git</url>
-    </scm>
-
     <developers>
         <developer>
             <name>Kimi Liu</name>
             <url>https://github.com/839128/bus.git</url>
         </developer>
     </developers>
+
+    <scm>
+        <connection>scm:git@github.com:839128/bus.git</connection>
+        <developerConnection>scm:git@github.com:839128/bus.git</developerConnection>
+        <url>git@github.com:839128/bus.git</url>
+    </scm>
 
     <issueManagement>
         <system>Github Issue</system>
@@ -75,12 +74,11 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
         <lombok.version>1.18.34</lombok.version>
         <jakarta.persistence.version>3.2.0</jakarta.persistence.version>
         <jakarta.mail.version>2.1.3</jakarta.mail.version>
         <jakarta.servlet.version>6.1.0</jakarta.servlet.version>
+        <jakarta.xml.version>4.0.2</jakarta.xml.version>
         <commons.logging.version>1.3.2</commons.logging.version>
         <jboss.version>3.6.0.Final</jboss.version>
         <logback.version>1.5.6</logback.version>
@@ -113,7 +111,7 @@
         <curator.version>5.6.0</curator.version>
         <guava.version>33.2.1-jre</guava.version>
         <hessian.version>4.0.66</hessian.version>
-        <mysql.version>8.4.0</mysql.version>
+        <mysql.version>9.0.0</mysql.version>
         <jersey.version>3.1.1</jersey.version>
         <jackson.version>2.17.2</jackson.version>
         <jna.version>5.14.0</jna.version>
@@ -130,6 +128,8 @@
         <vertx.version>4.5.8</vertx.version>
         <dubbo.version>3.2.11</dubbo.version>
         <elasticsearch.version>7.17.21</elasticsearch.version>
+        <mongo.version>5.1.2</mongo.version>
+        <curator.version>5.7.0</curator.version>
         <alipay.version>4.39.42.ALL</alipay.version>
         <aliyun.oss.version>3.17.4</aliyun.oss.version>
         <baidu.bos.version>0.10.314</baidu.bos.version>
@@ -139,8 +139,8 @@
         <qiniu.oss.version>7.15.1</qiniu.oss.version>
         <qcloud.oss.version>5.6.213</qcloud.oss.version>
         <upyun.oss.version>4.2.3</upyun.oss.version>
-        <miaixz.bus.version>8.0.6</miaixz.bus.version>
-        <spring.boot.version>3.3.1</spring.boot.version>
+        <miaixz.bus.version>8.0.8</miaixz.bus.version>
+        <spring.boot.version>3.3.2</spring.boot.version>
     </properties>
 
     <dependencyManagement>
@@ -306,6 +306,11 @@
                 <version>${jakarta.servlet.version}</version>
             </dependency>
             <dependency>
+                <groupId>jakarta.xml.bind</groupId>
+                <artifactId>jakarta.xml.bind-api</artifactId>
+                <version>${jakarta.xml.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>commons-logging</groupId>
                 <artifactId>commons-logging</artifactId>
                 <version>${commons.logging.version}</version>
@@ -326,8 +331,8 @@
                 <version>${logback.version}</version>
                 <exclusions>
                     <exclusion>
-                        <artifactId>slf4j-api</artifactId>
                         <groupId>org.slf4j</groupId>
+                        <artifactId>slf4j-api</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -436,8 +441,8 @@
                 <version>1.2.0</version>
                 <exclusions>
                     <exclusion>
-                        <artifactId>slf4j-api</artifactId>
                         <groupId>org.slf4j</groupId>
+                        <artifactId>slf4j-api</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -482,8 +487,8 @@
                 <version>${thymeleaf.version}</version>
                 <exclusions>
                     <exclusion>
-                        <artifactId>slf4j-api</artifactId>
                         <groupId>org.slf4j</groupId>
+                        <artifactId>slf4j-api</artifactId>
                     </exclusion>
                     <exclusion>
                         <groupId>org.javassist</groupId>
@@ -502,8 +507,8 @@
                 <version>1.0.2</version>
                 <exclusions>
                     <exclusion>
-                        <artifactId>commons-lang3</artifactId>
                         <groupId>org.apache.commons</groupId>
+                        <artifactId>commons-lang3</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -552,28 +557,28 @@
                 <version>1.3.1</version>
                 <exclusions>
                     <exclusion>
-                        <artifactId>logback-classic</artifactId>
                         <groupId>ch.qos.logback</groupId>
+                        <artifactId>logback-classic</artifactId>
                     </exclusion>
                     <exclusion>
-                        <artifactId>slf4j-api</artifactId>
                         <groupId>org.slf4j</groupId>
+                        <artifactId>slf4j-api</artifactId>
                     </exclusion>
                     <exclusion>
-                        <artifactId>pinyin4j</artifactId>
                         <groupId>com.belerweb</groupId>
+                        <artifactId>pinyin4j</artifactId>
                     </exclusion>
                     <exclusion>
+                        <groupId>org.apache.lucene</groupId>
                         <artifactId>lucene-core</artifactId>
-                        <groupId>org.apache.lucene</groupId>
                     </exclusion>
                     <exclusion>
+                        <groupId>org.apache.lucene</groupId>
                         <artifactId>lucene-analyzers-common</artifactId>
-                        <groupId>org.apache.lucene</groupId>
                     </exclusion>
                     <exclusion>
-                        <artifactId>jedis</artifactId>
                         <groupId>redis.clients</groupId>
+                        <artifactId>jedis</artifactId>
                     </exclusion>
                     <exclusion>
                         <groupId>org.apache.lucene</groupId>
@@ -894,6 +899,18 @@
                         <artifactId>joda-time</artifactId>
                     </exclusion>
                 </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.curator</groupId>
+                <artifactId>curator-recipes</artifactId>
+                <version>${curator.version}</version>
+                <optional>true</optional>
+            </dependency>
+            <dependency>
+                <groupId>org.mongodb</groupId>
+                <artifactId>mongodb-driver-sync</artifactId>
+                <version>${mongo.version}</version>
+                <optional>true</optional>
             </dependency>
             <dependency>
                 <groupId>com.squareup.okhttp3</groupId>
@@ -1277,6 +1294,17 @@
             </dependency>
             <dependency>
                 <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-logging</artifactId>
+                <version>${spring.boot.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.data</groupId>
+                <artifactId>spring-data-mongodb</artifactId>
+                <version>${spring.boot.version}</version>
+                <optional>true</optional>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-starter-web</artifactId>
                 <version>${spring.boot.version}</version>
                 <exclusions>
@@ -1310,6 +1338,17 @@
                     </exclusion>
                 </exclusions>
             </dependency>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-undertow</artifactId>
+                <version>${spring.boot.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.apache.tomcat.embed</groupId>
+                        <artifactId>tomcat-embed-el</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -1320,8 +1359,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.13.0</version>
                 <configuration>
-                    <source>${maven.compiler.source}</source>
-                    <target>${maven.compiler.target}</target>
+                    <source>21</source>
+                    <target>21</target>
                 </configuration>
             </plugin>
             <plugin>
@@ -1331,10 +1370,10 @@
                 <executions>
                     <execution>
                         <id>attach-javadocs</id>
-                        <phase>package</phase>
                         <goals>
                             <goal>jar</goal>
                         </goals>
+                        <phase>package</phase>
                     </execution>
                 </executions>
             </plugin>
@@ -1358,10 +1397,10 @@
                 <executions>
                     <execution>
                         <id>sonatype-nexus-staging</id>
-                        <phase>verify</phase>
                         <goals>
                             <goal>sign</goal>
                         </goals>
+                        <phase>verify</phase>
                     </execution>
                 </executions>
             </plugin>
@@ -1374,6 +1413,118 @@
                     <publishingServerId>central</publishingServerId>
                     <autoPublish>true</autoPublish>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.owasp</groupId>
+                <artifactId>dependency-check-maven</artifactId>
+                <version>10.0.3</version>
+                <configuration>
+                    <autoUpdate>true</autoUpdate>
+                    <nvdMaxRetryCount>25</nvdMaxRetryCount>
+                    <nvdApiDelay>32000</nvdApiDelay>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>com.diffplug.spotless</groupId>
+                <artifactId>spotless-maven-plugin</artifactId>
+                <version>2.43.0</version>
+                <configuration>
+                    <upToDateChecking>
+                        <enabled>false</enabled>
+                    </upToDateChecking>
+                    <formats>
+                        <format>
+                            <includes>
+                                <include>**/*.md</include>
+                                <include>**/*.yml</include>
+                                <include>**/*.yaml</include>
+                            </includes>
+                            <trimTrailingWhitespace />
+                            <endWithNewline />
+                            <indent>
+                                <spaces>true</spaces>
+                                <spacesPerTab>2</spacesPerTab>
+                            </indent>
+                        </format>
+                        <format>
+                            <includes>
+                                <include>**/*.xml</include>
+                            </includes>
+                            <trimTrailingWhitespace />
+                            <endWithNewline />
+                            <indent>
+                                <spaces>true</spaces>
+                                <spacesPerTab>4</spacesPerTab>
+                            </indent>
+                        </format>
+                    </formats>
+                    <java>
+                        <eclipse>
+                            <file>../.github/spotless/spotless_format.xml</file>
+                        </eclipse>
+                        <removeUnusedImports />
+                    </java>
+                    <pom>
+                        <sortPom>
+                            <encoding>UTF-8</encoding>
+                            <nrOfIndentSpace>4</nrOfIndentSpace>
+                            <keepBlankLines>true</keepBlankLines>
+                            <indentBlankLines>false</indentBlankLines>
+                            <indentSchemaLocation>true</indentSchemaLocation>
+                            <spaceBeforeCloseEmptyElement>true</spaceBeforeCloseEmptyElement>
+                            <sortModules>false</sortModules>
+                            <sortExecutions>false</sortExecutions>
+                            <expandEmptyElements>false</expandEmptyElements>
+                            <sortProperties>false</sortProperties>
+                        </sortPom>
+                    </pom>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>apply</goal>
+                        </goals>
+                        <phase>clean</phase>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>flatten-maven-plugin</artifactId>
+                <version>1.6.0</version>
+                <inherited>true</inherited>
+                <executions>
+                    <execution>
+                        <id>flatten</id>
+                        <goals>
+                            <goal>flatten</goal>
+                        </goals>
+                        <phase>process-resources</phase>
+                        <configuration>
+                            <updatePomFile>true</updatePomFile>
+                            <outputDirectory>${project.build.directory}</outputDirectory>
+                            <flattenedPomFilename>${project.artifactId}-${project.version}.pom</flattenedPomFilename>
+                            <flattenMode>resolveCiFriendliesOnly</flattenMode>
+                            <pomElements>
+                                <parent>keep</parent>
+                                <dependencies>keep</dependencies>
+                                <dependencyManagement>keep</dependencyManagement>
+                                <distributionManagement>remove</distributionManagement>
+                                <repositories>remove</repositories>
+                                <pluginRepositories>remove</pluginRepositories>
+                                <build>remove</build>
+                                <profiles>remove</profiles>
+                            </pomElements>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

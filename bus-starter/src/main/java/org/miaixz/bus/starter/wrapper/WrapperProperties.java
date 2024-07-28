@@ -24,12 +24,12 @@
  ~ THE SOFTWARE.                                                                 ~
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
- */
+*/
 package org.miaixz.bus.starter.wrapper;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.miaixz.bus.spring.BusXConfig;
+import org.miaixz.bus.spring.GeniusBuilder;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.web.servlet.ServletRegistrationBean;
 
@@ -46,12 +46,11 @@ import java.util.Set;
  */
 @Getter
 @Setter
-@ConfigurationProperties(prefix = BusXConfig.WRAPPER)
+@ConfigurationProperties(prefix = GeniusBuilder.WRAPPER)
 public class WrapperProperties {
 
     /**
-     * 设置此注册的名称
-     * 如果没有指定，将使用bean名
+     * 设置此注册的名称 如果没有指定，将使用bean名
      */
     private String name;
     /**
@@ -63,9 +62,7 @@ public class WrapperProperties {
      */
     private boolean enabled = true;
     /**
-     * 扫描controller接口的基本包
-     * Controller 所在包的 Ant 路径规则
-     * 主要目的是，给该 Controller 设置指定的前缀
+     * 扫描controller接口的基本包 Controller 所在包的 Ant 路径规则 主要目的是，给该 Controller 设置指定的前缀
      */
     private String[] basePackages;
     /**

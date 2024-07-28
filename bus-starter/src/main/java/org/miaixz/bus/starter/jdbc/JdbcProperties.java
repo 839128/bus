@@ -24,12 +24,12 @@
  ~ THE SOFTWARE.                                                                 ~
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
- */
+*/
 package org.miaixz.bus.starter.jdbc;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.miaixz.bus.spring.BusXConfig;
+import org.miaixz.bus.spring.GeniusBuilder;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.util.List;
@@ -42,7 +42,7 @@ import java.util.List;
  */
 @Getter
 @Setter
-@ConfigurationProperties(prefix = BusXConfig.DATASOURCE)
+@ConfigurationProperties(prefix = GeniusBuilder.DATASOURCE)
 public class JdbcProperties {
 
     /**
@@ -114,8 +114,7 @@ public class JdbcProperties {
      */
     private int maxWait;
     /**
-     * 建议配置为true，不影响性能，并且保证安全性。申请连接的时候检测
-     * 如果空闲时间大于timeBetweenEvictionRunsMillis，执行validationQuery检测连接是否有效
+     * 建议配置为true，不影响性能，并且保证安全性。申请连接的时候检测 如果空闲时间大于timeBetweenEvictionRunsMillis，执行validationQuery检测连接是否有效
      */
     private boolean testWhileIdle;
     /**

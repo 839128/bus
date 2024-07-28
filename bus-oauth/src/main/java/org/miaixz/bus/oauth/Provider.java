@@ -24,26 +24,24 @@
  ~ THE SOFTWARE.                                                                 ~
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
- */
+*/
 package org.miaixz.bus.oauth;
 
-import org.miaixz.bus.core.basics.entity.Message;
+import org.miaixz.bus.core.basic.entity.Message;
+import org.miaixz.bus.core.lang.EnumMap;
 import org.miaixz.bus.core.lang.exception.AuthorizedException;
 import org.miaixz.bus.oauth.magic.AccToken;
 import org.miaixz.bus.oauth.magic.Callback;
 import org.miaixz.bus.oauth.magic.ErrorCode;
 
 /**
- * {@code Provider}公共接口，所有平台的{@code Provider}都需要实现该接口
- * {@link Provider#authorize(String)}
- * {@link Provider#login(Callback)}
- * {@link Provider#revoke(AccToken)}
- * {@link Provider#refresh(AccToken)}
+ * {@code Provider}公共接口，所有平台的{@code Provider}都需要实现该接口 {@link Provider#authorize(String)}
+ * {@link Provider#login(Callback)} {@link Provider#revoke(AccToken)} {@link Provider#refresh(AccToken)}
  *
  * @author Kimi Liu
  * @since Java 17+
  */
-public interface Provider {
+public interface Provider extends org.miaixz.bus.core.Provider {
 
     /**
      * 返回带{@code state}参数的授权url，授权回调时会带上这个{@code state}
@@ -83,6 +81,11 @@ public interface Provider {
      */
     default Message refresh(AccToken accToken) {
         throw new AuthorizedException(ErrorCode.NOT_IMPLEMENTED.getCode());
+    }
+
+    @Override
+    default Object type() {
+        return EnumMap.Povider.OAUTH;
     }
 
 }

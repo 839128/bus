@@ -24,14 +24,16 @@
  ~ THE SOFTWARE.                                                                 ~
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
- */
+*/
 package org.miaixz.bus.core.lang;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 
 import java.awt.*;
 
 /**
- * 枚举元素通用接口，在自定义枚举上实现此接口可以用于数据转换
- * 数据库保存时建议保存 intVal()而非ordinal()防备需求变更
+ * 枚举元素通用接口，在自定义枚举上实现此接口可以用于数据转换 数据库保存时建议保存 intVal()而非ordinal()防备需求变更
  *
  * @param <E> Enum类型
  * @author Kimi Liu
@@ -85,6 +87,8 @@ public interface EnumMap<E extends EnumMap<E>> extends Enumers {
     /**
      * 图片缩略类型
      */
+    @Getter
+    @AllArgsConstructor
     enum Type {
         /**
          * 默认
@@ -108,24 +112,6 @@ public interface EnumMap<E extends EnumMap<E>> extends Enumers {
         AREA_AVERAGING(Image.SCALE_AREA_AVERAGING);
 
         private final int value;
-
-        /**
-         * 构造
-         *
-         * @param value 缩放方式
-         * @see Image#SCALE_DEFAULT
-         * @see Image#SCALE_FAST
-         * @see Image#SCALE_SMOOTH
-         * @see Image#SCALE_REPLICATE
-         * @see Image#SCALE_AREA_AVERAGING
-         */
-        Type(int value) {
-            this.value = value;
-        }
-
-        public int getValue() {
-            return this.value;
-        }
 
     }
 
@@ -154,6 +140,8 @@ public interface EnumMap<E extends EnumMap<E>> extends Enumers {
     /**
      * 修饰符
      */
+    @Getter
+    @AllArgsConstructor
     enum Modifier {
         /**
          * public修饰符，所有类都能访问
@@ -207,15 +195,6 @@ public interface EnumMap<E extends EnumMap<E>> extends Enumers {
         private final int value;
 
         /**
-         * 构造
-         *
-         * @param modifier 修饰符int表示，见{@link java.lang.reflect.Modifier}
-         */
-        Modifier(final int modifier) {
-            this.value = modifier;
-        }
-
-        /**
          * 多个修饰符做“或”操作，表示存在任意一个修饰符
          *
          * @param modifierTypes 修饰符列表，元素不能为空
@@ -243,14 +222,6 @@ public interface EnumMap<E extends EnumMap<E>> extends Enumers {
             return modifier;
         }
 
-        /**
-         * 获取修饰符枚举对应的int修饰符值，值见{@link java.lang.reflect.Modifier}
-         *
-         * @return 修饰符枚举对应的int修饰符值
-         */
-        public int getValue() {
-            return this.value;
-        }
     }
 
     /**
@@ -320,8 +291,7 @@ public interface EnumMap<E extends EnumMap<E>> extends Enumers {
     }
 
     /**
-     * FTP连接模式
-     * 见：https://www.cnblogs.com/huhaoshida/p/5412615.html
+     * FTP连接模式 见：https://www.cnblogs.com/huhaoshida/p/5412615.html
      *
      * @author Kimi Liu
      * @since Java 17+
@@ -341,6 +311,8 @@ public interface EnumMap<E extends EnumMap<E>> extends Enumers {
     /**
      * 命名模式
      */
+    @Getter
+    @AllArgsConstructor
     enum Naming {
 
         /**
@@ -357,7 +329,6 @@ public interface EnumMap<E extends EnumMap<E>> extends Enumers {
          * 弱化（降低强度）
          */
         FAINT(2, "弱化"),
-
         /**
          * 斜体
          */
@@ -371,7 +342,7 @@ public interface EnumMap<E extends EnumMap<E>> extends Enumers {
          */
         LOWER_CASE(5, "小写"),
         /**
-         * 驼峰转下划线
+         * 驼峰形式
          */
         CAMEL(6, "驼峰"),
         /**
@@ -392,34 +363,15 @@ public interface EnumMap<E extends EnumMap<E>> extends Enumers {
          */
         private final String desc;
 
-        Naming(long code, String desc) {
-            this.code = code;
-            this.desc = desc;
-        }
-
-        /**
-         * @return 单位对应的编码
-         */
-        public long getCode() {
-            return this.code;
-        }
-
-        /**
-         * @return 对应的名称
-         */
-        public String getDesc() {
-            return this.desc;
-        }
-
     }
 
     /**
      * 节日类型
      */
+    @Getter
+    @AllArgsConstructor
     enum Festival {
-        DAY(0, "日期"),
-        TERM(1, "节气"),
-        EVE(2, "除夕");
+        DAY(0, "日期"), TERM(1, "节气"), EVE(2, "除夕");
 
         /**
          * 代码
@@ -430,11 +382,6 @@ public interface EnumMap<E extends EnumMap<E>> extends Enumers {
          * 名称
          */
         private final String name;
-
-        Festival(int code, String name) {
-            this.code = code;
-            this.name = name;
-        }
 
         public static Festival fromCode(Integer code) {
             if (null == code) {
@@ -460,18 +407,145 @@ public interface EnumMap<E extends EnumMap<E>> extends Enumers {
             return null;
         }
 
-        public int getCode() {
-            return code;
-        }
-
-        public String getName() {
-            return name;
-        }
-
         @Override
         public String toString() {
             return getName();
         }
+
+    }
+
+    /**
+     * 比较模式
+     */
+    @Getter
+    @AllArgsConstructor
+    enum Compare {
+
+        /**
+         * 等于（equal to）
+         */
+        EQ("="),
+        /**
+         * 不等于（not equal to）
+         */
+        NE("!="),
+        /**
+         * 小于（less than）
+         */
+        LT("<"),
+        /**
+         * 小于等于（less than or equal to）
+         */
+        LE("<="),
+        /**
+         * 大于（greater than）
+         */
+        GT(">"),
+        /**
+         * 大于等于（greater than or equal to）
+         */
+        GE(">="),
+
+        LIKE("LIKE");
+
+        /**
+         * 代码值
+         */
+        String code;
+
+    }
+
+    /**
+     * 排序方式
+     */
+    @Getter
+    @AllArgsConstructor
+    enum Sort {
+
+        /**
+         * 升序
+         */
+        ASC("ASC"),
+        /**
+         * 降序
+         */
+        DESC("DESC");
+
+        /**
+         * 代码值
+         */
+        String code;
+
+    }
+
+    /**
+     * S
+     */
+    @Getter
+    @AllArgsConstructor
+    enum Povider {
+
+        /**
+         * 加解密
+         */
+        CRYPTO("CRYPTO"),
+        /**
+         * 验证码
+         */
+        CAPTCHA("CAPTCHA"),
+        /**
+         * 自然语言
+         */
+        NLP("NLP"),
+        /**
+         * 拼音
+         */
+        PINYIN("PINYIN"),
+        /**
+         * 模版
+         */
+        TEMPLATE("TEMPLATE"),
+        /**
+         * JSON
+         */
+        JSON("JSON"),
+        /**
+         * 日志
+         */
+        LOGGING("LOGGING"),
+        /**
+         * 热点/降级
+         */
+        LIMITER("LIMITER"),
+        /**
+         * 消息
+         */
+        NOTIFY("NOTIFY"),
+        /**
+         * 授权
+         */
+        OAUTH("OAUTH"),
+        /**
+         * 支付
+         */
+        PAY("PAY"),
+        /**
+         * 托名
+         */
+        SENSITIVE("SENSITIVE"),
+        /**
+         * 存储
+         */
+        STORAGE("STORAGE"),
+        /**
+         * 数据
+         */
+        VALIDATE("VALIDATE");
+
+        /**
+         * 代码值
+         */
+        String code;
 
     }
 

@@ -24,7 +24,7 @@
  ~ THE SOFTWARE.                                                                 ~
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
- */
+*/
 package org.miaixz.bus.logger.magic.level;
 
 /**
@@ -40,7 +40,7 @@ public interface Debug {
      *
      * @return the true/false
      */
-    boolean isDebug();
+    boolean isDebugEnabled();
 
     /**
      * 打印 DEBUG 等级的日志

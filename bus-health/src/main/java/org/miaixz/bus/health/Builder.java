@@ -24,7 +24,7 @@
  ~ THE SOFTWARE.                                                                 ~
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
- */
+*/
 package org.miaixz.bus.health;
 
 import com.sun.jna.Memory;
@@ -32,11 +32,11 @@ import com.sun.jna.Native;
 import com.sun.jna.NativeLong;
 import com.sun.jna.Pointer;
 import com.sun.jna.platform.unix.LibCAPI;
-import org.miaixz.bus.core.lang.annotation.ThreadSafe;
 import org.miaixz.bus.core.convert.Convert;
 import org.miaixz.bus.core.lang.Charset;
 import org.miaixz.bus.core.lang.Normal;
 import org.miaixz.bus.core.lang.Symbol;
+import org.miaixz.bus.core.lang.annotation.ThreadSafe;
 import org.miaixz.bus.core.xyz.ByteKit;
 import org.miaixz.bus.core.xyz.ObjectKit;
 import org.miaixz.bus.logger.Logger;
@@ -121,7 +121,7 @@ public final class Builder {
      * @param device    The device used by user
      * @param loginTime The login time of the user
      * @return True if Session is valid or False if the user of device is empty or the login time is lesser than zero or
-     * greater than current time.
+     *         greater than current time.
      */
     public static boolean isSessionValid(String user, String device, Long loginTime) {
         return !(user.isEmpty() || device.isEmpty() || loginTime < 0 || loginTime > System.currentTimeMillis());
@@ -143,7 +143,7 @@ public final class Builder {
      * @return {@code true} if file store should be excluded or {@code false} otherwise.
      */
     public static boolean isFileStoreExcluded(String path, String volume, List<PathMatcher> pathIncludes,
-                                              List<PathMatcher> pathExcludes, List<PathMatcher> volumeIncludes, List<PathMatcher> volumeExcludes) {
+            List<PathMatcher> pathExcludes, List<PathMatcher> volumeIncludes, List<PathMatcher> volumeExcludes) {
         Path p = Paths.get(path);
         Path v = Paths.get(volume);
         if (matches(p, pathIncludes) || matches(v, volumeIncludes)) {
@@ -238,7 +238,7 @@ public final class Builder {
      */
     public static String getSerialNo(byte[] edid) {
         // Bytes 12-15 are Serial number (last 4 characters)
-        if (Logger.isDebug()) {
+        if (Logger.isDebugEnabled()) {
             Logger.debug("Serial number: {}", Arrays.toString(Arrays.copyOfRange(edid, 12, 16)));
         }
         return String.format(Locale.ROOT, "%s%s%s%s", getAlphaNumericOrHex(edid[15]), getAlphaNumericOrHex(edid[14]),
@@ -388,8 +388,7 @@ public final class Builder {
         sb.append(", Product ID=").append(getProductID(edid));
         sb.append(", ").append(isDigital(edid) ? "Digital" : "Analog");
         sb.append(", Serial=").append(getSerialNo(edid));
-        sb.append(", ManufDate=").append(getWeek(edid) * 12 / 52 + 1).append('/')
-                .append(getYear(edid));
+        sb.append(", ManufDate=").append(getWeek(edid) * 12 / 52 + 1).append('/').append(getYear(edid));
         sb.append(", EDID v").append(getVersion(edid));
         int hSize = getHcm(edid);
         int vSize = getVcm(edid);
@@ -398,31 +397,31 @@ public final class Builder {
         byte[][] desc = getDescriptors(edid);
         for (byte[] b : desc) {
             switch (getDescriptorType(b)) {
-                case 0xff:
-                    sb.append("\n  Serial Number: ").append(getDescriptorText(b));
-                    break;
-                case 0xfe:
-                    sb.append("\n  Unspecified Text: ").append(getDescriptorText(b));
-                    break;
-                case 0xfd:
-                    sb.append("\n  Range Limits: ").append(getDescriptorRangeLimits(b));
-                    break;
-                case 0xfc:
-                    sb.append("\n  Monitor Name: ").append(getDescriptorText(b));
-                    break;
-                case 0xfb:
-                    sb.append("\n  White Point Data: ").append(ByteKit.byteArrayToHexString(b));
-                    break;
-                case 0xfa:
-                    sb.append("\n  Standard Timing ID: ").append(ByteKit.byteArrayToHexString(b));
-                    break;
-                default:
-                    if (getDescriptorType(b) <= 0x0f && getDescriptorType(b) >= 0x00) {
-                        sb.append("\n  Manufacturer Data: ").append(ByteKit.byteArrayToHexString(b));
-                    } else {
-                        sb.append("\n  Preferred Timing: ").append(getTimingDescriptor(b));
-                    }
-                    break;
+            case 0xff:
+                sb.append("\n  Serial Number: ").append(getDescriptorText(b));
+                break;
+            case 0xfe:
+                sb.append("\n  Unspecified Text: ").append(getDescriptorText(b));
+                break;
+            case 0xfd:
+                sb.append("\n  Range Limits: ").append(getDescriptorRangeLimits(b));
+                break;
+            case 0xfc:
+                sb.append("\n  Monitor Name: ").append(getDescriptorText(b));
+                break;
+            case 0xfb:
+                sb.append("\n  White Point Data: ").append(ByteKit.byteArrayToHexString(b));
+                break;
+            case 0xfa:
+                sb.append("\n  Standard Timing ID: ").append(ByteKit.byteArrayToHexString(b));
+                break;
+            default:
+                if (getDescriptorType(b) <= 0x0f && getDescriptorType(b) >= 0x00) {
+                    sb.append("\n  Manufacturer Data: ").append(ByteKit.byteArrayToHexString(b));
+                } else {
+                    sb.append("\n  Preferred Timing: ").append(getTimingDescriptor(b));
+                }
+                break;
             }
         }
         return sb.toString();
@@ -434,7 +433,7 @@ public final class Builder {
      *
      * @param filename The file to read
      * @return A list of Strings representing each line of the file, or an empty list if file could not be read or is
-     * empty
+     *         empty
      */
     public static List<String> readFile(String filename) {
         return readFile(filename, true);
@@ -447,11 +446,11 @@ public final class Builder {
      * @param filename    The file to read
      * @param reportError Whether to log errors reading the file
      * @return A list of Strings representing each line of the file, or an empty list if file could not be read or is
-     * empty
+     *         empty
      */
     public static List<String> readFile(String filename, boolean reportError) {
         if (new File(filename).canRead()) {
-            if (Logger.isDebug()) {
+            if (Logger.isDebugEnabled()) {
                 Logger.debug(READING_LOG, filename);
             }
             try {
@@ -476,7 +475,7 @@ public final class Builder {
      * @param filename The file to read
      * @param count    The number of lines to read
      * @return A list of Strings representing the first count lines of the file, or an empty list if file could not be
-     * read or is empty
+     *         read or is empty
      */
     public static List<String> readLines(String filename, int count) {
         return readLines(filename, count, true);
@@ -490,17 +489,17 @@ public final class Builder {
      * @param count       The number of lines to read
      * @param reportError Whether to log errors reading the file
      * @return A list of Strings representing the first count lines of the file, or an empty list if file could not be
-     * read or is empty
+     *         read or is empty
      */
     public static List<String> readLines(String filename, int count, boolean reportError) {
         Path file = Paths.get(filename);
         if (Files.isReadable(file)) {
-            if (Logger.isDebug()) {
+            if (Logger.isDebugEnabled()) {
                 Logger.debug(READING_LOG, filename);
             }
             CharsetDecoder decoder = Charset.UTF_8.newDecoder();
             try (Reader isr = new InputStreamReader(Files.newInputStream(file), decoder);
-                 BufferedReader reader = new BufferedReader(isr, Normal._1024)) {
+                    BufferedReader reader = new BufferedReader(isr, Normal._1024)) {
                 List<String> lines = new ArrayList<>(count);
                 for (int i = 0; i < count; ++i) {
                     String line = reader.readLine();
@@ -544,7 +543,7 @@ public final class Builder {
      */
     public static byte[] readAllBytes(String filename, boolean reportError) {
         if (new File(filename).canRead()) {
-            if (Logger.isDebug()) {
+            if (Logger.isDebugEnabled()) {
                 Logger.debug(READING_LOG, filename);
             }
             try {
@@ -684,12 +683,12 @@ public final class Builder {
      * @return The value contained in the file, if any; otherwise zero
      */
     public static long getLongFromFile(String filename) {
-        if (Logger.isDebug()) {
+        if (Logger.isDebugEnabled()) {
             Logger.debug(READING_LOG, filename);
         }
         List<String> read = readLines(filename, 1, false);
         if (!read.isEmpty()) {
-            if (Logger.isTrace()) {
+            if (Logger.isTraceEnabled()) {
                 Logger.trace(READ_LOG, read.get(0));
             }
             return Parsing.parseLongOrDefault(read.get(0), 0L);
@@ -705,12 +704,12 @@ public final class Builder {
      * @return The value contained in the file, if any; otherwise zero
      */
     public static long getUnsignedLongFromFile(String filename) {
-        if (Logger.isDebug()) {
+        if (Logger.isDebugEnabled()) {
             Logger.debug(READING_LOG, filename);
         }
         List<String> read = readLines(filename, 1, false);
         if (!read.isEmpty()) {
-            if (Logger.isTrace()) {
+            if (Logger.isTraceEnabled()) {
                 Logger.trace(READ_LOG, read.get(0));
             }
             return Parsing.parseUnsignedLongOrDefault(read.get(0), 0L);
@@ -725,13 +724,13 @@ public final class Builder {
      * @return The value contained in the file, if any; otherwise zero
      */
     public static int getIntFromFile(String filename) {
-        if (Logger.isDebug()) {
+        if (Logger.isDebugEnabled()) {
             Logger.debug(READING_LOG, filename);
         }
         try {
             List<String> read = readLines(filename, 1, false);
             if (!read.isEmpty()) {
-                if (Logger.isTrace()) {
+                if (Logger.isTraceEnabled()) {
                     Logger.trace(READ_LOG, read.get(0));
                 }
                 return Parsing.parseIntOrDefault(read.get(0), 0);
@@ -749,12 +748,12 @@ public final class Builder {
      * @return The value contained in the file, if any; otherwise empty string
      */
     public static String getStringFromFile(String filename) {
-        if (Logger.isDebug()) {
+        if (Logger.isDebugEnabled()) {
             Logger.debug(READING_LOG, filename);
         }
         List<String> read = readLines(filename, 1, false);
         if (!read.isEmpty()) {
-            if (Logger.isTrace()) {
+            if (Logger.isTraceEnabled()) {
                 Logger.trace(READ_LOG, read.get(0));
             }
             return read.get(0);
@@ -769,11 +768,11 @@ public final class Builder {
      * @param filename  The file to read
      * @param separator Character(s) in each line of the file that separate the key and the value.
      * @return The map contained in the file, delimited by the separator, with the value whitespace trimmed. If keys and
-     * values are not parsed, an empty map is returned.
+     *         values are not parsed, an empty map is returned.
      */
     public static Map<String, String> getKeyValueMapFromFile(String filename, String separator) {
         Map<String, String> map = new HashMap<>();
-        if (Logger.isDebug()) {
+        if (Logger.isDebugEnabled()) {
             Logger.debug(READING_LOG, filename);
         }
         List<String> lines = readFile(filename, false);

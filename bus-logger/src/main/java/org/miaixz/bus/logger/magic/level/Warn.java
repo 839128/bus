@@ -24,7 +24,7 @@
  ~ THE SOFTWARE.                                                                 ~
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
- */
+*/
 package org.miaixz.bus.logger.magic.level;
 
 /**
@@ -40,7 +40,7 @@ public interface Warn {
      *
      * @return the true/false
      */
-    boolean isWarn();
+    boolean isWarnEnabled();
 
     /**
      * 打印 WARN 等级的日志

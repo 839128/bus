@@ -24,7 +24,7 @@
  ~ THE SOFTWARE.                                                                 ~
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
- */
+*/
 package org.miaixz.bus.core.lang.caller;
 
 import org.miaixz.bus.core.lang.exception.InternalException;
@@ -57,7 +57,7 @@ public class StackTraceCaller implements Caller, Serializable {
     }
 
     @Override
-    public Class<?> getCallerCaller() {
+    public Class<?> getCallers() {
         final StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
         if (OFFSET + 2 >= stackTrace.length) {
             return null;

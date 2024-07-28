@@ -24,12 +24,12 @@
  ~ THE SOFTWARE.                                                                 ~
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
- */
+*/
 package org.miaixz.bus.core.convert;
 
-import org.miaixz.bus.core.beans.copier.BeanCopier;
-import org.miaixz.bus.core.beans.copier.CopyOptions;
-import org.miaixz.bus.core.beans.copier.ValueProvider;
+import org.miaixz.bus.core.bean.copier.BeanCopier;
+import org.miaixz.bus.core.bean.copier.CopyOptions;
+import org.miaixz.bus.core.bean.copier.ValueProvider;
 import org.miaixz.bus.core.center.map.MapProxy;
 import org.miaixz.bus.core.lang.Assert;
 import org.miaixz.bus.core.lang.exception.ConvertException;
@@ -41,6 +41,7 @@ import java.util.Map;
 
 /**
  * Bean转换器，支持：
+ * 
  * <pre>
  * Map = Bean
  * Bean = Bean
@@ -96,16 +97,15 @@ public class BeanConverter implements Converter, Serializable {
     }
 
     private Object convertInternal(final Type targetType, final Class<?> targetClass, final Object value) {
-        if (value instanceof Map ||
-                value instanceof ValueProvider ||
-                BeanKit.isWritableBean(value.getClass())) {
+        if (value instanceof Map || value instanceof ValueProvider || BeanKit.isWritableBean(value.getClass())) {
             if (value instanceof Map && targetClass.isInterface()) {
                 // 将Map动态代理为Bean
                 return MapProxy.of((Map<?, ?>) value).toProxyBean(targetClass);
             }
 
             // 限定被转换对象类型
-            return BeanCopier.of(value, ReflectKit.newInstanceIfPossible(targetClass), targetType, this.copyOptions).copy();
+            return BeanCopier.of(value, ReflectKit.newInstanceIfPossible(targetClass), targetType, this.copyOptions)
+                    .copy();
         } else if (value instanceof byte[]) {
             // 尝试反序列化
             return SerializeKit.deserialize((byte[]) value);

@@ -24,7 +24,7 @@
  ~ THE SOFTWARE.                                                                 ~
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
- */
+*/
 package org.miaixz.bus.starter.mapper;
 
 import org.apache.ibatis.io.VFS;
@@ -66,8 +66,8 @@ import java.util.List;
  * @since Java 17+
  */
 @ConditionalOnMissingBean(MapperFactoryBean.class)
-@EnableConfigurationProperties({MybatisProperties.class})
-@ConditionalOnClass({SqlSessionFactory.class, SqlSessionFactoryBean.class})
+@EnableConfigurationProperties(value = { MybatisProperties.class })
+@ConditionalOnClass({ SqlSessionFactory.class, SqlSessionFactoryBean.class })
 @AutoConfigureBefore(name = "org.mybatis.spring.boot.autoconfigure.MybatisAutoConfiguration")
 public class MapperConfiguration implements InitializingBean {
 
@@ -77,11 +77,9 @@ public class MapperConfiguration implements InitializingBean {
     private final ResourceLoader resourceLoader;
     private final List<ConfigurationCustomizer> configurationCustomizers;
 
-    public MapperConfiguration(Environment environment,
-                               MybatisProperties properties,
-                               ObjectProvider<Interceptor[]> interceptorsProvider,
-                               ResourceLoader resourceLoader,
-                               ObjectProvider<List<ConfigurationCustomizer>> configurationCustomizersProvider) {
+    public MapperConfiguration(Environment environment, MybatisProperties properties,
+            ObjectProvider<Interceptor[]> interceptorsProvider, ResourceLoader resourceLoader,
+            ObjectProvider<List<ConfigurationCustomizer>> configurationCustomizersProvider) {
         this.environment = environment;
         this.properties = properties;
         this.interceptors = interceptorsProvider.getIfAvailable();
@@ -111,6 +109,8 @@ public class MapperConfiguration implements InitializingBean {
         if (configuration == null && !StringKit.hasText(this.properties.getConfigLocation())) {
             configuration = new Configuration();
         }
+
+        // 设置自定义列表
         if (configuration != null && !CollKit.isEmpty(this.configurationCustomizers)) {
             for (ConfigurationCustomizer customizer : this.configurationCustomizers) {
                 customizer.customize(configuration);

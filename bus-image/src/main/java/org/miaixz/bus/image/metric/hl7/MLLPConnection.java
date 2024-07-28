@@ -24,7 +24,7 @@
  ~ THE SOFTWARE.                                                                 ~
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
- */
+*/
 package org.miaixz.bus.image.metric.hl7;
 
 import org.miaixz.bus.logger.Logger;
@@ -106,12 +106,12 @@ public class MLLPConnection implements Closeable {
             throw new IOException("Connection closed by receiver");
         if (b.length == 1) {
             switch (b[0]) {
-                case ACK:
-                    Logger.debug("{} >> <ACK>", sock);
-                    return;
-                case NAK:
-                    Logger.info("{} >> <NAK>", sock);
-                    throw new IOException("NAK received");
+            case ACK:
+                Logger.debug("{} >> <ACK>", sock);
+                return;
+            case NAK:
+                Logger.info("{} >> <NAK>", sock);
+                throw new IOException("NAK received");
             }
         }
         Logger.info("{}: <ACK> or <NAK> expected, but received {} bytes", sock, b.length);
@@ -119,13 +119,13 @@ public class MLLPConnection implements Closeable {
     }
 
     private void log(String format, byte[] b, int off, int len) {
-        if (!Logger.isInfo())
+        if (!Logger.isInfoEnabled())
             return;
         int mshlen = 0;
         while (mshlen < len && b[off + mshlen] != '\r')
             mshlen++;
         Logger.info(format, sock, new String(b, off, mshlen));
-        if (Logger.isDebug())
+        if (Logger.isDebugEnabled())
             Logger.debug(format, sock, new String(b, off, len).replace('\r', '\n'));
     }
 

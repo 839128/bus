@@ -24,14 +24,13 @@
  ~ THE SOFTWARE.                                                                 ~
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
- */
+*/
 package org.miaixz.bus.core.lang.caller;
 
 import org.miaixz.bus.core.xyz.CallerKit;
 
 /**
- * 调用者接口
- * 可以通过此接口的实现类方法获取调用者、多级调用者以及判断是否被调用
+ * 调用者接口 可以通过此接口的实现类方法获取调用者、多级调用者以及判断是否被调用
  *
  * @author Kimi Liu
  * @since Java 17+
@@ -50,7 +49,7 @@ public interface Caller {
      *
      * @return 调用者的调用者
      */
-    Class<?> getCallerCaller();
+    Class<?> getCallers();
 
     /**
      * 获得调用者，指定第几级调用者 调用者层级关系：

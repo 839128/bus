@@ -24,11 +24,11 @@
  ~ THE SOFTWARE.                                                                 ~
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
- */
+*/
 package org.miaixz.bus.starter.storage;
 
 import org.miaixz.bus.cache.metric.ExtendCache;
-import org.miaixz.bus.spring.BusXConfig;
+import org.miaixz.bus.spring.GeniusBuilder;
 import org.miaixz.bus.storage.cache.StorageCache;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -41,7 +41,7 @@ import org.springframework.context.annotation.Bean;
  * @author Kimi Liu
  * @since Java 17+
  */
-@EnableConfigurationProperties(value = {StorageProperties.class})
+@EnableConfigurationProperties(value = { StorageProperties.class })
 public class StorageConfiguration {
 
     @Bean
@@ -51,7 +51,7 @@ public class StorageConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(ExtendCache.class)
-    @ConditionalOnProperty(name = BusXConfig.STORAGE + ".cache.type", havingValue = "default", matchIfMissing = true)
+    @ConditionalOnProperty(name = GeniusBuilder.STORAGE + ".cache.type", havingValue = "default", matchIfMissing = true)
     public ExtendCache storageCache() {
         return StorageCache.INSTANCE;
     }

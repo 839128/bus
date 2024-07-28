@@ -24,7 +24,7 @@
  ~ THE SOFTWARE.                                                                 ~
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
- */
+*/
 package org.miaixz.bus.health.mac.software;
 
 import com.sun.jna.Native;
@@ -68,11 +68,12 @@ final class MacNetworkParams extends AbstractNetworkParams {
             Logger.error("Unknown host exception when getting address of local host: {}", e.getMessage());
             return Normal.EMPTY;
         }
-        try (CLibrary.Addrinfo hint = new CLibrary.Addrinfo(); ByRef.CloseablePointerByReference ptr = new ByRef.CloseablePointerByReference()) {
+        try (CLibrary.Addrinfo hint = new CLibrary.Addrinfo();
+                ByRef.CloseablePointerByReference ptr = new ByRef.CloseablePointerByReference()) {
             hint.ai_flags = CLibrary.AI_CANONNAME;
             int res = SYS.getaddrinfo(hostname, null, hint, ptr);
             if (res > 0) {
-                if (Logger.isError()) {
+                if (Logger.isErrorEnabled()) {
                     Logger.error("Failed getaddrinfo(): {}", SYS.gai_strerror(res));
                 }
                 return Normal.EMPTY;

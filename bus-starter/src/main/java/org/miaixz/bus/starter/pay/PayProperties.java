@@ -24,29 +24,27 @@
  ~ THE SOFTWARE.                                                                 ~
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
- */
+*/
 package org.miaixz.bus.starter.pay;
 
 import lombok.Getter;
 import lombok.Setter;
 import org.miaixz.bus.pay.Context;
 import org.miaixz.bus.pay.Registry;
-import org.miaixz.bus.spring.BusXConfig;
+import org.miaixz.bus.spring.GeniusBuilder;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.util.Map;
 
 /**
- * 聚合支付配置
- * 1. 默认读取配置文件信息
- * 2. 通过set形式设置(动态/DB等)
+ * 聚合支付配置 1. 默认读取配置文件信息 2. 通过set形式设置(动态/DB等)
  *
  * @author Kimi Liu
  * @since Java 17+
  */
 @Getter
 @Setter
-@ConfigurationProperties(prefix = BusXConfig.PAY)
+@ConfigurationProperties(prefix = GeniusBuilder.PAY)
 public class PayProperties {
 
     /**

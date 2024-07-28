@@ -24,11 +24,11 @@
  ~ THE SOFTWARE.                                                                 ~
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
- */
+*/
 package org.miaixz.bus.base.service;
 
-import org.miaixz.bus.core.basics.entity.Result;
-import org.miaixz.bus.core.basics.service.Service;
+import org.miaixz.bus.core.basic.entity.Result;
+import org.miaixz.bus.core.basic.service.Service;
 
 import java.util.List;
 

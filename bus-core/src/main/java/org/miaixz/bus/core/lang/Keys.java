@@ -24,7 +24,7 @@
  ~ THE SOFTWARE.                                                                 ~
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
- */
+*/
 package org.miaixz.bus.core.lang;
 
 import org.miaixz.bus.core.convert.Convert;
@@ -43,8 +43,7 @@ import java.util.Map;
 import java.util.Properties;
 
 /**
- * 系统属性名称常量池
- * 封装了包括Java运行时环境信息、Java虚拟机信息、Java类信息、OS信息、用户信息等
+ * 系统属性名称常量池 封装了包括Java运行时环境信息、Java虚拟机信息、Java类信息、OS信息、用户信息等
  *
  * @author Kimi Liu
  * @since Java 17+
@@ -52,21 +51,21 @@ import java.util.Properties;
 public class Keys {
 
     /**
-     * 操作系统的名称
+     * 操作系统名称
      */
     public static final String OS_NAME = "os.name";
 
     /**
-     * 操作系统的架构
+     * 操作系统架构
      */
     public static final String OS_ARCH = "os.arch";
 
     /**
-     * 操作系统的版本
+     * 操作系统版本
      */
     public static final String OS_VERSION = "os.version";
     /**
-     * 用户的账户名称
+     * 用户账户名称
      */
     public static final String USER_NAME = "user.name";
 
@@ -76,34 +75,35 @@ public class Keys {
     public static final String USER_HOME = "user.home";
 
     /**
-     * 用户的当前工作目录
+     * 当前工作目录
      */
     public static final String USER_DIR = "user.dir";
     /**
-     * 用户的当前语言
+     * 文件编码
+     */
+    public static final String FILE_ENCODING = "file.encoding";
+    /**
+     * 当前语言
      */
     public static final String USER_LANGUAGE = "user.language";
     /**
-     * 用户的当前地区国家
+     * 当前地区
      */
     public static final String USER_COUNTRY = "user.country";
     /**
-     * 用户的当前区域
+     * 当前区域
      */
     public static final String USER_REGION = "user.region";
     /**
-     * 文件路径分隔符
-     * 在Unix和Linux下 是{@code '/'}; 在Windows下是 {@code '\'}
+     * 文件路径分隔符 在Unix和Linux下 是{@code '/'}; 在Windows下是 {@code '\'}
      */
     public static final String FILE_SEPARATOR = "file.separator";
     /**
-     * 多个PATH之间的分隔符
-     * 在Unix和Linux下 是{@code ':'}; 在Windows下是 {@code ';'}
+     * 多个PATH之间的分隔符 在Unix和Linux下 是{@code ':'}; 在Windows下是 {@code ';'}
      */
     public static final String PATH_SEPARATOR = "path.separator";
     /**
-     * 行分隔符
-     * Unix /n
+     * 行分隔符 Unix /n
      */
     public static final String LINE_SEPARATOR = "line.separator";
 
@@ -230,7 +230,6 @@ public class Keys {
      */
     public static final String DATE_LENIENT = "bus.date.lenient";
 
-
     /**
      * JDK版本
      */
@@ -316,8 +315,8 @@ public class Keys {
             value = System.getProperty(name);
         } catch (final SecurityException e) {
             if (!quiet) {
-                Console.error("Caught a SecurityException reading the system property '{}'; " +
-                        "the Keys property value will default to null.", name);
+                Console.error("Caught a SecurityException reading the system property '{}'; "
+                        + "the Keys property value will default to null.", name);
             }
         }
 
@@ -326,8 +325,8 @@ public class Keys {
                 value = System.getenv(name);
             } catch (final SecurityException e) {
                 if (!quiet) {
-                    Console.error("Caught a SecurityException reading the system env '{}'; " +
-                            "the Keys env value will default to null.", name);
+                    Console.error("Caught a SecurityException reading the system env '{}'; "
+                            + "the Keys env value will default to null.", name);
                 }
             }
         }
@@ -431,8 +430,7 @@ public class Keys {
     }
 
     /**
-     * 根据{@code java.specification.version}属性值，获取版本号
-     * 默认8
+     * 根据{@code java.specification.version}属性值，获取版本号 默认8
      *
      * @return 版本号
      */
@@ -453,8 +451,7 @@ public class Keys {
     }
 
     /**
-     * 获取指定容器环境的对象的属性
-     * 如获取DNS属性，则URI为类似：dns:miaixz.org
+     * 获取指定容器环境的对象的属性 如获取DNS属性，则URI为类似：dns:miaixz.org
      *
      * @param uri     URI字符串，格式为[scheme:][name]/[domain]
      * @param attrIds 需要获取的属性ID名称

@@ -24,11 +24,11 @@
  ~ THE SOFTWARE.                                                                 ~
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
- */
+*/
 package org.miaixz.bus.goalie.filter;
 
 import jakarta.annotation.PostConstruct;
-import org.miaixz.bus.core.basics.entity.Message;
+import org.miaixz.bus.core.basic.entity.Message;
 import org.miaixz.bus.core.lang.Algorithm;
 import org.miaixz.bus.core.lang.Charset;
 import org.miaixz.bus.core.xyz.ObjectKit;
@@ -71,14 +71,14 @@ public class EncryptFilter implements WebFilter {
     @PostConstruct
     public void init() {
         if (Algorithm.AES.getValue().equals(encrypt.getType())) {
-            crypto = new AES(Algorithm.Mode.CBC, Padding.PKCS7Padding, encrypt.getKey().getBytes(), encrypt.getOffset().getBytes());
+            crypto = new AES(Algorithm.Mode.CBC, Padding.PKCS7Padding, encrypt.getKey().getBytes(),
+                    encrypt.getOffset().getBytes());
         }
     }
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
-        if (encrypt.isEnabled()
-                && (Context.Format.xml.equals(Context.get(exchange).getFormat())
+        if (encrypt.isEnabled() && (Context.Format.xml.equals(Context.get(exchange).getFormat())
                 || Context.Format.json.equals(Context.get(exchange).getFormat()))) {
             exchange = exchange.mutate().response(process(exchange)).build();
         }

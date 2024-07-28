@@ -24,12 +24,12 @@
  ~ THE SOFTWARE.                                                                 ~
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
- */
+*/
 package org.miaixz.bus.starter.storage;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.miaixz.bus.spring.BusXConfig;
+import org.miaixz.bus.spring.GeniusBuilder;
 import org.miaixz.bus.starter.cache.CacheProperties;
 import org.miaixz.bus.storage.Context;
 import org.miaixz.bus.storage.Registry;
@@ -39,16 +39,14 @@ import org.springframework.boot.context.properties.NestedConfigurationProperty;
 import java.util.Map;
 
 /**
- * 存储配置信息
- * 1. 默认读取配置文件信息
- * 2. 通过set形式设置(动态/DB等)
+ * 存储配置信息 1. 默认读取配置文件信息 2. 通过set形式设置(动态/DB等)
  *
  * @author Kimi Liu
  * @since Java 17+
  */
 @Getter
 @Setter
-@ConfigurationProperties(prefix = BusXConfig.STORAGE)
+@ConfigurationProperties(prefix = GeniusBuilder.STORAGE)
 public class StorageProperties {
 
     /**

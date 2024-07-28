@@ -24,7 +24,7 @@
  ~ THE SOFTWARE.                                                                 ~
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
- */
+*/
 package org.miaixz.bus.logger.magic.level;
 
 /**
@@ -40,7 +40,7 @@ public interface Info {
      *
      * @return the true/false
      */
-    boolean isInfo();
+    boolean isInfoEnabled();
 
     /**
      * 打印 INFO 等级的日志

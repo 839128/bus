@@ -24,14 +24,14 @@
  ~ THE SOFTWARE.                                                                 ~
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
- */
+*/
 package org.miaixz.bus.starter.cors;
 
 import lombok.Getter;
 import lombok.Setter;
 import org.miaixz.bus.core.lang.Symbol;
 import org.miaixz.bus.core.net.HTTP;
-import org.miaixz.bus.spring.BusXConfig;
+import org.miaixz.bus.spring.GeniusBuilder;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
@@ -42,7 +42,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  */
 @Getter
 @Setter
-@ConfigurationProperties(BusXConfig.CORS)
+@ConfigurationProperties(GeniusBuilder.CORS)
 public class CorsProperties {
 
     /**
@@ -52,15 +52,15 @@ public class CorsProperties {
     /**
      * 允许的域名
      */
-    private String[] allowedOrigins = new String[]{Symbol.STAR};
+    private String[] allowedOrigins = new String[] { Symbol.STAR };
     /**
      * 允许的请求头
      */
-    private String[] allowedHeaders = new String[]{Symbol.STAR};
+    private String[] allowedHeaders = new String[] { Symbol.STAR };
     /**
      * 允许的方法
      */
-    private String[] allowedMethods = new String[]{HTTP.GET, HTTP.POST, HTTP.PUT, HTTP.OPTIONS, HTTP.DELETE};
+    private String[] allowedMethods = new String[] { HTTP.GET, HTTP.POST, HTTP.PUT, HTTP.OPTIONS, HTTP.DELETE };
     /**
      * 响应头信息公开
      */

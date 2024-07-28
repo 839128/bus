@@ -24,12 +24,12 @@
  ~ THE SOFTWARE.                                                                 ~
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
- */
+*/
 package org.miaixz.bus.base.spring;
 
 import org.miaixz.bus.base.service.BaseService;
-import org.miaixz.bus.core.basics.normal.ErrorCode;
-import org.miaixz.bus.core.basics.spring.Controller;
+import org.miaixz.bus.core.basic.normal.ErrorCode;
+import org.miaixz.bus.core.basic.spring.Controller;
 import org.miaixz.bus.core.xyz.MapKit;
 import org.miaixz.bus.core.xyz.StringKit;
 import org.miaixz.bus.validate.magic.annotation.Valid;
@@ -145,7 +145,7 @@ public class BaseController<Service extends BaseService<T>, T> extends Controlle
      */
     @ResponseBody
     @RequestMapping(value = "/page", method = RequestMethod.GET)
-    public Object page(@Valid({"pageSize", "pageNo"}) T entity) {
+    public Object page(@Valid({ "pageSize", "pageNo" }) T entity) {
         return write(service.page(entity));
     }
 

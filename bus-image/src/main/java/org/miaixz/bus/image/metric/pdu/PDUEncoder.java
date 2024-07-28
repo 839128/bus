@@ -24,7 +24,7 @@
  ~ THE SOFTWARE.                                                                 ~
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
- */
+*/
 package org.miaixz.bus.image.metric.pdu;
 
 import org.miaixz.bus.image.Dimse;
@@ -128,15 +128,7 @@ public class PDUEncoder extends PDVOutputStream {
             }
             Logger.debug("{}: stop A-ABORT timeout", as);
         }
-        byte[] b = {
-                (byte) pdutype,
-                0,
-                0, 0, 0, 4,
-                0,
-                (byte) result,
-                (byte) source,
-                (byte) reason
-        };
+        byte[] b = { (byte) pdutype, 0, 0, 0, 0, 4, 0, (byte) result, (byte) source, (byte) reason };
         try {
             out.write(b);
             out.flush();
@@ -267,8 +259,7 @@ public class PDUEncoder extends PDVOutputStream {
         encodeStringItem(ItemType.IMPL_VERSION_NAME, rqac.getImplVersionName());
         for (ExtendedNegotiation extNeg : rqac.getExtendedNegotiations())
             encode(extNeg);
-        for (CommonExtended extNeg :
-                rqac.getCommonExtendedNegotiations())
+        for (CommonExtended extNeg : rqac.getCommonExtendedNegotiations())
             encode(extNeg);
         encode(rqac.getUserIdentityRQ());
         encode(rqac.getUserIdentityAC());
@@ -370,7 +361,7 @@ public class PDUEncoder extends PDVOutputStream {
     @Override
     public void copyFrom(InputStream in) throws IOException {
         checkThread();
-        for (; ; ) {
+        for (;;) {
             flushPDataTF();
             int copy = in.read(buf, pos, free());
             if (copy == -1)
@@ -403,8 +394,7 @@ public class PDUEncoder extends PDVOutputStream {
         put(pdvpcid);
         put(pdvcmd | last);
         pos = endpos;
-        Logger.trace("{} << PDV[len={}, pcid={}, mch={}]",
-                as, pdvlen, pdvpcid, (pdvcmd | last));
+        Logger.trace("{} << PDV[len={}, pcid={}, mch={}]", as, pdvlen, pdvpcid, (pdvcmd | last));
     }
 
     public void writePDataTF() throws IOException {
@@ -413,22 +403,20 @@ public class PDUEncoder extends PDVOutputStream {
         put(PDUType.P_DATA_TF);
         put(0);
         putInt(pdulen);
-        Logger.trace("{} << P-DATA-TF[len={}]",
-                as, pdulen);
+        Logger.trace("{} << P-DATA-TF[len={}]", as, pdulen);
         writePDU(pdulen);
     }
 
-    public void writeDIMSE(PresentationContext pc, Attributes cmd,
-                           DataWriter dataWriter) throws IOException {
+    public void writeDIMSE(PresentationContext pc, Attributes cmd, DataWriter dataWriter) throws IOException {
         synchronized (dimseLock) {
             int pcid = pc.getPCID();
             String tsuid = pc.getTransferSyntax();
             Dimse dimse = Dimse.valueOf(cmd.getInt(Tag.CommandField, -1));
             if (!dimse.isRSP() || !Status.isPending(cmd.getInt(Tag.Status, -1)))
                 as.incSentCount(dimse);
-            if (Logger.isInfo()) {
+            if (Logger.isInfoEnabled()) {
                 Logger.info("{} << {}", as, dimse.toString(cmd, pcid, tsuid));
-                if (Logger.isDebug()) {
+                if (Logger.isDebugEnabled()) {
                     Logger.debug("{} << {} Command:\n{}", as, dimse.toString(cmd), cmd);
                 }
             }
@@ -439,8 +427,7 @@ public class PDUEncoder extends PDVOutputStream {
 
             pdvpcid = pcid;
             pdvcmd = PDVType.COMMAND;
-            ImageOutputStream cmdout =
-                    new ImageOutputStream(this, UID.ImplicitVRLittleEndian.uid);
+            ImageOutputStream cmdout = new ImageOutputStream(this, UID.ImplicitVRLittleEndian.uid);
             cmdout.writeCommand(cmd);
             cmdout.close();
             if (dataWriter != null) {
@@ -451,7 +438,7 @@ public class PDUEncoder extends PDVOutputStream {
                     pos += 6;
                 }
                 pdvcmd = PDVType.DATA;
-                if (Logger.isDebug()) {
+                if (Logger.isDebugEnabled()) {
                     if (dataWriter instanceof DataWriterAdapter)
                         Logger.debug("{} << {} Dataset:\n{}", as, dimse.toString(cmd),
                                 ((DataWriterAdapter) dataWriter).getDataset());
@@ -459,7 +446,7 @@ public class PDUEncoder extends PDVOutputStream {
                         Logger.debug("{} << {} Dataset sending...", as, dimse.toString(cmd));
                 }
                 dataWriter.writeTo(this, tsuid);
-                if (Logger.isDebug() && !(dataWriter instanceof DataWriterAdapter))
+                if (Logger.isDebugEnabled() && !(dataWriter instanceof DataWriterAdapter))
                     Logger.debug("{} << {} Dataset sent", as, dimse.toString(cmd));
                 close();
             }

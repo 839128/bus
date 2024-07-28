@@ -24,10 +24,11 @@
  ~ THE SOFTWARE.                                                                 ~
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
- */
+*/
 package org.miaixz.bus.notify;
 
-import org.miaixz.bus.core.basics.entity.Message;
+import org.miaixz.bus.core.basic.entity.Message;
+import org.miaixz.bus.core.lang.EnumMap;
 import org.miaixz.bus.core.xyz.ListKit;
 import org.miaixz.bus.notify.magic.Material;
 
@@ -40,11 +41,10 @@ import java.util.List;
  * @author Justubborn
  * @since Java 17+
  */
-public interface Provider<T extends Material> {
+public interface Provider<T extends Material> extends org.miaixz.bus.core.Provider {
 
     /**
-     * 指定模版{@link Material}并发送
-     * 注意:不同等服务商使用的模版实现不同
+     * 指定模版{@link Material}并发送 注意:不同等服务商使用的模版实现不同
      *
      * @param entity 通知内容
      * @return 发送结果
@@ -80,6 +80,11 @@ public interface Provider<T extends Material> {
      */
     default Message send(T entity, String... mobile) {
         return send(entity, ListKit.of(mobile));
+    }
+
+    @Override
+    default Object type() {
+        return EnumMap.Povider.NOTIFY;
     }
 
 }

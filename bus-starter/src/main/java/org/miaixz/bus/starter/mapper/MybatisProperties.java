@@ -24,14 +24,14 @@
  ~ THE SOFTWARE.                                                                 ~
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
- */
+*/
 package org.miaixz.bus.starter.mapper;
 
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.ibatis.session.Configuration;
 import org.apache.ibatis.session.ExecutorType;
-import org.miaixz.bus.spring.BusXConfig;
+import org.miaixz.bus.spring.GeniusBuilder;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.NestedConfigurationProperty;
 import org.springframework.core.io.Resource;
@@ -52,7 +52,7 @@ import java.util.Properties;
  */
 @Getter
 @Setter
-@ConfigurationProperties(prefix = BusXConfig.MYBATIS)
+@ConfigurationProperties(prefix = GeniusBuilder.MYBATIS)
 public class MybatisProperties {
 
     private static final ResourcePatternResolver resourceResolver = new PathMatchingResourcePatternResolver();
@@ -74,8 +74,7 @@ public class MybatisProperties {
      */
     private String typeAliasesPackage;
     /**
-     * 用于过滤类型别名的超类
-     * 如果没有指定，MyBatis将从typeAliasesPackage中搜索的所有类作为类型别名处理
+     * 用于过滤类型别名的超类 如果没有指定，MyBatis将从typeAliasesPackage中搜索的所有类作为类型别名处理
      */
     private Class<?> typeAliasesSuperType;
     /**
@@ -95,8 +94,7 @@ public class MybatisProperties {
      */
     private Properties configurationProperties;
     /**
-     * 用于自定义默认设置的Configuration对象
-     * 如果指定了{@link #configLocation}，则不使用此属性
+     * 用于自定义默认设置的Configuration对象 如果指定了{@link #configLocation}，则不使用此属性
      */
     @NestedConfigurationProperty
     private Configuration configuration;

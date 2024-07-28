@@ -24,29 +24,27 @@
  ~ THE SOFTWARE.                                                                 ~
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
- */
+*/
 package org.miaixz.bus.starter.notify;
 
 import lombok.Getter;
 import lombok.Setter;
 import org.miaixz.bus.notify.Context;
 import org.miaixz.bus.notify.Registry;
-import org.miaixz.bus.spring.BusXConfig;
+import org.miaixz.bus.spring.GeniusBuilder;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.util.Map;
 
 /**
- * 消息通知
- * 1. 默认读取配置文件信息
- * 2. 通过set形式设置(动态/DB等)
+ * 消息通知 1. 默认读取配置文件信息 2. 通过set形式设置(动态/DB等)
  *
  * @author Kimi Liu
  * @since Java 17+
  */
 @Getter
 @Setter
-@ConfigurationProperties(prefix = BusXConfig.NOTIFY)
+@ConfigurationProperties(prefix = GeniusBuilder.NOTIFY)
 public class NotifyProperties {
 
     /**
