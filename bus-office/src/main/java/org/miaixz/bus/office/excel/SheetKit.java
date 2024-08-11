@@ -25,53 +25,82 @@
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 */
-package org.miaixz.bus.office.excel.reader;
+package org.miaixz.bus.office.excel;
 
 import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.ss.util.cellwalk.CellHandler;
+import org.apache.poi.ss.util.cellwalk.CellWalk;
+import org.miaixz.bus.core.xyz.StringKit;
 
 /**
- * 抽象{@link Sheet}数据读取实现
+ * {@link Sheet} 相关工具类
  *
- * @param <T> 读取类型
  * @author Kimi Liu
  * @since Java 17+
  */
-public abstract class AbstractSheetReader<T> implements SheetReader<T> {
-
-    protected final CellRangeAddress cellRangeAddress;
-    /**
-     * Excel配置
-     */
-    protected ExcelReadConfig config;
+public class SheetKit {
 
     /**
-     * 构造
+     * 获取或者创建sheet表 如果sheet表在Workbook中已经存在，则获取之，否则创建之
      *
-     * @param cellRangeAddress 读取范围
+     * @param book      工作簿{@link Workbook}
+     * @param sheetName 工作表名
+     * @return 工作表 {@link Sheet}
      */
-    public AbstractSheetReader(final CellRangeAddress cellRangeAddress) {
-        this.cellRangeAddress = cellRangeAddress;
+    public static Sheet getOrCreateSheet(final Workbook book, String sheetName) {
+        if (null == book) {
+            return null;
+        }
+        sheetName = StringKit.isBlank(sheetName) ? "sheet1" : sheetName;
+        Sheet sheet = book.getSheet(sheetName);
+        if (null == sheet) {
+            sheet = book.createSheet(sheetName);
+        }
+        return sheet;
     }
 
     /**
-     * 构造
+     * 获取或者创建sheet表 自定义需要读取或写出的Sheet，如果给定的sheet不存在，创建之（命名为默认） 在读取中，此方法用于切换读取的sheet，在写出时，此方法用于新建或者切换sheet
      *
-     * @param startRowIndex 起始行（包含，从0开始计数）
-     * @param endRowIndex   结束行（包含，从0开始计数）
+     * @param book       工作簿{@link Workbook}
+     * @param sheetIndex 工作表序号
+     * @return 工作表 {@link Sheet}
      */
-    public AbstractSheetReader(final int startRowIndex, final int endRowIndex) {
-        this(new CellRangeAddress(Math.min(startRowIndex, endRowIndex), Math.max(startRowIndex, endRowIndex), 0,
-                Integer.MAX_VALUE));
+    public static Sheet getOrCreateSheet(final Workbook book, final int sheetIndex) {
+        Sheet sheet = null;
+        try {
+            sheet = book.getSheetAt(sheetIndex);
+        } catch (final IllegalArgumentException ignore) {
+            // ignore
+        }
+        if (null == sheet) {
+            sheet = book.createSheet();
+        }
+        return sheet;
     }
 
     /**
-     * 设置Excel配置
+     * sheet是否为空
      *
-     * @param config Excel配置
+     * @param sheet {@link Sheet}
+     * @return sheet是否为空
      */
-    public void setExcelConfig(final ExcelReadConfig config) {
-        this.config = config;
+    public static boolean isEmpty(final Sheet sheet) {
+        return null == sheet || (sheet.getLastRowNum() == 0 && sheet.getPhysicalNumberOfRows() == 0);
+    }
+
+    /**
+     * 遍历Sheet中的指定区域单元格
+     *
+     * @param sheet       {@link Sheet}
+     * @param range       区域
+     * @param cellHandler 单元格处理器
+     */
+    public static void walk(final Sheet sheet, final CellRangeAddress range, final CellHandler cellHandler) {
+        final CellWalk cellWalk = new CellWalk(sheet, range);
+        cellWalk.traverse(cellHandler);
     }
 
 }

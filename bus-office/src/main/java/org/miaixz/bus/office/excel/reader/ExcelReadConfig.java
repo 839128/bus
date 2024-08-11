@@ -27,51 +27,39 @@
 */
 package org.miaixz.bus.office.excel.reader;
 
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.util.CellRangeAddress;
+import org.miaixz.bus.office.excel.ExcelConfig;
 
 /**
- * 抽象{@link Sheet}数据读取实现
+ * Excel读取配置
  *
- * @param <T> 读取类型
  * @author Kimi Liu
  * @since Java 17+
  */
-public abstract class AbstractSheetReader<T> implements SheetReader<T> {
-
-    protected final CellRangeAddress cellRangeAddress;
-    /**
-     * Excel配置
-     */
-    protected ExcelReadConfig config;
+public class ExcelReadConfig extends ExcelConfig {
 
     /**
-     * 构造
-     *
-     * @param cellRangeAddress 读取范围
+     * 是否忽略空行
      */
-    public AbstractSheetReader(final CellRangeAddress cellRangeAddress) {
-        this.cellRangeAddress = cellRangeAddress;
+    protected boolean ignoreEmptyRow = true;
+
+    /**
+     * 是否忽略空行
+     * 
+     * @return 是否忽略空行
+     */
+    public boolean isIgnoreEmptyRow() {
+        return this.ignoreEmptyRow;
     }
 
     /**
-     * 构造
+     * 设置是否忽略空行
      *
-     * @param startRowIndex 起始行（包含，从0开始计数）
-     * @param endRowIndex   结束行（包含，从0开始计数）
+     * @param ignoreEmptyRow 是否忽略空行
+     * @return this
      */
-    public AbstractSheetReader(final int startRowIndex, final int endRowIndex) {
-        this(new CellRangeAddress(Math.min(startRowIndex, endRowIndex), Math.max(startRowIndex, endRowIndex), 0,
-                Integer.MAX_VALUE));
-    }
-
-    /**
-     * 设置Excel配置
-     *
-     * @param config Excel配置
-     */
-    public void setExcelConfig(final ExcelReadConfig config) {
-        this.config = config;
+    public ExcelReadConfig setIgnoreEmptyRow(final boolean ignoreEmptyRow) {
+        this.ignoreEmptyRow = ignoreEmptyRow;
+        return this;
     }
 
 }

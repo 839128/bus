@@ -27,51 +27,59 @@
 */
 package org.miaixz.bus.office.excel.reader;
 
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.util.CellRangeAddress;
+import org.miaixz.bus.core.center.function.BiConsumerX;
+import org.miaixz.bus.office.excel.cell.CellEditor;
+import org.miaixz.bus.office.excel.cell.CellKit;
 
 /**
- * 抽象{@link Sheet}数据读取实现
+ * 读取Excel的Sheet，使用Consumer方式处理单元格
  *
- * @param <T> 读取类型
  * @author Kimi Liu
  * @since Java 17+
  */
-public abstract class AbstractSheetReader<T> implements SheetReader<T> {
+public class WalkSheetReader extends AbstractSheetReader<Void> {
 
-    protected final CellRangeAddress cellRangeAddress;
-    /**
-     * Excel配置
-     */
-    protected ExcelReadConfig config;
-
-    /**
-     * 构造
-     *
-     * @param cellRangeAddress 读取范围
-     */
-    public AbstractSheetReader(final CellRangeAddress cellRangeAddress) {
-        this.cellRangeAddress = cellRangeAddress;
-    }
+    private final BiConsumerX<Cell, Object> cellHandler;
 
     /**
      * 构造
      *
      * @param startRowIndex 起始行（包含，从0开始计数）
      * @param endRowIndex   结束行（包含，从0开始计数）
+     * @param cellHandler   单元格处理器，用于处理读到的单元格及其数据
      */
-    public AbstractSheetReader(final int startRowIndex, final int endRowIndex) {
-        this(new CellRangeAddress(Math.min(startRowIndex, endRowIndex), Math.max(startRowIndex, endRowIndex), 0,
-                Integer.MAX_VALUE));
+    public WalkSheetReader(final int startRowIndex, final int endRowIndex,
+            final BiConsumerX<Cell, Object> cellHandler) {
+        super(startRowIndex, endRowIndex);
+        this.cellHandler = cellHandler;
     }
 
-    /**
-     * 设置Excel配置
-     *
-     * @param config Excel配置
-     */
-    public void setExcelConfig(final ExcelReadConfig config) {
-        this.config = config;
+    @Override
+    public Void read(final Sheet sheet) {
+        final int startRowIndex = Math.max(this.cellRangeAddress.getFirstRow(), sheet.getFirstRowNum());// 读取起始行（包含）
+        final int endRowIndex = Math.min(this.cellRangeAddress.getLastRow(), sheet.getLastRowNum());// 读取结束行（包含）
+        final CellEditor cellEditor = this.config.getCellEditor();
+
+        Row row;
+        for (int y = startRowIndex; y <= endRowIndex; y++) {
+            row = sheet.getRow(y);
+            if (null != row) {
+                final short startColumnIndex = (short) Math.max(this.cellRangeAddress.getFirstColumn(),
+                        row.getFirstCellNum());
+                final short endColumnIndex = (short) Math.min(this.cellRangeAddress.getLastColumn(),
+                        row.getLastCellNum());
+                Cell cell;
+                for (short x = startColumnIndex; x < endColumnIndex; x++) {
+                    cell = CellKit.getCell(row, x);
+                    cellHandler.accept(cell, CellKit.getCellValue(cell, cellEditor));
+                }
+            }
+        }
+
+        return null;
     }
 
 }
