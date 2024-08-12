@@ -200,4 +200,4 @@ Talk is cheap, Show me the code."
 
 ### ✨ 状态
 
-![Alt](https://repobeats.axiom.co/api/embed/e6aec865b2638153d492db3db4ab8f09b39725cd.svg "Repobeats analytics image")
+![alt](https://repobeats.axiom.co/api/embed/e6aec865b2638153d492db3db4ab8f09b39725cd.svg "Repobeats analytics image")
