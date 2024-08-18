@@ -28,55 +28,63 @@
 package org.miaixz.bus.office.excel.cell.setters;
 
 import java.io.File;
-import java.time.temporal.TemporalAccessor;
-import java.util.Calendar;
-import java.util.Date;
 
-import org.apache.poi.ss.usermodel.Hyperlink;
-import org.apache.poi.ss.usermodel.RichTextString;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.miaixz.bus.core.xyz.FileKit;
+import org.miaixz.bus.office.excel.ExcelImgType;
+import org.miaixz.bus.office.excel.SimpleClientAnchor;
 import org.miaixz.bus.office.excel.cell.CellSetter;
+import org.miaixz.bus.office.excel.writer.ExcelDrawing;
 
 /**
- * {@link CellSetter} 简单静态工厂类，用于根据值类型创建对应的{@link CellSetter}
+ * 图片单元格值设置器
  *
  * @author Kimi Liu
  * @since Java 17+
  */
-public class CellSetterFactory {
+public class ImgCellSetter implements CellSetter {
+
+    private final byte[] pictureData;
+    private final ExcelImgType imgType;
 
     /**
-     * 创建值对应类型的{@link CellSetter}
+     * 构造，默认PNG图片
      *
-     * @param value 值
-     * @return {@link CellSetter}
+     * @param pictureData 图片数据
      */
-    public static CellSetter createCellSetter(final Object value) {
-        if (null == value) {
-            return NullCellSetter.INSTANCE;
-        } else if (value instanceof CellSetter) {
-            return (CellSetter) value;
-        } else if (value instanceof Date) {
-            return new DateCellSetter((Date) value);
-        } else if (value instanceof TemporalAccessor) {
-            return new TemporalAccessorCellSetter((TemporalAccessor) value);
-        } else if (value instanceof Calendar) {
-            return new CalendarCellSetter((Calendar) value);
-        } else if (value instanceof Boolean) {
-            return new BooleanCellSetter((Boolean) value);
-        } else if (value instanceof RichTextString) {
-            return new RichTextCellSetter((RichTextString) value);
-        } else if (value instanceof Number) {
-            return new NumberCellSetter((Number) value);
-        } else if (value instanceof Hyperlink) {
-            return new HyperlinkCellSetter((Hyperlink) value);
-        } else if (value instanceof byte[]) {
-            // 二进制理解为图片
-            return new ImgCellSetter((byte[]) value);
-        } else if (value instanceof File) {
-            return new ImgCellSetter((File) value);
-        } else {
-            return new CharSequenceCellSetter(value.toString());
-        }
+    public ImgCellSetter(final byte[] pictureData) {
+        this(pictureData, ExcelImgType.PNG);
+    }
+
+    /**
+     * 构造
+     *
+     * @param picturefile 图片数据
+     */
+    public ImgCellSetter(final File picturefile) {
+        this(FileKit.readBytes(picturefile), ExcelImgType.getType(picturefile));
+    }
+
+    /**
+     * 构造
+     *
+     * @param pictureData 图片数据
+     * @param imgType     图片类型
+     */
+    public ImgCellSetter(final byte[] pictureData, final ExcelImgType imgType) {
+        this.pictureData = pictureData;
+        this.imgType = imgType;
+    }
+
+    @Override
+    public void setValue(final Cell cell) {
+        final Sheet sheet = cell.getSheet();
+        final int columnIndex = cell.getColumnIndex();
+        final int rowIndex = cell.getRowIndex();
+
+        ExcelDrawing.drawingImg(sheet, this.pictureData, this.imgType,
+                new SimpleClientAnchor(columnIndex, rowIndex, columnIndex + 1, rowIndex + 1));
     }
 
 }

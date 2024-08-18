@@ -25,58 +25,86 @@
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 */
-package org.miaixz.bus.office.excel.cell.setters;
+package org.miaixz.bus.office.excel.style;
 
-import java.io.File;
-import java.time.temporal.TemporalAccessor;
-import java.util.Calendar;
-import java.util.Date;
-
-import org.apache.poi.ss.usermodel.Hyperlink;
-import org.apache.poi.ss.usermodel.RichTextString;
-import org.miaixz.bus.office.excel.cell.CellSetter;
+import org.apache.poi.hssf.usermodel.HSSFShape;
 
 /**
- * {@link CellSetter} 简单静态工厂类，用于根据值类型创建对应的{@link CellSetter}
+ * SimpleShape中的线条风格枚举
  *
+ * @see HSSFShape
  * @author Kimi Liu
  * @since Java 17+
  */
-public class CellSetterFactory {
+public enum LineStyle {
 
     /**
-     * 创建值对应类型的{@link CellSetter}
-     *
-     * @param value 值
-     * @return {@link CellSetter}
+     * Solid (continuous) pen
      */
-    public static CellSetter createCellSetter(final Object value) {
-        if (null == value) {
-            return NullCellSetter.INSTANCE;
-        } else if (value instanceof CellSetter) {
-            return (CellSetter) value;
-        } else if (value instanceof Date) {
-            return new DateCellSetter((Date) value);
-        } else if (value instanceof TemporalAccessor) {
-            return new TemporalAccessorCellSetter((TemporalAccessor) value);
-        } else if (value instanceof Calendar) {
-            return new CalendarCellSetter((Calendar) value);
-        } else if (value instanceof Boolean) {
-            return new BooleanCellSetter((Boolean) value);
-        } else if (value instanceof RichTextString) {
-            return new RichTextCellSetter((RichTextString) value);
-        } else if (value instanceof Number) {
-            return new NumberCellSetter((Number) value);
-        } else if (value instanceof Hyperlink) {
-            return new HyperlinkCellSetter((Hyperlink) value);
-        } else if (value instanceof byte[]) {
-            // 二进制理解为图片
-            return new ImgCellSetter((byte[]) value);
-        } else if (value instanceof File) {
-            return new ImgCellSetter((File) value);
-        } else {
-            return new CharSequenceCellSetter(value.toString());
-        }
+    SOLID(HSSFShape.LINESTYLE_SOLID),
+    /**
+     * PS_DASH system dash style
+     */
+    DASHSYS(HSSFShape.LINESTYLE_DASHSYS),
+    /**
+     * PS_DOT system dash style
+     */
+    DOTSYS(HSSFShape.LINESTYLE_DOTSYS),
+    /**
+     * PS_DASHDOT system dash style
+     */
+    DASHDOTSYS(HSSFShape.LINESTYLE_DASHDOTSYS),
+    /**
+     * PS_DASHDOTDOT system dash style
+     */
+    DASHDOTDOTSYS(HSSFShape.LINESTYLE_DASHDOTDOTSYS),
+    /**
+     * square dot style
+     */
+    DOTGEL(HSSFShape.LINESTYLE_DOTGEL),
+    /**
+     * dash style
+     */
+    DASHGEL(HSSFShape.LINESTYLE_DASHGEL),
+    /**
+     * long dash style
+     */
+    LONGDASHGEL(HSSFShape.LINESTYLE_LONGDASHGEL),
+    /**
+     * dash short dash
+     */
+    DASHDOTGEL(HSSFShape.LINESTYLE_DASHDOTGEL),
+    /**
+     * long dash short dash
+     */
+    LONGDASHDOTGEL(HSSFShape.LINESTYLE_LONGDASHDOTGEL),
+    /**
+     * long dash short dash short dash
+     */
+    LONGDASHDOTDOTGEL(HSSFShape.LINESTYLE_LONGDASHDOTDOTGEL),
+    /**
+     * 无
+     */
+    NONE(HSSFShape.LINESTYLE_NONE);
+
+    private final int value;
+
+    /**
+     * 构造
+     *
+     * @param value 样式编码
+     */
+    LineStyle(final int value) {
+        this.value = value;
+    }
+
+    /**
+     * 获取样式编码
+     *
+     * @return 样式编码
+     */
+    public int getValue() {
+        return value;
     }
 
 }

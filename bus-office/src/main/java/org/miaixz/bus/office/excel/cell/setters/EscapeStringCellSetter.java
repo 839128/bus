@@ -27,56 +27,43 @@
 */
 package org.miaixz.bus.office.excel.cell.setters;
 
-import java.io.File;
-import java.time.temporal.TemporalAccessor;
-import java.util.Calendar;
-import java.util.Date;
+import java.util.regex.Pattern;
 
-import org.apache.poi.ss.usermodel.Hyperlink;
-import org.apache.poi.ss.usermodel.RichTextString;
-import org.miaixz.bus.office.excel.cell.CellSetter;
+import org.miaixz.bus.core.xyz.PatternKit;
+import org.miaixz.bus.core.xyz.StringKit;
 
 /**
- * {@link CellSetter} 简单静态工厂类，用于根据值类型创建对应的{@link CellSetter}
+ * 字符串转义Cell值设置器 使用 _x005F前缀转义_xXXXX_，避免被decode的问题 如用户传入'_x5116_'会导致乱码，使用此设置器转义为'_x005F_x5116_'
  *
  * @author Kimi Liu
  * @since Java 17+
  */
-public class CellSetterFactory {
+public class EscapeStringCellSetter extends CharSequenceCellSetter {
+
+    private static final Pattern utfPtrn = Pattern.compile("_x[0-9A-Fa-f]{4}_");
 
     /**
-     * 创建值对应类型的{@link CellSetter}
+     * 构造
      *
      * @param value 值
-     * @return {@link CellSetter}
      */
-    public static CellSetter createCellSetter(final Object value) {
-        if (null == value) {
-            return NullCellSetter.INSTANCE;
-        } else if (value instanceof CellSetter) {
-            return (CellSetter) value;
-        } else if (value instanceof Date) {
-            return new DateCellSetter((Date) value);
-        } else if (value instanceof TemporalAccessor) {
-            return new TemporalAccessorCellSetter((TemporalAccessor) value);
-        } else if (value instanceof Calendar) {
-            return new CalendarCellSetter((Calendar) value);
-        } else if (value instanceof Boolean) {
-            return new BooleanCellSetter((Boolean) value);
-        } else if (value instanceof RichTextString) {
-            return new RichTextCellSetter((RichTextString) value);
-        } else if (value instanceof Number) {
-            return new NumberCellSetter((Number) value);
-        } else if (value instanceof Hyperlink) {
-            return new HyperlinkCellSetter((Hyperlink) value);
-        } else if (value instanceof byte[]) {
-            // 二进制理解为图片
-            return new ImgCellSetter((byte[]) value);
-        } else if (value instanceof File) {
-            return new ImgCellSetter((File) value);
-        } else {
-            return new CharSequenceCellSetter(value.toString());
+    public EscapeStringCellSetter(final CharSequence value) {
+        super(escape(StringKit.toStringOrNull(value)));
+    }
+
+    /**
+     * 使用 _x005F前缀转义_xXXXX_，避免被decode的问题
+     *
+     * @param value 被转义的字符串
+     * @return 转义后的字符串
+     */
+    private static String escape(final String value) {
+        if (value == null || !value.contains("_x")) {
+            return value;
         }
+
+        // 使用 _x005F前缀转义_xXXXX_，避免被decode的问题
+        return PatternKit.replaceAll(value, utfPtrn, "_x005F$0");
     }
 
 }
