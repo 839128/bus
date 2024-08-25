@@ -59,7 +59,8 @@
             <organization>Miaixz</organization>
             <organizationUrl>http://www.miaixz.org</organizationUrl>
             <roles>
-                <role>maintainer</role>
+                <role>Owner</role>
+                <role>Committer</role>
             </roles>
         </developer>
         <developer>
@@ -68,6 +69,9 @@
             <email>wubenhui@gmail.com</email>
             <organization>Miaixz</organization>
             <organizationUrl>http://www.miaixz.org</organizationUrl>
+            <roles>
+                <role>Committer</role>
+            </roles>
         </developer>
     </developers>
 
