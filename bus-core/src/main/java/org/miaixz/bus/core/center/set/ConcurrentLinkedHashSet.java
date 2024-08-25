@@ -25,64 +25,69 @@
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 */
-package org.miaixz.bus.core.center.date.culture.cn.birth.provider.impl;
+package org.miaixz.bus.core.center.set;
 
-import org.miaixz.bus.core.center.date.culture.cn.birth.ChildLimitInfo;
-import org.miaixz.bus.core.center.date.culture.cn.birth.provider.ChildLimitProvider;
-import org.miaixz.bus.core.center.date.culture.solar.SolarDay;
-import org.miaixz.bus.core.center.date.culture.solar.SolarMonth;
-import org.miaixz.bus.core.center.date.culture.solar.SolarTerms;
-import org.miaixz.bus.core.center.date.culture.solar.SolarTime;
+import org.miaixz.bus.core.center.map.concurrent.ConcurrentLinkedHashMap;
+import org.miaixz.bus.core.lang.Normal;
+
+import java.util.Collection;
 
 /**
- * 默认的童限计算
+ * 通过{@link ConcurrentLinkedHashMap}实现的线程安全HashSet
  *
+ * @param <E> 元素类型
  * @author Kimi Liu
  * @since Java 17+
  */
-public class DefaultChildLimitProvider implements ChildLimitProvider {
+public class ConcurrentLinkedHashSet<E> extends SetFromMap<E> {
 
-    @Override
-    public ChildLimitInfo getInfo(SolarTime birthTime, SolarTerms term) {
-        // 出生时刻和节令时刻相差的秒数
-        int seconds = Math.abs(term.getJulianDay().getSolarTime().subtract(birthTime));
-        // 3天 = 1年，3天=60*60*24*3秒=259200秒 = 1年
-        int year = seconds / 259200;
-        seconds %= 259200;
-        // 1天 = 4月，1天=60*60*24秒=86400秒 = 4月，85400秒/4=21600秒 = 1月
-        int month = seconds / 21600;
-        seconds %= 21600;
-        // 1时 = 5天，1时=60*60秒=3600秒 = 5天，3600秒/5=720秒 = 1天
-        int day = seconds / 720;
-        seconds %= 720;
-        // 1分 = 2时，60秒 = 2时，60秒/2=30秒 = 1时
-        int hour = seconds / 30;
-        seconds %= 30;
-        // 1秒 = 2分，1秒/2=0.5秒 = 1分
-        int minute = seconds * 2;
+    private static final long serialVersionUID = -1L;
 
-        SolarDay birthday = birthTime.getSolarDay();
+    /**
+     * 构造
+     */
+    public ConcurrentLinkedHashSet() {
+        super(new ConcurrentLinkedHashMap.Builder<E, Boolean>().maximumWeightedCapacity(Normal._64).build());
+    }
 
-        int d = birthday.getDay() + day;
-        int h = birthTime.getHour() + hour;
-        int mi = birthTime.getMinute() + minute;
-        h += mi / 60;
-        mi %= 60;
-        d += h / 24;
-        h %= 24;
+    /**
+     * 构造 触发因子为默认的0.75
+     *
+     * @param initialCapacity 初始大小
+     */
+    public ConcurrentLinkedHashSet(final int initialCapacity) {
+        super(new ConcurrentLinkedHashMap.Builder<E, Boolean>().initialCapacity(initialCapacity)
+                .maximumWeightedCapacity(initialCapacity).build());
+    }
 
-        SolarMonth sm = SolarMonth.fromYm(birthday.getYear() + year, birthday.getMonth()).next(month);
+    /**
+     * 构造
+     *
+     * @param initialCapacity  初始大小
+     * @param concurrencyLevel 线程并发度
+     */
+    public ConcurrentLinkedHashSet(final int initialCapacity, final int concurrencyLevel) {
+        super(new ConcurrentLinkedHashMap.Builder<E, Boolean>().initialCapacity(initialCapacity)
+                .maximumWeightedCapacity(initialCapacity).concurrencyLevel(concurrencyLevel).build());
+    }
 
-        int dc = sm.getDayCount();
-        while (d > dc) {
-            d -= dc;
-            sm = sm.next(1);
-            dc = sm.getDayCount();
+    /**
+     * 从已有集合中构造
+     *
+     * @param iter {@link Iterable}
+     */
+    public ConcurrentLinkedHashSet(final Iterable<E> iter) {
+        super(iter instanceof Collection
+                ? new ConcurrentLinkedHashMap.Builder<E, Boolean>().initialCapacity(((Collection<E>) iter).size())
+                .build()
+                : new ConcurrentLinkedHashMap.Builder<E, Boolean>().build());
+        if (iter instanceof Collection) {
+            this.addAll((Collection<E>) iter);
+        } else {
+            for (final E e : iter) {
+                this.add(e);
+            }
         }
-
-        return new ChildLimitInfo(birthTime,
-                SolarTime.fromYmdHms(sm.getYear(), sm.getMonth(), d, h, mi, birthTime.getSecond()), year, month, day,
-                hour, minute);
     }
 
 }

@@ -25,64 +25,80 @@
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 */
-package org.miaixz.bus.office.excel.reader;
+package org.miaixz.bus.core.convert;
 
-import org.apache.poi.ss.usermodel.Sheet;
-import org.miaixz.bus.core.bean.copier.CopyOptions;
+import org.miaixz.bus.core.bean.copier.ValueProvider;
+import org.miaixz.bus.core.bean.copier.provider.BeanValueProvider;
+import org.miaixz.bus.core.bean.copier.provider.MapValueProvider;
+import org.miaixz.bus.core.lang.Assert;
+import org.miaixz.bus.core.lang.exception.ConvertException;
 import org.miaixz.bus.core.xyz.BeanKit;
+import org.miaixz.bus.core.xyz.KotlinKit;
+import org.miaixz.bus.core.xyz.TypeKit;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.io.Serializable;
+import java.lang.reflect.Type;
 import java.util.Map;
 
 /**
- * 读取{@link Sheet}为bean的List列表形式
+ * Kotlin Bean转换器，支持：
+ * 
+ * <pre>
+ * Map = Bean
+ * Bean = Bean
+ * ValueProvider = Bean
+ * </pre>
  *
- * @param <T> 结果类型
  * @author Kimi Liu
  * @since Java 17+
  */
-public class BeanSheetReader<T> implements SheetReader<List<T>> {
+public class KBeanConverter implements MatcherConverter, Serializable {
 
-    private final Class<T> beanClass;
-    private final MapSheetReader mapSheetReader;
+    private static final long serialVersionUID = -1L;
 
     /**
-     * 构造
-     *
-     * @param headerRowIndex 标题所在行，如果标题行在读取的内容行中间，这行做为数据将忽略
-     * @param startRowIndex  起始行（包含，从0开始计数）
-     * @param endRowIndex    结束行（包含，从0开始计数）
-     * @param beanClass      每行对应Bean的类型
+     * 单例对象
      */
-    public BeanSheetReader(final int headerRowIndex, final int startRowIndex, final int endRowIndex,
-            final Class<T> beanClass) {
-        mapSheetReader = new MapSheetReader(headerRowIndex, startRowIndex, endRowIndex);
-        this.beanClass = beanClass;
+    public static KBeanConverter INSTANCE = new KBeanConverter();
+
+    @Override
+    public boolean match(final Type targetType, final Class<?> rawType, final Object value) {
+        return KClassUtil.isKotlinClass(rawType);
     }
 
     @Override
-    public List<T> read(final Sheet sheet) {
-        final List<Map<Object, Object>> mapList = mapSheetReader.read(sheet);
-        if (Map.class.isAssignableFrom(this.beanClass)) {
-            return (List<T>) mapList;
+    public Object convert(final Type targetType, final Object value) throws ConvertException {
+        Assert.notNull(targetType);
+        if (null == value) {
+            return null;
         }
 
-        final List<T> beanList = new ArrayList<>(mapList.size());
-        final CopyOptions copyOptions = CopyOptions.of().setIgnoreError(true);
-        for (final Map<Object, Object> map : mapList) {
-            beanList.add(BeanKit.toBean(map, this.beanClass, copyOptions));
+        // value本身实现了Converter接口，直接调用
+        if (value instanceof Converter) {
+            return ((Converter) value).convert(targetType, value);
         }
-        return beanList;
+
+        final Class<?> targetClass = TypeKit.getClass(targetType);
+        Assert.notNull(targetClass, "Target type is not a class!");
+
+        return convertInternal(targetType, targetClass, value);
     }
 
-    /**
-     * 设置Excel配置
-     *
-     * @param config Excel配置
-     */
-    public void setExcelConfig(final ExcelReadConfig config) {
-        this.mapSheetReader.setExcelConfig(config);
+    private Object convertInternal(final Type targetType, final Class<?> targetClass, final Object value) {
+        ValueProvider<String> valueProvider = null;
+        if (value instanceof ValueProvider) {
+            valueProvider = (ValueProvider<String>) value;
+        } else if (value instanceof Map) {
+            valueProvider = new MapValueProvider((Map<String, ?>) value);
+        } else if (BeanKit.isWritableBean(value.getClass())) {
+            valueProvider = new BeanValueProvider(value);
+        }
+
+        if (null != valueProvider) {
+            return KotlinKit.newInstance(targetClass, valueProvider);
+        }
+
+        throw new ConvertException("Unsupported source type: [{}] to [{}]", value.getClass(), targetType);
     }
 
 }
