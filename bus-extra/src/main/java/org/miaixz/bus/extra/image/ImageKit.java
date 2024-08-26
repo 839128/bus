@@ -792,15 +792,15 @@ public class ImageKit {
     /**
      * 给图片添加文字水印
      *
-     * @param imageFile  源图像文件
-     * @param targetFile 目标图像文件
-     * @param pressText  水印文字
+     * @param imageFile 源图像文件
+     * @param destFile  目标图像文件
+     * @param pressText 水印文字
      */
-    public static void pressText(final File imageFile, final File targetFile, final ImageText pressText) {
+    public static void pressText(final File imageFile, final File destFile, final ImageText pressText) {
         BufferedImage image = null;
         try {
             image = read(imageFile);
-            pressText(image, targetFile, pressText);
+            pressText(image, destFile, pressText);
         } finally {
             flush(image);
         }
@@ -827,14 +827,14 @@ public class ImageKit {
     /**
      * 给图片添加文字水印 此方法并不关闭流
      *
-     * @param srcImage   源图像，使用结束后需手动调用{@link #flush(Image)}释放资源
-     * @param targetFile 目标流
-     * @param pressText  水印文字信息
+     * @param srcImage  源图像，使用结束后需手动调用{@link #flush(Image)}释放资源
+     * @param destFile  目标流
+     * @param pressText 水印文字信息
      * @throws InternalException IO异常
      */
-    public static void pressText(final Image srcImage, final File targetFile, final ImageText pressText)
+    public static void pressText(final Image srcImage, final File destFile, final ImageText pressText)
             throws InternalException {
-        write(pressText(srcImage, pressText), targetFile);
+        write(pressText(srcImage, pressText), destFile);
     }
 
     /**
@@ -1014,19 +1014,19 @@ public class ImageKit {
      * 给图片添加全屏图片水印
      *
      * @param imageFile      源图像文件
-     * @param targetFile     目标图像文件
+     * @param destFile       目标图像文件
      * @param pressImageFile 水印图像文件
      * @param lineHeight     行高
      * @param degree         水印图像旋转角度，（单位：弧度），以圆点（0,0）为圆心，正代表顺时针，负代表逆时针
      * @param alpha          透明度：alpha 必须是范围 [0.0, 1.0] 之内（包含边界值）的一个浮点数字
      * @throws InternalException IO异常
      */
-    public static void pressImageFull(final File imageFile, final File targetFile, final File pressImageFile,
+    public static void pressImageFull(final File imageFile, final File destFile, final File pressImageFile,
             final int lineHeight, final int degree, final float alpha) throws InternalException {
         BufferedImage image = null;
         try {
             image = read(imageFile);
-            write(pressImageFull(image, read(pressImageFile), lineHeight, degree, alpha), targetFile);
+            write(pressImageFull(image, read(pressImageFile), lineHeight, degree, alpha), destFile);
         } finally {
             flush(image);
         }
@@ -1600,12 +1600,12 @@ public class ImageKit {
     /**
      * 写出图像为目标文件扩展名对应的格式
      *
-     * @param image      {@link Image}，使用结束后需手动调用{@link #flush(Image)}释放资源
-     * @param targetFile 目标文件
+     * @param image    {@link Image}，使用结束后需手动调用{@link #flush(Image)}释放资源
+     * @param destFile 目标文件
      * @throws InternalException IO异常
      */
-    public static void write(final Image image, final File targetFile) throws InternalException {
-        ImageWriter.of(image, FileName.extName(targetFile)).write(targetFile);
+    public static void write(final Image image, final File destFile) throws InternalException {
+        ImageWriter.of(image, FileName.extName(destFile)).write(destFile);
     }
 
     /**
@@ -2103,11 +2103,43 @@ public class ImageKit {
      * @param font   字体
      * @param width  字符串总宽度
      * @param height 字符串背景高度
-     * @return 画笔对象
+     * @return {@link Graphics}
      */
     public static Graphics drawStringColourful(final Graphics g, final String text, final Font font, final int width,
             final int height) {
-        return drawString(g, text, font, null, width, height);
+        return drawStringColourful(g, text, font, width, height, null, 0);
+    }
+
+    /**
+     * 绘制字符串，使用随机颜色，默认抗锯齿
+     *
+     * @param g                {@link Graphics}画笔
+     * @param str              字符串
+     * @param font             字体
+     * @param width            字符串总宽度
+     * @param height           字符串背景高度
+     * @param compareColor     对比颜色，用于计算颜色与对比颜色的色差，色差小于minColorDistance则重新生成颜色
+     * @param minColorDistance 随机生成的颜色与对比颜色的最小色差，小于此值则重新生成颜色
+     * @return {@link Graphics}
+     */
+    public static Graphics drawStringColourful(final Graphics g, final String str, final Font font, final int width,
+            final int height, final Color compareColor, final int minColorDistance) {
+        // 抗锯齿
+        enableAntialias(g);
+        // 创建字体
+        g.setFont(font);
+
+        // 文字高度（必须在设置字体后调用）
+        final int midY = getCenterY(g, height);
+
+        final int len = str.length();
+        final int charWidth = width / len;
+        for (int i = 0; i < len; i++) {
+            // 产生随机的颜色值，让输出的每个字符的颜色值都将不同。
+            g.setColor(ColorKit.randomColor(compareColor, minColorDistance));
+            g.drawString(String.valueOf(str.charAt(i)), i * charWidth, midY);
+        }
+        return g;
     }
 
     /**
@@ -2119,7 +2151,7 @@ public class ImageKit {
      * @param color  字体颜色，{@code null} 表示使用随机颜色（每个字符单独随机）
      * @param width  字符串背景的宽度
      * @param height 字符串背景的高度
-     * @return 画笔对象
+     * @return {@link Graphics}
      */
     public static Graphics drawString(final Graphics g, final String text, final Font font, final Color color,
             final int width, final int height) {
@@ -2137,10 +2169,6 @@ public class ImageKit {
         final int len = text.length();
         final int charWidth = width / len;
         for (int i = 0; i < len; i++) {
-            if (null == color) {
-                // 产生随机的颜色值，让输出的每个字符的颜色值都将不同。
-                g.setColor(ColorKit.randomColor());
-            }
             g.drawString(String.valueOf(text.charAt(i)), i * charWidth, midY);
         }
         return g;
@@ -2154,7 +2182,7 @@ public class ImageKit {
      * @param font      字体，字体大小决定了在背景中绘制的大小
      * @param color     字体颜色，{@code null} 表示使用黑色
      * @param rectangle 字符串绘制坐标和大小，此对象定义了绘制字符串的区域大小和偏移位置
-     * @return 画笔对象
+     * @return {@link Graphics}
      */
     public static Graphics drawString(final Graphics g, final String text, final Font font, final Color color,
             final Rectangle rectangle) {
@@ -2185,7 +2213,7 @@ public class ImageKit {
      * @param font  字体，字体大小决定了在背景中绘制的大小
      * @param color 字体颜色，{@code null} 表示使用黑色
      * @param point 绘制字符串的位置坐标
-     * @return 画笔对象
+     * @return {@link Graphics}
      */
     public static Graphics drawString(final Graphics g, final String text, final Font font, final Color color,
             final Point point) {
@@ -2205,7 +2233,7 @@ public class ImageKit {
      * @param g     画笔
      * @param img   要绘制的图片
      * @param point 绘制的位置，基于左上角
-     * @return 画笔对象
+     * @return {@link Graphics}
      */
     public static Graphics drawImg(final Graphics g, final Image img, final Point point) {
         g.drawImage(img, point.x, point.y, null);
@@ -2248,6 +2276,16 @@ public class ImageKit {
                     .setRenderingHints(RenderingHintsBuilder.of().setAntialiasing(RenderingHintsBuilder.Antialias.ON)
                             .setTextAntialias(RenderingHintsBuilder.TextAntialias.ON).build());
         }
+    }
+
+    /**
+     * 获得系统中支持的所有字体
+     *
+     * @return 字体数组
+     */
+    public static Font[] getAllFonts() {
+        final GraphicsEnvironment e = GraphicsEnvironment.getLocalGraphicsEnvironment();
+        return e.getAllFonts();
     }
 
     /**

@@ -129,44 +129,44 @@ public class QrCodeKit {
     /**
      * 生成二维码到文件，二维码图片格式取决于文件的扩展名
      *
-     * @param content    文本内容
-     * @param width      宽度（单位：类型为一般图片或SVG时，单位是像素，类型为 Ascii Art 字符画时，单位是字符▄或▀的大小）
-     * @param height     高度（单位：类型为一般图片或SVG时，单位是像素，类型为 Ascii Art 字符画时，单位是字符▄或▀的大小）
-     * @param targetFile 目标文件，扩展名决定输出格式
+     * @param content  文本内容
+     * @param width    宽度（单位：类型为一般图片或SVG时，单位是像素，类型为 Ascii Art 字符画时，单位是字符▄或▀的大小）
+     * @param height   高度（单位：类型为一般图片或SVG时，单位是像素，类型为 Ascii Art 字符画时，单位是字符▄或▀的大小）
+     * @param destFile 目标文件，扩展名决定输出格式
      * @return 目标文件
      */
-    public static File generate(final String content, final int width, final int height, final File targetFile) {
-        return generate(content, QrConfig.of(width, height), targetFile);
+    public static File generate(final String content, final int width, final int height, final File destFile) {
+        return generate(content, QrConfig.of(width, height), destFile);
     }
 
     /**
      * 生成二维码到文件，二维码图片格式取决于文件的扩展名
      *
-     * @param content    文本内容
-     * @param config     二维码配置，包括宽度、高度、边距、颜色等
-     * @param targetFile 目标文件，扩展名决定输出格式
+     * @param content  文本内容
+     * @param config   二维码配置，包括宽度、高度、边距、颜色等
+     * @param destFile 目标文件，扩展名决定输出格式
      * @return 目标文件
      */
-    public static File generate(final String content, final QrConfig config, final File targetFile) {
-        final String extName = FileName.extName(targetFile);
+    public static File generate(final String content, final QrConfig config, final File destFile) {
+        final String extName = FileName.extName(destFile);
         switch (extName) {
         case QR_TYPE_SVG:
-            FileKit.writeUtf8String(generateAsSvg(content, config), targetFile);
+            FileKit.writeUtf8String(generateAsSvg(content, config), destFile);
             break;
         case QR_TYPE_TXT:
-            FileKit.writeUtf8String(generateAsAsciiArt(content, config), targetFile);
+            FileKit.writeUtf8String(generateAsAsciiArt(content, config), destFile);
             break;
         default:
             BufferedImage image = null;
             try {
                 image = generate(content, config);
-                ImageKit.write(image, targetFile);
+                ImageKit.write(image, destFile);
             } finally {
                 ImageKit.flush(image);
             }
         }
 
-        return targetFile;
+        return destFile;
     }
 
     /**

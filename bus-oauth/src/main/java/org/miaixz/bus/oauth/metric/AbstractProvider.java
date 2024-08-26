@@ -27,6 +27,10 @@
 */
 package org.miaixz.bus.oauth.metric;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.miaixz.bus.cache.metric.ExtendCache;
 import org.miaixz.bus.core.basic.entity.Message;
 import org.miaixz.bus.core.data.id.ID;
@@ -43,10 +47,6 @@ import org.miaixz.bus.oauth.magic.AccToken;
 import org.miaixz.bus.oauth.magic.Callback;
 import org.miaixz.bus.oauth.magic.ErrorCode;
 import org.miaixz.bus.oauth.magic.Material;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * 默认授权处理类
@@ -72,7 +72,7 @@ public abstract class AbstractProvider implements Provider {
             throw new AuthorizedException(ErrorCode.PARAMETER_INCOMPLETE.getCode());
         }
         // 校验配置合法性
-        Checker.checkConfig(this.context, this.complex);
+        checkConfig(this.context);
     }
 
     /**
@@ -302,6 +302,10 @@ public abstract class AbstractProvider implements Provider {
         }
         String scope = String.join(separator, scopes);
         return encode ? UrlEncoder.encodeAll(scope) : scope;
+    }
+
+    protected void checkConfig(Context context) {
+        Checker.checkConfig(context, this.complex);
     }
 
 }

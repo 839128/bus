@@ -813,24 +813,23 @@ public class Images implements Flushable, Serializable {
     /**
      * 写出图像为目标文件扩展名对应的格式
      *
-     * @param targetFile 目标文件
+     * @param destFile 目标文件
      * @return this
      * @throws InternalException IO异常
      */
-    public Images write(final File targetFile) throws InternalException {
-        final String formatName = FileName.extName(targetFile);
+    public Images write(final File destFile) throws InternalException {
+        final String formatName = FileName.extName(destFile);
         if (StringKit.isNotBlank(formatName)) {
             this.targetImageType = formatName;
         }
 
-        if (targetFile.exists()) {
-            // noinspection ResultOfMethodCallIgnored
-            targetFile.delete();
+        if (destFile.exists()) {
+            destFile.delete();
         }
 
         ImageOutputStream out = null;
         try {
-            out = ImageKit.getImageOutputStream(targetFile);
+            out = ImageKit.getImageOutputStream(destFile);
             write(out);
         } finally {
             IoKit.closeQuietly(out);

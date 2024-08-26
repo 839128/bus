@@ -27,6 +27,11 @@
 */
 package org.miaixz.bus.office.excel.sax;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Iterator;
+
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.openxml4j.exceptions.OpenXML4JException;
 import org.apache.poi.openxml4j.opc.OPCPackage;
@@ -38,11 +43,6 @@ import org.miaixz.bus.core.xyz.MethodKit;
 import org.miaixz.bus.core.xyz.ObjectKit;
 import org.miaixz.bus.core.xyz.StringKit;
 import org.miaixz.bus.office.excel.sax.handler.RowHandler;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Iterator;
 
 /**
  * Sax方式读取Excel文件 Excel2007格式说明见：<a href=
@@ -108,9 +108,7 @@ public class Excel07SaxReader implements ExcelSaxReader<Excel07SaxReader> {
     public Excel07SaxReader read(final InputStream in, final String idOrRidOrSheetName) throws InternalException {
         try (final OPCPackage opcPackage = OPCPackage.open(in)) {
             return read(opcPackage, idOrRidOrSheetName);
-        } catch (final IOException e) {
-            throw new InternalException(e);
-        } catch (final InvalidFormatException e) {
+        } catch (final IOException | InvalidFormatException e) {
             throw new InternalException(e);
         }
     }
@@ -139,9 +137,7 @@ public class Excel07SaxReader implements ExcelSaxReader<Excel07SaxReader> {
             throws InternalException {
         try {
             return read(new XSSFReader(opcPackage), idOrRidOrSheetName);
-        } catch (final OpenXML4JException e) {
-            throw new InternalException(e);
-        } catch (final IOException e) {
+        } catch (final OpenXML4JException | IOException e) {
             throw new InternalException(e);
         }
     }
@@ -187,7 +183,7 @@ public class Excel07SaxReader implements ExcelSaxReader<Excel07SaxReader> {
             if (this.handler.sheetIndex > -1) {
                 // 根据 rId# 或 rSheet# 查找sheet
                 sheetInputStream = xssfReader.getSheet(RID_PREFIX + (this.handler.sheetIndex + 1));
-                ExcelSax.readFrom(sheetInputStream, this.handler);
+                ExcelSaxKit.readFrom(sheetInputStream, this.handler);
                 this.handler.rowHandler.doAfterAllAnalysed();
             } else {
                 this.handler.sheetIndex = -1;
@@ -198,7 +194,7 @@ public class Excel07SaxReader implements ExcelSaxReader<Excel07SaxReader> {
                     this.handler.index = 0;
                     this.handler.sheetIndex++;
                     sheetInputStream = sheetInputStreams.next();
-                    ExcelSax.readFrom(sheetInputStream, this.handler);
+                    ExcelSaxKit.readFrom(sheetInputStream, this.handler);
                     this.handler.rowHandler.doAfterAllAnalysed();
                 }
             }

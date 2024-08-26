@@ -27,6 +27,12 @@
 */
 package org.miaixz.bus.office.excel.sax;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.xssf.eventusermodel.XSSFReader;
 import org.miaixz.bus.core.lang.exception.InternalException;
@@ -37,21 +43,15 @@ import org.miaixz.bus.core.xyz.StringKit;
 import org.xml.sax.Attributes;
 import org.xml.sax.helpers.DefaultHandler;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
 /**
  * 在Sax方式读取Excel时，读取sheet标签中sheetId和rid的对应关系，类似于:
  * 
  * <pre>
  *  sheet name="Sheet6" sheetId="4" r:id="rId6"
  * </pre>
- * 
+ *
  * 读取结果为：
- * 
+ *
  * <pre>
  *     {"4": "6"}
  * </pre>
@@ -88,7 +88,7 @@ public class SheetRidReader extends DefaultHandler {
         InputStream workbookData = null;
         try {
             workbookData = xssfReader.getWorkbookData();
-            ExcelSax.readFrom(workbookData, this);
+            ExcelSaxKit.readFrom(workbookData, this);
         } catch (final InvalidFormatException | IOException e) {
             throw new InternalException(e);
         } finally {

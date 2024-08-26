@@ -27,6 +27,10 @@
 */
 package org.miaixz.bus.office.csv;
 
+import java.io.*;
+import java.util.List;
+import java.util.Map;
+
 import org.miaixz.bus.core.center.iterator.ArrayIterator;
 import org.miaixz.bus.core.convert.Convert;
 import org.miaixz.bus.core.lang.Assert;
@@ -34,10 +38,6 @@ import org.miaixz.bus.core.lang.Charset;
 import org.miaixz.bus.core.lang.Symbol;
 import org.miaixz.bus.core.lang.exception.InternalException;
 import org.miaixz.bus.core.xyz.*;
-
-import java.io.*;
-import java.util.List;
-import java.util.Map;
 
 /**
  * CSV数据写出器
@@ -172,22 +172,6 @@ public final class CsvWriter implements Closeable, Flushable, Serializable {
     public CsvWriter(final Writer writer, final CsvWriteConfig config) {
         this.writer = (writer instanceof BufferedWriter) ? writer : new BufferedWriter(writer);
         this.config = ObjectKit.defaultIfNull(config, CsvWriteConfig::defaultConfig);
-    }
-
-    /**
-     * 给定字符是否为DDE攻击不安全的字符，包括：
-     * <ul>
-     * <li>{@code @ }</li>
-     * <li>{@code + }</li>
-     * <li>{@code - }</li>
-     * <li>{@code = }</li>
-     * </ul>
-     *
-     * @param c 被检查的字符
-     * @return 是否不安全的字符
-     */
-    private static boolean isDDEUnsafeChar(final char c) {
-        return c == Symbol.C_AT || c == Symbol.C_PLUS || c == Symbol.C_MINUS || c == Symbol.C_EQUAL;
     }
 
     /**
@@ -503,6 +487,22 @@ public final class CsvWriter implements Closeable, Flushable, Serializable {
         if (needsTextDelimiter) {
             writer.write(textDelimiter);
         }
+    }
+
+    /**
+     * 给定字符是否为DDE攻击不安全的字符，包括：
+     * <ul>
+     * <li>{@code @ }</li>
+     * <li>{@code + }</li>
+     * <li>{@code - }</li>
+     * <li>{@code = }</li>
+     * </ul>
+     *
+     * @param c 被检查的字符
+     * @return 是否不安全的字符
+     */
+    private static boolean isDDEUnsafeChar(final char c) {
+        return c == Symbol.C_AT || c == Symbol.C_PLUS || c == Symbol.C_MINUS || c == Symbol.C_EQUAL;
     }
 
 }

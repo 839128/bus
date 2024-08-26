@@ -60,7 +60,7 @@ public class Element extends Samsara {
     }
 
     /**
-     * 我生者（生）
+     * 我生者
      *
      * @return 五行
      */
@@ -69,7 +69,7 @@ public class Element extends Samsara {
     }
 
     /**
-     * 我克者（克）
+     * 我克者
      *
      * @return 五行
      */
@@ -78,7 +78,7 @@ public class Element extends Samsara {
     }
 
     /**
-     * 生我者（泄）
+     * 生我者
      *
      * @return 五行
      */
@@ -87,12 +87,21 @@ public class Element extends Samsara {
     }
 
     /**
-     * 克我者（耗）
+     * 克我者
      *
      * @return 五行
      */
     public Element getRestrained() {
         return next(-2);
+    }
+
+    /**
+     * 方位
+     *
+     * @return 方位
+     */
+    public Direction getDirection() {
+        return Direction.fromIndex(new int[] { 2, 8, 4, 6, 0 }[index]);
     }
 
 }

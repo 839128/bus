@@ -246,7 +246,8 @@ public class Dictionary extends CustomKeyMap<String, Object> implements TypeGett
      */
     public <T> Dictionary parseBean(final T bean) {
         Assert.notNull(bean, "Bean must not be null");
-        this.putAll(BeanKit.beanToMap(bean));
+        // 一次性使用，避免先生成Map，再复制造成空间浪费
+        this.putAll(BeanKit.toBeanMap(bean));
         return this;
     }
 
@@ -421,7 +422,7 @@ public class Dictionary extends CustomKeyMap<String, Object> implements TypeGett
 
     /**
      * 通过lambda批量设置值 实际使用时，可以使用getXXX的方法引用来完成键值对的赋值：
-     * 
+     *
      * <pre>
      * User user = GenericBuilder.of(User::new).with(User::setUsername, "name").build();
      * Dictionary.create().setFields(user::getNickname, user::getUsername);

@@ -69,7 +69,8 @@ public class ListNode implements Node {
                 // 只支持String为key的Map
                 return MapKit.getAny((Map<String, ?>) bean, unWrappedNames);
             } else {
-                final Map<String, Object> map = BeanKit.beanToMap(bean);
+                // 一次性使用，包装Bean避免无用转换
+                final Map<String, Object> map = BeanKit.toBeanMap(bean);
                 return MapKit.getAny(map, unWrappedNames);
             }
         }

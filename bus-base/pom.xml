@@ -32,7 +32,7 @@
 
     <groupId>org.miaixz</groupId>
     <artifactId>bus-base</artifactId>
-    <version>8.0.8</version>
+    <version>8.0.9</version>
     <packaging>jar</packaging>
 
     <name>${project.artifactId}</name>
@@ -43,14 +43,31 @@
     <licenses>
         <license>
             <name>The MIT License (MIT)</name>
-            <url>https://opensource.org/licenses/MIT</url>
+            <url>https://github.com/839128/bus/blob/main/LICENSE</url>
         </license>
     </licenses>
 
     <developers>
         <developer>
+            <id>839128</id>
             <name>Kimi Liu</name>
-            <url>https://github.com/839128/bus.git</url>
+            <email>839536@gmail.com</email>
+            <organization>Miaixz</organization>
+            <organizationUrl>http://www.miaixz.org</organizationUrl>
+            <roles>
+                <role>Owner</role>
+                <role>Committer</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>justubborn</id>
+            <name>Justubborn</name>
+            <email>wubenhui@gmail.com</email>
+            <organization>Miaixz</organization>
+            <organizationUrl>http://www.miaixz.org</organizationUrl>
+            <roles>
+                <role>Committer</role>
+            </roles>
         </developer>
     </developers>
 
@@ -69,7 +86,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <lombok.version>1.18.34</lombok.version>
-        <spring.boot.version>3.3.2</spring.boot.version>
+        <spring.boot.version>3.3.3</spring.boot.version>
         <jakarta.persistence.version>3.2.0</jakarta.persistence.version>
     </properties>
 
@@ -118,7 +135,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.7.0</version>
+                <version>3.8.0</version>
                 <executions>
                     <execution>
                         <id>attach-javadocs</id>
@@ -198,8 +215,8 @@
                                 <include>**/*.yml</include>
                                 <include>**/*.yaml</include>
                             </includes>
-                            <trimTrailingWhitespace/>
-                            <endWithNewline/>
+                            <trimTrailingWhitespace />
+                            <endWithNewline />
                             <indent>
                                 <spaces>true</spaces>
                                 <spacesPerTab>2</spacesPerTab>
@@ -209,8 +226,8 @@
                             <includes>
                                 <include>**/*.xml</include>
                             </includes>
-                            <trimTrailingWhitespace/>
-                            <endWithNewline/>
+                            <trimTrailingWhitespace />
+                            <endWithNewline />
                             <indent>
                                 <spaces>true</spaces>
                                 <spacesPerTab>4</spacesPerTab>
@@ -224,7 +241,7 @@
                         <eclipse>
                             <file>../.github/spotless/spotless_format.xml</file>
                         </eclipse>
-                        <removeUnusedImports/>
+                        <removeUnusedImports />
                     </java>
                     <pom>
                         <sortPom>

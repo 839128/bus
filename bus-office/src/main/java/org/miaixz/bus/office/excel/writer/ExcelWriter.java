@@ -25,35 +25,35 @@
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 */
-package org.miaixz.bus.office.excel;
+package org.miaixz.bus.office.excel.writer;
 
-import org.apache.poi.common.usermodel.Hyperlink;
 import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.CellRangeAddressList;
 import org.apache.poi.ss.util.CellReference;
-import org.apache.poi.xssf.streaming.SXSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFDataValidation;
-import org.apache.poi.xssf.usermodel.XSSFSheet;
-import org.miaixz.bus.core.center.map.TableMap;
-import org.miaixz.bus.core.center.map.concurrent.SafeConcurrentHashMap;
-import org.miaixz.bus.core.center.map.multi.RowKeyTable;
-import org.miaixz.bus.core.center.map.multi.Table;
-import org.miaixz.bus.core.compare.IndexedCompare;
 import org.miaixz.bus.core.lang.Assert;
-import org.miaixz.bus.core.lang.EnumMap;
-import org.miaixz.bus.core.lang.Symbol;
+import org.miaixz.bus.core.lang.EnumValue;
 import org.miaixz.bus.core.lang.exception.InternalException;
-import org.miaixz.bus.core.xyz.*;
+import org.miaixz.bus.core.xyz.BeanKit;
+import org.miaixz.bus.core.xyz.FileKit;
+import org.miaixz.bus.core.xyz.IoKit;
+import org.miaixz.bus.office.excel.*;
 import org.miaixz.bus.office.excel.cell.CellEditor;
 import org.miaixz.bus.office.excel.cell.CellKit;
 import org.miaixz.bus.office.excel.style.DefaultStyleSet;
+import org.miaixz.bus.office.excel.style.LineStyle;
+import org.miaixz.bus.office.excel.style.ShapeConfig;
 import org.miaixz.bus.office.excel.style.StyleSet;
 
+import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * Excel 写入器 此工具用于通过POI将数据写出到Excel，此对象可完成以下两个功能
@@ -66,32 +66,20 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author Kimi Liu
  * @since Java 17+
  */
-public class ExcelWriter extends ExcelBase<ExcelWriter> {
+public class ExcelWriter extends ExcelBase<ExcelWriter, ExcelWriteConfig> {
 
-    /**
-     * 当前行
-     */
-    private final AtomicInteger currentRow;
-    /**
-     * 是否只保留别名对应的字段
-     */
-    private boolean onlyAlias;
-    /**
-     * 标题顺序比较器
-     */
-    private Comparator<String> aliasComparator;
     /**
      * 样式集，定义不同类型数据样式
      */
     private StyleSet styleSet;
     /**
-     * 标题项对应列号缓存，每次写标题更新此缓存
+     * Sheet数据写出器
      */
-    private Map<String, Integer> headLocationCache;
+    private SheetDataWriter sheetDataWriter;
     /**
-     * 单元格值处理接口
+     * 模板Excel写入器
      */
-    private CellEditor cellEditor;
+    private SheetTemplateWriter sheetTemplateWriter;
 
     /**
      * 构造，默认生成xlsx格式的Excel文件 此构造不传入写出的Excel文件路径，只能调用{@link #flush(OutputStream)}方法写出到流
@@ -102,7 +90,7 @@ public class ExcelWriter extends ExcelBase<ExcelWriter> {
     }
 
     /**
-     * 构造 此构造不传入写出的Excel文件路径，只能调用{@link #flush(OutputStream)}方法写出到流 若写出到文件，需要调用{@link #flush(File)} 写出到文件
+     * 此构造不传入写出的Excel文件路径，只能调用{@link #flush(OutputStream)}方法写出到流 若写出到文件，需要调用{@link #flush(File, boolean)} 写出到文件
      *
      * @param isXlsx 是否为xlsx格式
      */
@@ -113,14 +101,14 @@ public class ExcelWriter extends ExcelBase<ExcelWriter> {
     /**
      * 构造，默认写出到第一个sheet，第一个sheet名为sheet1
      *
-     * @param destFilePath 目标文件路径，可以不存在
+     * @param dest 目标文件路径，可以不存在
      */
-    public ExcelWriter(final String destFilePath) {
-        this(destFilePath, null);
+    public ExcelWriter(final String dest) {
+        this(dest, null);
     }
 
     /**
-     * 构造 此构造不传入写出的Excel文件路径，只能调用{@link #flush(OutputStream)}方法写出到流 若写出到文件，需要调用{@link #flush(File)} 写出到文件
+     * 此构造不传入写出的Excel文件路径，只能调用{@link #flush(OutputStream)}方法写出到流 若写出到文件，需要调用{@link #flush(File, boolean)} 写出到文件
      *
      * @param isXlsx    是否为xlsx格式
      * @param sheetName sheet名，第一个sheet名并写出到此sheet，例如sheet1
@@ -156,7 +144,13 @@ public class ExcelWriter extends ExcelBase<ExcelWriter> {
      */
     public ExcelWriter(final File destFile, final String sheetName) {
         this(WorkbookKit.createBookForWriter(destFile), sheetName);
-        this.destFile = destFile;
+
+        if (!FileKit.exists(destFile)) {
+            this.destFile = destFile;
+        } else {
+            // 如果是已经存在的文件，则作为模板加载，此时不能写出到模板文件
+            this.sheetTemplateWriter = new SheetTemplateWriter(this.sheet, this.config);
+        }
     }
 
     /**
@@ -167,7 +161,7 @@ public class ExcelWriter extends ExcelBase<ExcelWriter> {
      * @param sheetName sheet名，做为第一个sheet名并写出到此sheet，例如sheet1
      */
     public ExcelWriter(final Workbook workbook, final String sheetName) {
-        this(WorkbookKit.getOrCreateSheet(workbook, sheetName));
+        this(SheetKit.getOrCreateSheet(workbook, sheetName));
     }
 
     /**
@@ -177,50 +171,52 @@ public class ExcelWriter extends ExcelBase<ExcelWriter> {
      * @param sheet {@link Sheet}
      */
     public ExcelWriter(final Sheet sheet) {
-        super(sheet);
+        super(new ExcelWriteConfig(), sheet);
         this.styleSet = new DefaultStyleSet(workbook);
-        this.currentRow = new AtomicInteger(0);
+    }
+
+    @Override
+    public ExcelWriter setConfig(final ExcelWriteConfig config) {
+        return super.setConfig(config);
     }
 
     /**
-     * 设置单元格值处理逻辑 当Excel中的值并不能满足我们的读取要求时，通过传入一个编辑接口，可以对单元格值自定义，例如对数字和日期类型值转换为字符串等
+     * 增加下拉列表
      *
-     * @param cellEditor 单元格值处理接口
-     * @return this
+     * @param sheet      {@link Sheet}
+     * @param regions    {@link CellRangeAddressList} 指定下拉列表所占的单元格范围
+     * @param selectList 下拉列表内容
      */
-    public ExcelWriter setCellEditor(final CellEditor cellEditor) {
-        this.cellEditor = cellEditor;
-        return this;
+    public static void addSelect(final Sheet sheet, final CellRangeAddressList regions, final String... selectList) {
+        final DataValidationHelper validationHelper = sheet.getDataValidationHelper();
+        final DataValidationConstraint constraint = validationHelper.createExplicitListConstraint(selectList);
+
+        // 设置下拉框数据
+        final DataValidation dataValidation = validationHelper.createValidation(constraint, regions);
+
+        // 处理Excel兼容性问题
+        if (dataValidation instanceof XSSFDataValidation) {
+            dataValidation.setSuppressDropDownArrow(true);
+            dataValidation.setShowErrorBox(true);
+        } else {
+            dataValidation.setSuppressDropDownArrow(false);
+        }
+
+        sheet.addValidationData(dataValidation);
     }
 
     @Override
     public ExcelWriter setSheet(final int sheetIndex) {
+        super.setSheet(sheetIndex);
         // 切换到新sheet需要重置开始行
-        reset();
-        return super.setSheet(sheetIndex);
+        return reset();
     }
 
     @Override
     public ExcelWriter setSheet(final String sheetName) {
+        super.setSheet(sheetName);
         // 切换到新sheet需要重置开始行
-        reset();
-        return super.setSheet(sheetName);
-    }
-
-    /**
-     * 重置Writer，包括：
-     *
-     * <pre>
-     * 1. 当前行游标归零
-     * 2. 清空别名比较器
-     * 3. 清除标题缓存
-     * </pre>
-     *
-     * @return this
-     */
-    public ExcelWriter reset() {
-        resetRow();
-        return this;
+        return reset();
     }
 
     /**
@@ -248,36 +244,32 @@ public class ExcelWriter extends ExcelBase<ExcelWriter> {
     /**
      * 设置所有列为自动宽度，不考虑合并单元格 此方法必须在指定列数据完全写出后调用才有效。 列数计算是通过第一行计算的
      *
+     * @param useMergedCells 是否适用于合并单元格
+     * @param widthRatio     列宽的倍数。如果所有内容都是英文，可以设为1，如果有中文，建议设置为 1.6-2.0之间。
      * @return this
      */
-    public ExcelWriter autoSizeColumnAll() {
+    public ExcelWriter autoSizeColumnAll(final boolean useMergedCells, final float widthRatio) {
         final int columnCount = this.getColumnCount();
         for (int i = 0; i < columnCount; i++) {
-            autoSizeColumn(i);
+            autoSizeColumn(i, useMergedCells, widthRatio);
         }
         return this;
     }
 
     /**
-     * 设置某列为自动宽度，不考虑合并单元格 此方法必须在指定列数据完全写出后调用才有效。
-     *
-     * @param columnIndex 第几列，从0计数
-     * @return this
-     */
-    public ExcelWriter autoSizeColumn(final int columnIndex) {
-        this.sheet.autoSizeColumn(columnIndex);
-        return this;
-    }
-
-    /**
-     * 设置某列为自动宽度 此方法必须在指定列数据完全写出后调用才有效。
+     * 设置某列为自动宽度。注意有中文的情况下，需要根据需求调整宽度扩大比例。 此方法必须在指定列数据完全写出后调用才有效。
      *
      * @param columnIndex    第几列，从0计数
      * @param useMergedCells 是否适用于合并单元格
+     * @param widthRatio     列宽的倍数。如果所有内容都是英文，可以设为1，如果有中文，建议设置为 1.6-2.0之间。
      * @return this
      */
-    public ExcelWriter autoSizeColumn(final int columnIndex, final boolean useMergedCells) {
-        this.sheet.autoSizeColumn(columnIndex, useMergedCells);
+    public ExcelWriter autoSizeColumn(final int columnIndex, final boolean useMergedCells, final float widthRatio) {
+        if (widthRatio > 0) {
+            sheet.setColumnWidth(columnIndex, (int) (sheet.getColumnWidth(columnIndex) * widthRatio));
+        } else {
+            sheet.autoSizeColumn(columnIndex, useMergedCells);
+        }
         return this;
     }
 
@@ -289,6 +281,21 @@ public class ExcelWriter extends ExcelBase<ExcelWriter> {
      */
     public ExcelWriter disableDefaultStyle() {
         return setStyleSet(null);
+    }
+
+    /**
+     * 重置Writer，包括：
+     *
+     * <pre>
+     * 1. 当前行游标归零
+     * 2. 清除标题缓存
+     * </pre>
+     *
+     * @return this
+     */
+    public ExcelWriter reset() {
+        this.sheetDataWriter = null;
+        return this;
     }
 
     /**
@@ -314,7 +321,9 @@ public class ExcelWriter extends ExcelBase<ExcelWriter> {
      * @return this
      */
     public ExcelWriter setStyleSet(final StyleSet styleSet) {
-        this.styleSet = styleSet;
+        if (null != this.sheetDataWriter) {
+            this.sheetDataWriter.setStyleSet(styleSet);
+        }
         return this;
     }
 
@@ -324,7 +333,7 @@ public class ExcelWriter extends ExcelBase<ExcelWriter> {
      * @return 当前行
      */
     public int getCurrentRow() {
-        return this.currentRow.get();
+        return null == this.sheetDataWriter ? 0 : this.sheetDataWriter.getCurrentRow();
     }
 
     /**
@@ -334,7 +343,7 @@ public class ExcelWriter extends ExcelBase<ExcelWriter> {
      * @return this
      */
     public ExcelWriter setCurrentRow(final int rowIndex) {
-        this.currentRow.set(rowIndex);
+        getSheetDataWriter().setCurrentRow(rowIndex);
         return this;
     }
 
@@ -353,18 +362,18 @@ public class ExcelWriter extends ExcelBase<ExcelWriter> {
      * @return this
      */
     public ExcelWriter passCurrentRow() {
-        this.currentRow.incrementAndGet();
+        getSheetDataWriter().passAndGet();
         return this;
     }
 
     /**
      * 跳过指定行数
      *
-     * @param rows 跳过的行数
+     * @param rowNum 跳过的行数
      * @return this
      */
-    public ExcelWriter passRows(final int rows) {
-        this.currentRow.addAndGet(rows);
+    public ExcelWriter passRows(final int rowNum) {
+        getSheetDataWriter().passRowsAndGet(rowNum);
         return this;
     }
 
@@ -374,51 +383,18 @@ public class ExcelWriter extends ExcelBase<ExcelWriter> {
      * @return this
      */
     public ExcelWriter resetRow() {
-        this.currentRow.set(0);
+        getSheetDataWriter().resetRow();
         return this;
     }
 
     /**
-     * 设置写出的目标文件
+     * 设置写出的目标文件 注意这个文件不能存在，存在则{@link #flush()}时会被覆盖
      *
      * @param destFile 目标文件
      * @return this
      */
     public ExcelWriter setDestFile(final File destFile) {
         this.destFile = destFile;
-        return this;
-    }
-
-    @Override
-    public ExcelWriter setHeaderAlias(final Map<String, String> headerAlias) {
-        // 新增别名时清除比较器缓存
-        this.aliasComparator = null;
-        return super.setHeaderAlias(headerAlias);
-    }
-
-    @Override
-    public ExcelWriter clearHeaderAlias() {
-        // 清空别名时清除比较器缓存
-        this.aliasComparator = null;
-        return super.clearHeaderAlias();
-    }
-
-    @Override
-    public ExcelWriter addHeaderAlias(final String name, final String alias) {
-        // 新增别名时清除比较器缓存
-        this.aliasComparator = null;
-        return super.addHeaderAlias(name, alias);
-    }
-
-    /**
-     * 设置是否只保留别名中的字段值，如果为true，则不设置alias的字段将不被输出，false表示原样输出
-     * Bean中设置@Alias时，setOnlyAlias是无效的，这个参数只和addHeaderAlias配合使用，原因是注解是Bean内部的操作，而addHeaderAlias是Writer的操作，不互通。
-     *
-     * @param isOnlyAlias 是否只保留别名中的字段值
-     * @return this
-     */
-    public ExcelWriter setOnlyAlias(final boolean isOnlyAlias) {
-        this.onlyAlias = isOnlyAlias;
         return this;
     }
 
@@ -493,11 +469,11 @@ public class ExcelWriter extends ExcelBase<ExcelWriter> {
      * 设置Excel页眉或页脚
      *
      * @param text     页脚的文本
-     * @param align    对齐方式枚举 {@link EnumMap.Align}
+     * @param align    对齐方式枚举 {@link EnumValue.Align}
      * @param isFooter 是否为页脚，false表示页眉，true表示页脚
      * @return this
      */
-    public ExcelWriter setHeaderOrFooter(final String text, final EnumMap.Align align, final boolean isFooter) {
+    public ExcelWriter setHeaderOrFooter(final String text, final EnumValue.Align align, final boolean isFooter) {
         final HeaderFooter headerFooter = isFooter ? this.sheet.getFooter() : this.sheet.getHeader();
         switch (align) {
         case LEFT:
@@ -516,7 +492,7 @@ public class ExcelWriter extends ExcelBase<ExcelWriter> {
     }
 
     /**
-     * 设置忽略错误，即Excel中的绿色警告小标，只支持XSSFSheet
+     * 设置忽略错误，即Excel中的绿色警告小标，只支持XSSFSheet和SXSSFSheet
      * 见：https://stackoverflow.com/questions/23488221/how-to-remove-warning-in-excel-using-apache-poi-in-java
      *
      * @param cellRangeAddress  指定单元格范围
@@ -524,21 +500,10 @@ public class ExcelWriter extends ExcelBase<ExcelWriter> {
      * @return this
      * @throws UnsupportedOperationException 如果sheet不是XSSFSheet
      */
-    public ExcelWriter addIgnoredErrors(final org.apache.poi.ss.util.CellRangeAddress cellRangeAddress,
+    public ExcelWriter addIgnoredErrors(final CellRangeAddress cellRangeAddress,
             final IgnoredErrorType... ignoredErrorTypes) throws UnsupportedOperationException {
-        final Sheet sheet = this.sheet;
-        if (sheet instanceof XSSFSheet) {
-            ((XSSFSheet) sheet).addIgnoredErrors(cellRangeAddress, ignoredErrorTypes);
-            return this;
-        } else if (sheet instanceof SXSSFSheet) {
-            // SXSSFSheet并未提供忽略错误方法，获得其内部_sh字段设置
-            final XSSFSheet xssfSheet = (XSSFSheet) FieldKit.getFieldValue(sheet, "_sh");
-            if (null != xssfSheet) {
-                xssfSheet.addIgnoredErrors(cellRangeAddress, ignoredErrorTypes);
-            }
-        }
-
-        throw new UnsupportedOperationException("Only XSSFSheet supports addIgnoredErrors");
+        SheetKit.addIgnoredErrors(this.sheet, cellRangeAddress, ignoredErrorTypes);
+        return this;
     }
 
     /**
@@ -561,21 +526,8 @@ public class ExcelWriter extends ExcelBase<ExcelWriter> {
      * @return this
      */
     public ExcelWriter addSelect(final CellRangeAddressList regions, final String... selectList) {
-        final DataValidationHelper validationHelper = this.sheet.getDataValidationHelper();
-        final DataValidationConstraint constraint = validationHelper.createExplicitListConstraint(selectList);
-
-        // 设置下拉框数据
-        final DataValidation dataValidation = validationHelper.createValidation(constraint, regions);
-
-        // 处理Excel兼容性问题
-        if (dataValidation instanceof XSSFDataValidation) {
-            dataValidation.setSuppressDropDownArrow(true);
-            dataValidation.setShowErrorBox(true);
-        } else {
-            dataValidation.setSuppressDropDownArrow(false);
-        }
-
-        return addValidationData(dataValidation);
+        addSelect(this.sheet, regions, selectList);
+        return this;
     }
 
     /**
@@ -619,14 +571,14 @@ public class ExcelWriter extends ExcelBase<ExcelWriter> {
      * @return this
      */
     public ExcelWriter merge(final int lastColumn, final Object content, final boolean isSetHeaderStyle) {
-        Assert.isFalse(this.isClosed, "ExcelWriter has been closed!");
+        checkClosed();
 
-        final int rowIndex = this.currentRow.get();
+        final int rowIndex = getCurrentRow();
         merge(CellKit.ofSingleRow(rowIndex, lastColumn), content, isSetHeaderStyle);
 
         // 设置内容后跳到下一行
         if (null != content) {
-            this.currentRow.incrementAndGet();
+            this.passCurrentRow();
         }
         return this;
     }
@@ -639,9 +591,9 @@ public class ExcelWriter extends ExcelBase<ExcelWriter> {
      * @param isSetHeaderStyle 是否为合并后的单元格设置默认标题样式，只提取边框样式
      * @return this
      */
-    public ExcelWriter merge(final org.apache.poi.ss.util.CellRangeAddress cellRangeAddress, final Object content,
+    public ExcelWriter merge(final CellRangeAddress cellRangeAddress, final Object content,
             final boolean isSetHeaderStyle) {
-        Assert.isFalse(this.isClosed, "ExcelWriter has been closed!");
+        checkClosed();
 
         CellStyle style = null;
         if (null != this.styleSet) {
@@ -661,26 +613,22 @@ public class ExcelWriter extends ExcelBase<ExcelWriter> {
      * @param cellStyle        合并后单元格使用的样式，可以为null
      * @return this
      */
-    public ExcelWriter merge(final org.apache.poi.ss.util.CellRangeAddress cellRangeAddress, final Object content,
-            final CellStyle cellStyle) {
-        Assert.isFalse(this.isClosed, "ExcelWriter has been closed!");
+    public ExcelWriter merge(final CellRangeAddress cellRangeAddress, final Object content, final CellStyle cellStyle) {
+        checkClosed();
 
         CellKit.mergingCells(this.getSheet(), cellRangeAddress, cellStyle);
 
         // 设置内容
         if (null != content) {
             final Cell cell = getOrCreateCell(cellRangeAddress.getFirstColumn(), cellRangeAddress.getFirstRow());
-            CellKit.setCellValue(cell, content, cellStyle, this.cellEditor);
+            CellKit.setCellValue(cell, content, cellStyle, this.config.getCellEditor());
         }
         return this;
     }
 
     /**
      * 写出数据，本方法只是将数据写入Workbook中的Sheet，并不写出到文件 写出的起始行为当前行号，可使用{@link #getCurrentRow()}方法调用，根据写出的的行数，当前行号自动增加
-     * 默认的，当当前行号为0时，写出标题（如果为Map或Bean），否则不写标题
-     *
-     * <p>
-     * data中元素支持的类型有：
+     * 默认的，当当前行号为0时，写出标题（如果为Map或Bean），否则不写标题 data中元素支持的类型有：
      *
      * <pre>
      * 1. Iterable，即元素为一个集合，元素被当作一行，data表示多行
@@ -698,8 +646,6 @@ public class ExcelWriter extends ExcelBase<ExcelWriter> {
 
     /**
      * 写出数据，本方法只是将数据写入Workbook中的Sheet，并不写出到文件 写出的起始行为当前行号，可使用{@link #getCurrentRow()}方法调用，根据写出的的行数，当前行号自动增加
-     *
-     * <p>
      * data中元素支持的类型有：
      *
      * <pre>
@@ -714,7 +660,7 @@ public class ExcelWriter extends ExcelBase<ExcelWriter> {
      * @return this
      */
     public ExcelWriter write(final Iterable<?> data, final boolean isWriteKeyAsHead) {
-        Assert.isFalse(this.isClosed, "ExcelWriter has been closed!");
+        checkClosed();
         boolean isFirst = true;
         for (final Object object : data) {
             writeRow(object, isFirst && isWriteKeyAsHead);
@@ -728,7 +674,6 @@ public class ExcelWriter extends ExcelBase<ExcelWriter> {
     /**
      * 写出数据，本方法只是将数据写入Workbook中的Sheet，并不写出到文件 写出的起始行为当前行号，可使用{@link #getCurrentRow()}方法调用，根据写出的的行数，当前行号自动增加
      * data中元素支持的类型有：
-     *
      * <p>
      * 1. Map，即元素为一个Map，第一个Map的keys作为首行，剩下的行为Map的values，data表示多行 2.
      * Bean，即元素为一个Bean，第一个Bean的字段名列表会作为首行，剩下的行为Bean的字段值列表，data表示多行
@@ -739,7 +684,7 @@ public class ExcelWriter extends ExcelBase<ExcelWriter> {
      * @return this
      */
     public ExcelWriter write(final Iterable<?> data, final Comparator<String> comparator) {
-        Assert.isFalse(this.isClosed, "ExcelWriter has been closed!");
+        checkClosed();
         boolean isFirstRow = true;
         Map<?, ?> map;
         for (final Object obj : data) {
@@ -768,77 +713,80 @@ public class ExcelWriter extends ExcelBase<ExcelWriter> {
      * @return this
      */
     public ExcelWriter writeImg(final File imgFile, final int col1, final int row1, final int col2, final int row2) {
-        return this.writeImg(imgFile, 0, 0, 0, 0, col1, row1, col2, row2);
+        return writeImg(imgFile, new SimpleClientAnchor(col1, row1, col2, row2));
     }
 
     /**
      * 写出数据，本方法只是将数据写入Workbook中的Sheet，并不写出到文件 添加图片到当前sheet中 / 默认图片类型png
      *
-     * @param imgFile 图片文件
-     * @param dx1     起始单元格中的x坐标
-     * @param dy1     起始单元格中的y坐标
-     * @param dx2     结束单元格中的x坐标
-     * @param dy2     结束单元格中的y坐标
-     * @param col1    指定起始的列，下标从0开始
-     * @param row1    指定起始的行，下标从0开始
-     * @param col2    指定结束的列，下标从0开始
-     * @param row2    指定结束的行，下标从0开始
+     * @param imgFile      图片文件
+     * @param clientAnchor 图片的位置和大小信息
      * @return this
      */
-    public ExcelWriter writeImg(final File imgFile, final int dx1, final int dy1, final int dx2, final int dy2,
-            final int col1, final int row1, final int col2, final int row2) {
-        return this.writeImg(imgFile, Workbook.PICTURE_TYPE_PNG, dx1, dy1, dx2, dy2, col1, row1, col2, row2);
+    public ExcelWriter writeImg(final File imgFile, final SimpleClientAnchor clientAnchor) {
+        return writeImg(imgFile, ExcelImgType.getType(imgFile), clientAnchor);
     }
 
     /**
      * 写出数据，本方法只是将数据写入Workbook中的Sheet，并不写出到文件 添加图片到当前sheet中
      *
-     * @param imgFile 图片文件
-     * @param imgType 图片类型，对应poi中Workbook类中的图片类型2-7变量
-     * @param dx1     起始单元格中的x坐标
-     * @param dy1     起始单元格中的y坐标
-     * @param dx2     结束单元格中的x坐标
-     * @param dy2     结束单元格中的y坐标
-     * @param col1    指定起始的列，下标从0开始
-     * @param row1    指定起始的行，下标从0开始
-     * @param col2    指定结束的列，下标从0开始
-     * @param row2    指定结束的行，下标从0开始
+     * @param imgFile      图片文件
+     * @param imgType      图片类型，对应poi中Workbook类中的图片类型2-7变量
+     * @param clientAnchor 图片的位置和大小信息
      * @return this
      */
-    public ExcelWriter writeImg(final File imgFile, final int imgType, final int dx1, final int dy1, final int dx2,
-            final int dy2, final int col1, final int row1, final int col2, final int row2) {
-        return writeImg(FileKit.readBytes(imgFile), imgType, dx1, dy1, dx2, dy2, col1, row1, col2, row2);
+    public ExcelWriter writeImg(final File imgFile, final ExcelImgType imgType, final SimpleClientAnchor clientAnchor) {
+        return writeImg(FileKit.readBytes(imgFile), imgType, clientAnchor);
     }
 
     /**
      * 写出数据，本方法只是将数据写入Workbook中的Sheet，并不写出到文件 添加图片到当前sheet中
      *
-     * @param pictureData 数据bytes
-     * @param imgType     图片类型，对应poi中Workbook类中的图片类型2-7变量
-     * @param dx1         起始单元格中的x坐标
-     * @param dy1         起始单元格中的y坐标
-     * @param dx2         结束单元格中的x坐标
-     * @param dy2         结束单元格中的y坐标
-     * @param col1        指定起始的列，下标从0开始
-     * @param row1        指定起始的行，下标从0开始
-     * @param col2        指定结束的列，下标从0开始
-     * @param row2        指定结束的行，下标从0开始
+     * @param pictureData  数据bytes
+     * @param imgType      图片类型，对应poi中Workbook类中的图片类型2-7变量
+     * @param clientAnchor 图片的位置和大小信息
      * @return this
      */
-    public ExcelWriter writeImg(final byte[] pictureData, final int imgType, final int dx1, final int dy1,
-            final int dx2, final int dy2, final int col1, final int row1, final int col2, final int row2) {
-        final Drawing<?> patriarch = this.sheet.createDrawingPatriarch();
-        final ClientAnchor anchor = this.workbook.getCreationHelper().createClientAnchor();
-        anchor.setDx1(dx1);
-        anchor.setDy1(dy1);
-        anchor.setDx2(dx2);
-        anchor.setDy2(dy2);
-        anchor.setCol1(col1);
-        anchor.setRow1(row1);
-        anchor.setCol2(col2);
-        anchor.setRow2(row2);
+    public ExcelWriter writeImg(final byte[] pictureData, final ExcelImgType imgType,
+            final SimpleClientAnchor clientAnchor) {
+        ExcelDrawing.drawingImg(this.sheet, pictureData, imgType, clientAnchor);
+        return this;
+    }
 
-        patriarch.createPicture(anchor, this.workbook.addPicture(pictureData, imgType));
+    /**
+     * 绘制线条
+     *
+     * @param clientAnchor 绘制区域信息
+     * @return this
+     */
+    public ExcelWriter writeLineShape(final SimpleClientAnchor clientAnchor) {
+        return writeSimpleShape(clientAnchor, ShapeConfig.of());
+    }
+
+    /**
+     * 绘制线条
+     *
+     * @param clientAnchor 绘制区域信息
+     * @param lineStyle    线条样式
+     * @param lineWidth    线条粗细
+     * @param lineColor    线条颜色
+     * @return this
+     */
+    public ExcelWriter writeLineShape(final SimpleClientAnchor clientAnchor, final LineStyle lineStyle,
+            final int lineWidth, final Color lineColor) {
+        return writeSimpleShape(clientAnchor,
+                ShapeConfig.of().setLineStyle(lineStyle).setLineWidth(lineWidth).setLineColor(lineColor));
+    }
+
+    /**
+     * 绘制简单形状
+     *
+     * @param clientAnchor 绘制区域信息
+     * @param shapeConfig  形状配置，包括形状类型、线条样式、线条宽度、线条颜色、填充颜色等
+     * @return this
+     */
+    public ExcelWriter writeSimpleShape(final SimpleClientAnchor clientAnchor, final ShapeConfig shapeConfig) {
+        ExcelDrawing.drawingSimpleShape(this.sheet, clientAnchor, shapeConfig);
         return this;
     }
 
@@ -849,23 +797,13 @@ public class ExcelWriter extends ExcelBase<ExcelWriter> {
      * @return this
      */
     public ExcelWriter writeHeadRow(final Iterable<?> rowData) {
-        Assert.isFalse(this.isClosed, "ExcelWriter has been closed!");
-        this.headLocationCache = new SafeConcurrentHashMap<>();
-        final Row row = this.sheet.createRow(this.currentRow.getAndIncrement());
-        int i = 0;
-        Cell cell;
-        for (final Object value : rowData) {
-            cell = row.createCell(i);
-            CellKit.setCellValue(cell, value, this.styleSet, true, this.cellEditor);
-            this.headLocationCache.put(StringKit.toString(value), i);
-            i++;
-        }
+        checkClosed();
+        getSheetDataWriter().writeHeadRow(rowData);
         return this;
     }
 
     /**
      * 写出复杂标题的第二行标题数据 本方法只是将数据写入Workbook中的Sheet，并不写出到文件 写出的起始行为当前行号，可使用{@link #getCurrentRow()}方法调用，根据写出的的行数，当前行号自动+1
-     *
      * <p>
      * 此方法的逻辑是：将一行数据写出到当前行，遇到已存在的单元格跳过，不存在的创建并赋值。
      * </p>
@@ -874,18 +812,22 @@ public class ExcelWriter extends ExcelBase<ExcelWriter> {
      * @return this
      */
     public ExcelWriter writeSecHeadRow(final Iterable<?> rowData) {
-        final Row row = RowKit.getOrCreateRow(this.sheet, this.currentRow.getAndIncrement());
+        checkClosed();
+        final Row row = getOrCreateRow(getCurrentRow());
+        passCurrentRow();
+
         final Iterator<?> iterator = rowData.iterator();
         // 如果获取的row存在单元格，则执行复杂表头逻辑，否则直接调用writeHeadRow(Iterable<?> rowData)
         if (row.getLastCellNum() != 0) {
-            for (int i = 0; i < this.workbook.getSpreadsheetVersion().getMaxColumns(); i++) {
+            final CellEditor cellEditor = this.config.getCellEditor();
+            for (int i = 0; ; i++) {
                 Cell cell = row.getCell(i);
                 if (cell != null) {
                     continue;
                 }
                 if (iterator.hasNext()) {
                     cell = row.createCell(i);
-                    CellKit.setCellValue(cell, iterator.next(), this.styleSet, true, this.cellEditor);
+                    CellKit.setCellValue(cell, iterator.next(), this.styleSet, true, cellEditor);
                 } else {
                     break;
                 }
@@ -912,31 +854,29 @@ public class ExcelWriter extends ExcelBase<ExcelWriter> {
      * @see #writeRow(Map, boolean)
      */
     public ExcelWriter writeRow(final Object rowBean, final boolean isWriteKeyAsHead) {
-        final Map rowMap;
-        if (rowBean instanceof Map) {
-            if (MapKit.isNotEmpty(this.headerAlias)) {
-                rowMap = MapKit.newTreeMap((Map) rowBean, getCachedAliasComparator());
-            } else {
-                rowMap = (Map) rowBean;
-            }
-        } else if (rowBean instanceof Iterable) {
-            // MapWrapper由于实现了Iterable接口，应该优先按照Map处理
-            return writeRow((Iterable<?>) rowBean);
-        } else if (rowBean instanceof Hyperlink) {
-            // Hyperlink当成一个值
-            return writeRow(ListKit.of(rowBean), isWriteKeyAsHead);
-        } else if (BeanKit.isReadableBean(rowBean.getClass())) {
-            if (MapKit.isEmpty(this.headerAlias)) {
-                rowMap = BeanKit.beanToMap(rowBean, new LinkedHashMap<>(), false, false);
-            } else {
-                // 别名存在情况下按照别名的添加顺序排序Bean数据
-                rowMap = BeanKit.beanToMap(rowBean, new TreeMap<>(getCachedAliasComparator()), false, false);
-            }
-        } else {
-            // 其它转为字符串默认输出
-            return writeRow(ListKit.of(rowBean), isWriteKeyAsHead);
+        checkClosed();
+
+        // 模板写出
+        if (null != this.sheetTemplateWriter) {
+            this.sheetTemplateWriter.fillRow(rowBean);
+            return this;
         }
-        return writeRow(rowMap, isWriteKeyAsHead);
+
+        getSheetDataWriter().writeRow(rowBean, isWriteKeyAsHead);
+        return this;
+    }
+
+    /**
+     * 填充非列表模板变量（一次性变量）
+     *
+     * @param rowMap 行数据
+     * @return this
+     */
+    public ExcelWriter fillOnce(final Map<?, ?> rowMap) {
+        checkClosed();
+        Assert.notNull(this.sheetTemplateWriter, () -> new InternalException("No template for this writer!"));
+        this.sheetTemplateWriter.fillOnce(rowMap);
+        return this;
     }
 
     /**
@@ -947,43 +887,15 @@ public class ExcelWriter extends ExcelBase<ExcelWriter> {
      * @return this
      */
     public ExcelWriter writeRow(final Map<?, ?> rowMap, final boolean isWriteKeyAsHead) {
-        Assert.isFalse(this.isClosed, "ExcelWriter has been closed!");
-        if (MapKit.isEmpty(rowMap)) {
-            // 如果写出数据为null或空，跳过当前行
-            return passCurrentRow();
+        checkClosed();
+
+        // 模板写出
+        if (null != this.sheetTemplateWriter) {
+            this.sheetTemplateWriter.fillRow(rowMap);
+            return this;
         }
 
-        final Table<?, ?, ?> aliasTable = aliasTable(rowMap);
-        if (isWriteKeyAsHead) {
-            // 写出标题行，并记录标题别名和列号的关系
-            writeHeadRow(aliasTable.columnKeys());
-            // 记录原数据key对应列号
-            int i = 0;
-            for (final Object key : aliasTable.rowKeySet()) {
-                this.headLocationCache.putIfAbsent(StringKit.toString(key), i);
-                i++;
-            }
-        }
-
-        // 如果已经写出标题行，根据标题行找对应的值写入
-        if (MapKit.isNotEmpty(this.headLocationCache)) {
-            final Row row = RowKit.getOrCreateRow(this.sheet, this.currentRow.getAndIncrement());
-            Integer location;
-            for (final Table.Cell<?, ?, ?> cell : aliasTable) {
-                // 首先查找原名对应的列号
-                location = this.headLocationCache.get(StringKit.toString(cell.getRowKey()));
-                if (null == location) {
-                    // 未找到，则查找别名对应的列号
-                    location = this.headLocationCache.get(StringKit.toString(cell.getColumnKey()));
-                }
-                if (null != location) {
-                    CellKit.setCellValue(CellKit.getOrCreateCell(row, location), cell.getValue(), this.styleSet, false,
-                            this.cellEditor);
-                }
-            }
-        } else {
-            writeRow(aliasTable.values());
-        }
+        getSheetDataWriter().writeRow(rowMap, isWriteKeyAsHead);
         return this;
     }
 
@@ -994,9 +906,8 @@ public class ExcelWriter extends ExcelBase<ExcelWriter> {
      * @return this
      */
     public ExcelWriter writeRow(final Iterable<?> rowData) {
-        Assert.isFalse(this.isClosed, "ExcelWriter has been closed!");
-        RowKit.writeRow(this.sheet.createRow(this.currentRow.getAndIncrement()), rowData, this.styleSet, false,
-                this.cellEditor);
+        checkClosed();
+        getSheetDataWriter().writeRow(rowData);
         return this;
     }
 
@@ -1056,8 +967,8 @@ public class ExcelWriter extends ExcelBase<ExcelWriter> {
      */
     public ExcelWriter writeCol(final Object headerVal, final int colIndex, final Iterable<?> colData,
             final boolean isResetRowIndex) {
-        Assert.isFalse(this.isClosed, "ExcelWriter has been closed!");
-        int currentRowIndex = currentRow.get();
+        checkClosed();
+        int currentRowIndex = getCurrentRow();
         if (null != headerVal) {
             writeCellValue(colIndex, currentRowIndex, headerVal, true);
             currentRowIndex++;
@@ -1067,7 +978,7 @@ public class ExcelWriter extends ExcelBase<ExcelWriter> {
             currentRowIndex++;
         }
         if (!isResetRowIndex) {
-            currentRow.set(currentRowIndex);
+            setCurrentRow(currentRowIndex);
         }
         return this;
     }
@@ -1107,7 +1018,7 @@ public class ExcelWriter extends ExcelBase<ExcelWriter> {
      */
     public ExcelWriter writeCellValue(final int x, final int y, final Object value, final boolean isHeader) {
         final Cell cell = getOrCreateCell(x, y);
-        CellKit.setCellValue(cell, value, this.styleSet, isHeader, this.cellEditor);
+        CellKit.setCellValue(cell, value, this.styleSet, isHeader, this.config.getCellEditor());
         return this;
     }
 
@@ -1194,10 +1105,10 @@ public class ExcelWriter extends ExcelBase<ExcelWriter> {
      */
     public ExcelWriter setColumnStyleIfHasData(final int x, final int y, final CellStyle style) {
         if (x < 0) {
-            throw new IllegalArgumentException("Invalid column number (" + x + Symbol.PARENTHESE_RIGHT);
+            throw new IllegalArgumentException("Invalid column number (" + x + ")");
         }
         if (y < 0) {
-            throw new IllegalArgumentException("Invalid row number (" + y + Symbol.PARENTHESE_RIGHT);
+            throw new IllegalArgumentException("Invalid row number (" + y + ")");
         }
         final int rowCount = this.getRowCount();
         for (int i = y; i < rowCount; i++) {
@@ -1214,19 +1125,35 @@ public class ExcelWriter extends ExcelBase<ExcelWriter> {
      * @throws InternalException IO异常
      */
     public ExcelWriter flush() throws InternalException {
-        return flush(this.destFile);
+        return flush(false);
+    }
+
+    /**
+     * 将Excel Workbook刷出到预定义的文件 如果用户未自定义输出的文件，将抛出{@link NullPointerException} 预定义文件可以通过{@link #setDestFile(File)}
+     * 方法预定义，或者通过构造定义
+     *
+     * @param override 是否覆盖已有文件
+     * @return this
+     * @throws InternalException IO异常
+     */
+    public ExcelWriter flush(final boolean override) throws InternalException {
+        Assert.notNull(this.destFile, "[destFile] is null, and you must call setDestFile(File) first.");
+        return flush(this.destFile, override);
     }
 
     /**
      * 将Excel Workbook刷出到文件 如果用户未自定义输出的文件，将抛出{@link NullPointerException}
      *
      * @param destFile 写出到的文件
+     * @param override 是否覆盖已有文件
      * @return this
-     * @throws InternalException IO异常
+     * @throws InternalException 异常
      */
-    public ExcelWriter flush(final File destFile) throws InternalException {
-        Assert.notNull(destFile,
-                "[destFile] is null, and you must call setDestFile(File) first or call flush(OutputStream).");
+    public ExcelWriter flush(final File destFile, final boolean override) throws InternalException {
+        Assert.notNull(destFile, "destFile is null!");
+        if (FileKit.exists(destFile) && !override) {
+            throw new InternalException("File to write exist: " + destFile);
+        }
         return flush(FileKit.getOutputStream(destFile), true);
     }
 
@@ -1250,7 +1177,8 @@ public class ExcelWriter extends ExcelBase<ExcelWriter> {
      * @throws InternalException IO异常
      */
     public ExcelWriter flush(final OutputStream out, final boolean isCloseOut) throws InternalException {
-        Assert.isFalse(this.isClosed, "ExcelWriter has been closed!");
+        checkClosed();
+
         try {
             this.workbook.write(out);
             out.flush();
@@ -1280,54 +1208,22 @@ public class ExcelWriter extends ExcelBase<ExcelWriter> {
      */
     protected void closeWithoutFlush() {
         super.close();
-        this.currentRow.set(0);
+        this.reset();
 
-        // 清空对象
+        // 清空样式
         this.styleSet = null;
     }
 
     /**
-     * 为指定的key列表添加标题别名，如果没有定义key的别名，在onlyAlias为false时使用原key key为别名，value为字段值
+     * 获取SheetDataWriter，没有则创建
      *
-     * @param rowMap 一行数据
-     * @return 别名列表
+     * @return SheetDataWriter
      */
-    private Table<?, ?, ?> aliasTable(final Map<?, ?> rowMap) {
-        final Table<Object, Object, Object> filteredTable = new RowKeyTable<>(new LinkedHashMap<>(), TableMap::new);
-        if (MapKit.isEmpty(this.headerAlias)) {
-            rowMap.forEach((key, value) -> filteredTable.put(key, key, value));
-        } else {
-            rowMap.forEach((key, value) -> {
-                final String aliasName = this.headerAlias.get(StringKit.toString(key));
-                if (null != aliasName) {
-                    // 别名键值对加入
-                    filteredTable.put(key, aliasName, value);
-                } else if (!this.onlyAlias) {
-                    // 保留无别名设置的键值对
-                    filteredTable.put(key, key, value);
-                }
-            });
+    private SheetDataWriter getSheetDataWriter() {
+        if (null == this.sheetDataWriter) {
+            this.sheetDataWriter = new SheetDataWriter(this.sheet, this.config, this.styleSet);
         }
-
-        return filteredTable;
-    }
-
-    /**
-     * 获取单例的别名比较器，比较器的顺序为别名加入的顺序
-     *
-     * @return Comparator
-     */
-    private Comparator<String> getCachedAliasComparator() {
-        if (MapKit.isEmpty(this.headerAlias)) {
-            return null;
-        }
-        Comparator<String> aliasComparator = this.aliasComparator;
-        if (null == aliasComparator) {
-            final Set<String> keySet = this.headerAlias.keySet();
-            aliasComparator = new IndexedCompare<>(keySet.toArray(new String[0]));
-            this.aliasComparator = aliasComparator;
-        }
-        return aliasComparator;
+        return this.sheetDataWriter;
     }
 
 }

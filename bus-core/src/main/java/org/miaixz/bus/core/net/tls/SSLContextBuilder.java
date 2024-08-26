@@ -42,8 +42,8 @@ import java.util.Arrays;
  * <ul>
  * <li>协议（protocol），默认TLS</li>
  * <li>{@link KeyManager}，默认空</li>
- * <li>{@link TrustManager}，默认{@link TrustAnyTrustManager}，即信任全部</li>
- * <li>{@link SecureRandom}</li>
+ * <li>{@link TrustManager}，默认{@code null}</li>
+ * <li>{@link SecureRandom}，默认{@code null}</li>
  * </ul>
  * 构建后可获得{@link SSLContext}，通过调用{@link SSLContext#getSocketFactory()}获取{@link javax.net.ssl.SSLSocketFactory}
  *
@@ -56,8 +56,8 @@ public class SSLContextBuilder implements Builder<SSLContext> {
 
     private String protocol = Protocol.TLS.name;
     private KeyManager[] keyManagers;
-    private TrustManager[] trustManagers = TrustAnyTrustManager.TRUST_ANYS;
-    private SecureRandom secureRandom = new SecureRandom();
+    private TrustManager[] trustManagers;
+    private SecureRandom secureRandom;
 
     /**
      * 创建 SSLContextBuilder

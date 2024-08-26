@@ -122,7 +122,7 @@ public class ClassPathMapperScanner extends ClassPathBeanDefinitionScanner {
                 return true;
             }
             return metadataReader.getAnnotationMetadata()
-                    .hasAnnotation("annotation.mapper.org.miaixz.bus.RegisterMapper");
+                    .hasAnnotation("org.miaixz.bus.mapper.annotation.RegisterMapper");
         });
     }
 
@@ -296,7 +296,7 @@ public class ClassPathMapperScanner extends ClassPathBeanDefinitionScanner {
             if (index < 0) {
                 throw new InternalException("通过 @EnableMapper 注解的 properties 参数配置出错:" + property + " !\n"
                         + "请保证配置项按 properties 文件格式要求进行配置，例如：\n" + "properties = {\n"
-                        + "\t\"mappers=mapper.org.miaixz.bus.Mapper\",\n" + "\t\"notEmpty=true\"\n" + "}");
+                        + "\t\"mappers=org.miaixz.bus.mapper.Mapper\",\n" + "\t\"notEmpty=true\"\n" + "}");
             }
             props.put(property.substring(0, index).trim(), property.substring(index + 1).trim());
         }

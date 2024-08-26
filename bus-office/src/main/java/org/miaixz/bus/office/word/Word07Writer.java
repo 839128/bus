@@ -27,6 +27,9 @@
 */
 package org.miaixz.bus.office.word;
 
+import java.awt.*;
+import java.io.*;
+
 import org.apache.poi.common.usermodel.PictureType;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.util.Units;
@@ -40,9 +43,6 @@ import org.miaixz.bus.core.lang.exception.InternalException;
 import org.miaixz.bus.core.xyz.ArrayKit;
 import org.miaixz.bus.core.xyz.FileKit;
 import org.miaixz.bus.core.xyz.IoKit;
-
-import java.awt.*;
-import java.io.*;
 
 /**
  * Word docx生成器
@@ -96,28 +96,6 @@ public class Word07Writer implements Closeable {
     public Word07Writer(final XWPFDocument doc, final File destFile) {
         this.doc = doc;
         this.destFile = destFile;
-    }
-
-    /**
-     * 获取图片类型枚举
-     *
-     * @param fileName 文件名称
-     * @return 图片类型枚举
-     */
-    public static PictureType getType(final String fileName) {
-        String extName = FileName.extName(fileName).toUpperCase();
-        if ("JPG".equals(extName)) {
-            extName = "JPEG";
-        }
-
-        PictureType picType;
-        try {
-            picType = PictureType.valueOf(extName);
-        } catch (final IllegalArgumentException e) {
-            // 默认值
-            picType = PictureType.JPEG;
-        }
-        return picType;
     }
 
     /**
@@ -250,6 +228,28 @@ public class Word07Writer implements Closeable {
     }
 
     /**
+     * 获取图片类型枚举
+     *
+     * @param fileName 文件名称
+     * @return 图片类型枚举
+     */
+    public static PictureType getType(final String fileName) {
+        String extName = FileName.extName(fileName).toUpperCase();
+        if ("JPG".equals(extName)) {
+            extName = "JPEG";
+        }
+
+        PictureType picType;
+        try {
+            picType = PictureType.valueOf(extName);
+        } catch (final IllegalArgumentException e) {
+            // 默认值
+            picType = PictureType.JPEG;
+        }
+        return picType;
+    }
+
+    /**
      * 增加多张图片，单独成段落，增加后图片流关闭
      *
      * @param width    图片统一宽度
@@ -257,7 +257,7 @@ public class Word07Writer implements Closeable {
      * @param picFiles 图片列表
      * @return this
      */
-    public Word07Writer addPictures(final int width, final int height, final File... picFiles) {
+    public Word07Writer addPicture(final int width, final int height, final File... picFiles) {
         final XWPFParagraph paragraph = doc.createParagraph();
         XWPFRun run;
         try {
@@ -268,9 +268,7 @@ public class Word07Writer implements Closeable {
                     run.addPicture(in, getType(name), name, Units.toEMU(width), Units.toEMU(height));
                 }
             }
-        } catch (final InvalidFormatException e) {
-            throw new InternalException(e);
-        } catch (final IOException e) {
+        } catch (final InvalidFormatException | IOException e) {
             throw new InternalException(e);
         }
         return this;

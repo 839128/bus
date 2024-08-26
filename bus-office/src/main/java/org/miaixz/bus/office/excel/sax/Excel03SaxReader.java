@@ -27,13 +27,19 @@
 */
 package org.miaixz.bus.office.excel.sax;
 
-import org.apache.poi.hssf.eventusermodel.EventWorkbookBuilder.SheetRecordCollectingListener;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.poi.hssf.eventusermodel.*;
+import org.apache.poi.hssf.eventusermodel.EventWorkbookBuilder.SheetRecordCollectingListener;
 import org.apache.poi.hssf.eventusermodel.dummyrecord.LastCellOfRowDummyRecord;
 import org.apache.poi.hssf.eventusermodel.dummyrecord.MissingCellDummyRecord;
 import org.apache.poi.hssf.model.HSSFFormulaParser;
-import org.apache.poi.hssf.record.Record;
 import org.apache.poi.hssf.record.*;
+import org.apache.poi.hssf.record.Record;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 import org.miaixz.bus.core.lang.Assert;
@@ -43,12 +49,6 @@ import org.miaixz.bus.core.xyz.IoKit;
 import org.miaixz.bus.core.xyz.ObjectKit;
 import org.miaixz.bus.core.xyz.StringKit;
 import org.miaixz.bus.office.excel.sax.handler.RowHandler;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Excel2003格式的事件-用户模型方式读取器，统一将此归类为Sax读取 参考：http://www.cnblogs.com/wshsdlau/p/5643862.html
@@ -63,14 +63,6 @@ public class Excel03SaxReader implements HSSFListener, ExcelSaxReader<Excel03Sax
      */
     private final boolean isOutputFormulaValues = true;
     /**
-     * Sheet边界记录，此Record中可以获得Sheet名
-     */
-    private final List<BoundSheetRecord> boundSheetRecords = new ArrayList<>();
-    /**
-     * 行处理器
-     */
-    private final RowHandler rowHandler;
-    /**
      * 用于解析公式
      */
     private SheetRecordCollectingListener workbookBuildingListener;
@@ -82,12 +74,21 @@ public class Excel03SaxReader implements HSSFListener, ExcelSaxReader<Excel03Sax
      * 静态字符串表
      */
     private SSTRecord sstRecord;
+
     private FormatTrackingHSSFListener formatListener;
+
+    /**
+     * Sheet边界记录，此Record中可以获得Sheet名
+     */
+    private final List<BoundSheetRecord> boundSheetRecords = new ArrayList<>();
+
     private boolean isOutputNextStringRecord;
+
     /**
      * 存储行记录的容器
      */
     private List<Object> rowCellList = new ArrayList<>();
+
     /**
      * 自定义需要处理的sheet编号，如果-1表示处理所有sheet
      */
@@ -96,10 +97,16 @@ public class Excel03SaxReader implements HSSFListener, ExcelSaxReader<Excel03Sax
      * sheet名称，主要用于使用sheet名读取的情况
      */
     private String sheetName;
+
     /**
      * 当前rid索引
      */
     private int curRid = -1;
+
+    /**
+     * 行处理器
+     */
+    private final RowHandler rowHandler;
 
     /**
      * 构造
@@ -305,7 +312,7 @@ public class Excel03SaxReader implements HSSFListener, ExcelSaxReader<Excel03Sax
                     // This is stored in the next record
                     isOutputNextStringRecord = true;
                 } else {
-                    value = ExcelSax.getNumberOrDateValue(formulaRec, formulaRec.getValue(), this.formatListener);
+                    value = ExcelSaxKit.getNumberOrDateValue(formulaRec, formulaRec.getValue(), this.formatListener);
                 }
             } else {
                 value = HSSFFormulaParser.toFormulaString(stubWorkbook, formulaRec.getParsedExpression());
@@ -335,7 +342,7 @@ public class Excel03SaxReader implements HSSFListener, ExcelSaxReader<Excel03Sax
             break;
         case NumberRecord.sid: // 数字类型
             final NumberRecord numrec = (NumberRecord) record;
-            value = ExcelSax.getNumberOrDateValue(numrec, numrec.getValue(), this.formatListener);
+            value = ExcelSaxKit.getNumberOrDateValue(numrec, numrec.getValue(), this.formatListener);
             // 向容器加入列值
             addToRowCellList(numrec, value);
             break;

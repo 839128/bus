@@ -904,8 +904,7 @@ public interface CentralProcessor {
 
         private String queryVendorFromImplementer(String cpuVendor) {
             Properties archProps = Config.readProperties(Config._ARCHITECTURE_PROPERTIES);
-            String vendor = archProps.getProperty("hw_impl." + this.cpuVendor);
-            return (vendor == null ? cpuVendor : vendor);
+            return archProps.getProperty("hw_impl." + cpuVendor, cpuVendor);
         }
 
         @Override

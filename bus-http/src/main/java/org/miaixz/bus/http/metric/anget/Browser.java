@@ -100,7 +100,7 @@ public class Browser extends UserAgent {
             new Browser("Yammer Mobile", "Yammer[\\s]+([\\d\\w\\.\\-]+)", "Yammer[\\s]+([\\d\\w\\.\\-]+)"),
             new Browser("Apache HTTP Client", "Apache\\\\-HttpClient", "Apache\\-HttpClient\\/([\\d\\w\\.\\-]+)"),
             new Browser("BlackBerry", "BlackBerry", "BlackBerry[\\d]+\\/([\\d\\w\\.\\-]+)"),
-            // issue#I847JY 百度浏览器
+            // 百度浏览器
             new Browser("Baidu", "Baidu", "baiduboxapp\\/([\\d\\w\\.\\-]+)"));
 
     /**

@@ -100,7 +100,7 @@ public class ImageWriter implements Flushable {
      * @return {@link ImageWriteParam} or {@code null}
      */
     private static ImageWriteParam buildParam(final RenderedImage renderedImage, final javax.imageio.ImageWriter writer,
-            final float quality) {
+                                              final float quality) {
         // 设置质量
         ImageWriteParam imgWriteParams = null;
         if (quality > 0 && quality < 1) {
@@ -140,14 +140,14 @@ public class ImageWriter implements Flushable {
     /**
      * 写出图像为目标文件扩展名对应的格式
      *
-     * @param targetFile 目标文件
+     * @param destFile 目标文件
      * @throws InternalException IO异常
      */
-    public void write(final File targetFile) throws InternalException {
-        FileKit.touch(targetFile);
+    public void write(final File destFile) throws InternalException {
+        FileKit.touch(destFile);
         ImageOutputStream out = null;
         try {
-            out = ImageKit.getImageOutputStream(targetFile);
+            out = ImageKit.getImageOutputStream(destFile);
             write(out);
         } finally {
             IoKit.closeQuietly(out);

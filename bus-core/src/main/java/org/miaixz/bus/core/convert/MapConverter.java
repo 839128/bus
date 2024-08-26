@@ -49,7 +49,7 @@ import java.util.Objects;
  * @author Kimi Liu
  * @since Java 17+
  */
-public class MapConverter implements Converter, Serializable {
+public class MapConverter implements MatcherConverter, Serializable {
 
     private static final long serialVersionUID = -1L;
 
@@ -57,6 +57,11 @@ public class MapConverter implements Converter, Serializable {
      * 单例
      */
     public static MapConverter INSTANCE = new MapConverter();
+
+    @Override
+    public boolean match(final Type targetType, final Class<?> rawType, final Object value) {
+        return Map.class.isAssignableFrom(rawType);
+    }
 
     @Override
     public Object convert(Type targetType, final Object value) throws ConvertException {

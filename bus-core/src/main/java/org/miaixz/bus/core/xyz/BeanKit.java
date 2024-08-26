@@ -36,6 +36,7 @@ import org.miaixz.bus.core.bean.desc.BeanDesc;
 import org.miaixz.bus.core.bean.desc.BeanDescFactory;
 import org.miaixz.bus.core.bean.desc.PropDesc;
 import org.miaixz.bus.core.bean.path.BeanPath;
+import org.miaixz.bus.core.center.map.BeanMap;
 import org.miaixz.bus.core.center.map.CaseInsensitiveMap;
 import org.miaixz.bus.core.center.map.Dictionary;
 import org.miaixz.bus.core.convert.Convert;
@@ -330,6 +331,16 @@ public class BeanKit {
             return bean;
         }
         return copyProperties(map, bean, copyOptions);
+    }
+
+    /**
+     * 将Bean包装为Map形式
+     *
+     * @param bean Bean
+     * @return {@link BeanMap}
+     */
+    public static Map<String, Object> toBeanMap(final Object bean) {
+        return BeanMap.of(bean);
     }
 
     /**

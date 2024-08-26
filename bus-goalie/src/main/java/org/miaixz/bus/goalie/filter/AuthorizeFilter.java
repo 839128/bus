@@ -142,7 +142,7 @@ public class AuthorizeFilter implements WebFilter {
             if (delegate.isOk()) {
                 OAuth2 auth2 = delegate.getOAuth2();
                 Map<String, Object> map = new HashMap<>();
-                BeanKit.beanToMap(auth2, map, CopyOptions.of().setTransientSupport(false).ignoreNullValue());
+                BeanKit.beanToMap(auth2, map, CopyOptions.of().setTransientSupport(false).setIgnoreCase(true));
                 map.forEach((k, v) -> params.put(k, v.toString()));
             } else {
                 throw new BusinessException(delegate.getMessage().errcode, delegate.getMessage().errmsg);

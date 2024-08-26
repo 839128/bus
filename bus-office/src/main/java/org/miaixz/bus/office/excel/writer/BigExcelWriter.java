@@ -25,13 +25,16 @@
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 */
-package org.miaixz.bus.office.excel;
+package org.miaixz.bus.office.excel.writer;
 
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.streaming.SXSSFSheet;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.miaixz.bus.core.lang.exception.InternalException;
 import org.miaixz.bus.core.xyz.FileKit;
+import org.miaixz.bus.core.xyz.IoKit;
+import org.miaixz.bus.office.excel.SheetKit;
+import org.miaixz.bus.office.excel.WorkbookKit;
 
 import java.io.File;
 import java.io.OutputStream;
@@ -45,6 +48,9 @@ import java.io.OutputStream;
  */
 public class BigExcelWriter extends ExcelWriter {
 
+    /**
+     * 默认内存中保存的行数，默认100
+     */
     public static final int DEFAULT_WINDOW_SIZE = SXSSFWorkbook.DEFAULT_WINDOW_SIZE;
 
     /**
@@ -61,7 +67,8 @@ public class BigExcelWriter extends ExcelWriter {
     }
 
     /**
-     * 构造 此构造不传入写出的Excel文件路径，只能调用{@link #flush(java.io.OutputStream)}方法写出到流 若写出到文件，需要调用{@link #flush(File)} 写出到文件
+     * 构造 此构造不传入写出的Excel文件路径，只能调用{@link #flush(java.io.OutputStream)}方法写出到流 若写出到文件，需要调用{@link #flush(File, boolean)}
+     * 写出到文件
      *
      * @param rowAccessWindowSize 在内存中的行数
      */
@@ -70,7 +77,8 @@ public class BigExcelWriter extends ExcelWriter {
     }
 
     /**
-     * 构造 此构造不传入写出的Excel文件路径，只能调用{@link #flush(java.io.OutputStream)}方法写出到流 若写出到文件，需要调用{@link #flush(File)} 写出到文件
+     * 构造 此构造不传入写出的Excel文件路径，只能调用{@link #flush(java.io.OutputStream)}方法写出到流 若写出到文件，需要调用{@link #flush(File, boolean)}
+     * 写出到文件
      *
      * @param rowAccessWindowSize   在内存中的行数，-1表示不限制，此时需要手动刷出
      * @param compressTmpFiles      是否使用Gzip压缩临时文件
@@ -92,7 +100,8 @@ public class BigExcelWriter extends ExcelWriter {
     }
 
     /**
-     * 构造 此构造不传入写出的Excel文件路径，只能调用{@link #flush(java.io.OutputStream)}方法写出到流 若写出到文件，需要调用{@link #flush(File)} 写出到文件
+     * 构造 此构造不传入写出的Excel文件路径，只能调用{@link #flush(java.io.OutputStream)}方法写出到流 若写出到文件，需要调用{@link #flush(File, boolean)}
+     * 写出到文件
      *
      * @param rowAccessWindowSize 在内存中的行数
      * @param sheetName           sheet名，第一个sheet名并写出到此sheet，例如sheet1
@@ -139,7 +148,7 @@ public class BigExcelWriter extends ExcelWriter {
      * @param sheetName sheet名，做为第一个sheet名并写出到此sheet，例如sheet1
      */
     public BigExcelWriter(final SXSSFWorkbook workbook, final String sheetName) {
-        this(WorkbookKit.getOrCreateSheet(workbook, sheetName));
+        this(SheetKit.getOrCreateSheet(workbook, sheetName));
     }
 
     /**
@@ -153,19 +162,19 @@ public class BigExcelWriter extends ExcelWriter {
     }
 
     @Override
-    public BigExcelWriter autoSizeColumn(final int columnIndex) {
+    public BigExcelWriter autoSizeColumn(final int columnIndex, final boolean useMergedCells, final float widthRatio) {
         final SXSSFSheet sheet = (SXSSFSheet) this.sheet;
         sheet.trackColumnForAutoSizing(columnIndex);
-        super.autoSizeColumn(columnIndex);
+        super.autoSizeColumn(columnIndex, useMergedCells, widthRatio);
         sheet.untrackColumnForAutoSizing(columnIndex);
         return this;
     }
 
     @Override
-    public BigExcelWriter autoSizeColumnAll() {
+    public BigExcelWriter autoSizeColumnAll(final boolean useMergedCells, final float widthRatio) {
         final SXSSFSheet sheet = (SXSSFSheet) this.sheet;
         sheet.trackAllColumnsForAutoSizing();
-        super.autoSizeColumnAll();
+        super.autoSizeColumnAll(useMergedCells, widthRatio);
         sheet.untrackAllColumnsForAutoSizing();
         return this;
     }
@@ -186,7 +195,7 @@ public class BigExcelWriter extends ExcelWriter {
         }
 
         // 清理临时文件
-        ((SXSSFWorkbook) this.workbook).dispose();
+        IoKit.close(this.workbook);
         super.closeWithoutFlush();
     }
 

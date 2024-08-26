@@ -33,6 +33,7 @@ import org.miaixz.bus.core.lang.reflect.TypeReference;
 import org.miaixz.bus.core.lang.tuple.Pair;
 import org.miaixz.bus.core.xyz.*;
 
+import java.io.Serializable;
 import java.lang.reflect.Type;
 import java.util.Map;
 
@@ -48,7 +49,9 @@ import java.util.Map;
  * @author Kimi Liu
  * @since Java 17+
  */
-public class EntryConverter implements Converter {
+public class EntryConverter implements MatcherConverter, Serializable {
+
+    private static final long serialVersionUID = -1L;
 
     /**
      * 单例
@@ -72,6 +75,17 @@ public class EntryConverter implements Converter {
         return null;
     }
 
+    @Override
+    public Object convert(Type targetType, final Object value) throws ConvertException {
+        if (targetType instanceof TypeReference) {
+            targetType = ((TypeReference<?>) targetType).getType();
+        }
+        final Type keyType = TypeKit.getTypeArgument(targetType, 0);
+        final Type valueType = TypeKit.getTypeArgument(targetType, 1);
+
+        return convert(targetType, keyType, valueType, value);
+    }
+
     /**
      * Map转Entry
      *
@@ -82,16 +96,16 @@ public class EntryConverter implements Converter {
      * @return Entry
      */
     private static Map.Entry<?, ?> mapToEntry(final Type targetType, final Type keyType, final Type valueType,
-            final Map map) {
-
-        Object key = null;
-        Object value = null;
+                                              final Map map) {
+        final Object key;
+        final Object value;
         if (1 == map.size()) {
             final Map.Entry entry = (Map.Entry) map.entrySet().iterator().next();
             key = entry.getKey();
             value = entry.getValue();
-        } else if (2 == map.size()) {
-            key = map.get("id");
+        } else {
+            // 忽略Map中其它属性
+            key = map.get("key");
             value = map.get("value");
         }
 
@@ -99,17 +113,6 @@ public class EntryConverter implements Converter {
         return (Map.Entry<?, ?>) ReflectKit.newInstance(TypeKit.getClass(targetType),
                 TypeKit.isUnknown(keyType) ? key : convert.convert(keyType, key),
                 TypeKit.isUnknown(valueType) ? value : convert.convert(valueType, value));
-    }
-
-    @Override
-    public Object convert(Type targetType, final Object value) throws ConvertException {
-        if (targetType instanceof TypeReference) {
-            targetType = ((TypeReference<?>) targetType).getType();
-        }
-        final Type keyType = TypeKit.getTypeArgument(targetType, 0);
-        final Type valueType = TypeKit.getTypeArgument(targetType, 1);
-
-        return convert(targetType, keyType, valueType, value);
     }
 
     /**
@@ -137,7 +140,7 @@ public class EntryConverter implements Converter {
             final CharSequence text = (CharSequence) value;
             map = strToMap(text);
         } else if (BeanKit.isWritableBean(value.getClass())) {
-            map = BeanKit.beanToMap(value);
+            map = BeanKit.toBeanMap(value);
         }
 
         if (null != map) {
@@ -145,6 +148,11 @@ public class EntryConverter implements Converter {
         }
 
         throw new ConvertException("Unsupported to map from [{}] of type: {}", value, value.getClass().getName());
+    }
+
+    @Override
+    public boolean match(final Type targetType, final Class<?> rawType, final Object value) {
+        return Map.Entry.class.isAssignableFrom(rawType);
     }
 
 }

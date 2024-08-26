@@ -271,6 +271,10 @@ public class Builder {
         for (int i = 0; i < keys.size(); i++) {
             String key = keys.get(i);
             String value = params.get(key);
+            // 参数的值为空不参与签名
+            if (StringKit.isBlank(value)) {
+                continue;
+            }
             // 拼接时，不包括最后一个&字符
             if (i == keys.size() - 1) {
                 if (quotes) {
@@ -461,7 +465,7 @@ public class Builder {
      * @return 请求头 Authorization
      */
     public static String getAuthorization(String mchId, String serialNo, String nonceStr, String timestamp,
-            String signature, String authType) {
+                                          String signature, String authType) {
         Map<String, String> params = new HashMap<>(5);
         params.put("mchid", mchId);
         params.put("serial_no", serialNo);

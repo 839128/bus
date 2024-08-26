@@ -25,76 +25,61 @@
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 */
-package org.miaixz.bus.core.center;
+package org.miaixz.bus.office.excel.reader;
 
-import org.miaixz.bus.core.center.map.concurrent.SafeConcurrentHashMap;
-import org.miaixz.bus.core.center.set.SetFromMap;
-
-import java.util.Collection;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.miaixz.bus.core.center.function.BiConsumerX;
+import org.miaixz.bus.office.excel.cell.CellEditor;
+import org.miaixz.bus.office.excel.cell.CellKit;
 
 /**
- * 通过{@link SafeConcurrentHashMap}实现的线程安全HashSet
+ * 读取Excel的Sheet，使用Consumer方式处理单元格
  *
- * @param <E> 元素类型
  * @author Kimi Liu
  * @since Java 17+
  */
-public class ConcurrentHashSet<E> extends SetFromMap<E> {
+public class WalkSheetReader extends AbstractSheetReader<Void> {
 
-    private static final long serialVersionUID = -1L;
-
-    /**
-     * 构造 触发因子为默认的0.75
-     */
-    public ConcurrentHashSet() {
-        super(new SafeConcurrentHashMap<>());
-    }
-
-    /**
-     * 构造 触发因子为默认的0.75
-     *
-     * @param initialCapacity 初始大小
-     */
-    public ConcurrentHashSet(final int initialCapacity) {
-        super(new SafeConcurrentHashMap<>(initialCapacity));
-    }
+    private final BiConsumerX<Cell, Object> cellHandler;
 
     /**
      * 构造
      *
-     * @param initialCapacity 初始大小
-     * @param loadFactor      加载因子。此参数决定数据增长时触发的百分比
+     * @param startRowIndex 起始行（包含，从0开始计数）
+     * @param endRowIndex   结束行（包含，从0开始计数）
+     * @param cellHandler   单元格处理器，用于处理读到的单元格及其数据
      */
-    public ConcurrentHashSet(final int initialCapacity, final float loadFactor) {
-        super(new SafeConcurrentHashMap<>(initialCapacity, loadFactor));
+    public WalkSheetReader(final int startRowIndex, final int endRowIndex,
+            final BiConsumerX<Cell, Object> cellHandler) {
+        super(startRowIndex, endRowIndex);
+        this.cellHandler = cellHandler;
     }
 
-    /**
-     * 构造
-     *
-     * @param initialCapacity  初始大小
-     * @param loadFactor       触发因子。此参数决定数据增长时触发的百分比
-     * @param concurrencyLevel 线程并发度
-     */
-    public ConcurrentHashSet(final int initialCapacity, final float loadFactor, final int concurrencyLevel) {
-        super(new SafeConcurrentHashMap<>(initialCapacity, loadFactor, concurrencyLevel));
-    }
+    @Override
+    public Void read(final Sheet sheet) {
+        final int startRowIndex = Math.max(this.cellRangeAddress.getFirstRow(), sheet.getFirstRowNum());// 读取起始行（包含）
+        final int endRowIndex = Math.min(this.cellRangeAddress.getLastRow(), sheet.getLastRowNum());// 读取结束行（包含）
+        final CellEditor cellEditor = this.config.getCellEditor();
 
-    /**
-     * 从已有集合中构造
-     *
-     * @param iter {@link Iterable}
-     */
-    public ConcurrentHashSet(final Iterable<E> iter) {
-        super(iter instanceof Collection ? new SafeConcurrentHashMap<>(((Collection<E>) iter).size())
-                : new SafeConcurrentHashMap<>());
-        if (iter instanceof Collection) {
-            this.addAll((Collection<E>) iter);
-        } else {
-            for (final E e : iter) {
-                this.add(e);
+        Row row;
+        for (int y = startRowIndex; y <= endRowIndex; y++) {
+            row = sheet.getRow(y);
+            if (null != row) {
+                final short startColumnIndex = (short) Math.max(this.cellRangeAddress.getFirstColumn(),
+                        row.getFirstCellNum());
+                final short endColumnIndex = (short) Math.min(this.cellRangeAddress.getLastColumn(),
+                        row.getLastCellNum());
+                Cell cell;
+                for (short x = startColumnIndex; x < endColumnIndex; x++) {
+                    cell = CellKit.getCell(row, x);
+                    cellHandler.accept(cell, CellKit.getCellValue(cell, cellEditor));
+                }
             }
         }
+
+        return null;
     }
 
 }

@@ -27,6 +27,8 @@
 */
 package org.miaixz.bus.crypto.cipher;
 
+import java.util.Arrays;
+
 import org.bouncycastle.crypto.*;
 import org.bouncycastle.crypto.modes.AEADBlockCipher;
 import org.miaixz.bus.core.lang.Algorithm;
@@ -34,8 +36,6 @@ import org.miaixz.bus.core.lang.Assert;
 import org.miaixz.bus.core.lang.Wrapper;
 import org.miaixz.bus.core.lang.exception.CryptoException;
 import org.miaixz.bus.crypto.Cipher;
-
-import java.util.Arrays;
 
 /**
  * 基于BouncyCastle库封装的加密解密实现，包装包括：
@@ -119,7 +119,7 @@ public class BCCipher implements Cipher, Wrapper<Object> {
     }
 
     @Override
-    public String getAlgorithmName() {
+    public String getAlgorithm() {
         if (null != this.bufferedBlockCipher) {
             return this.bufferedBlockCipher.getUnderlyingCipher().getAlgorithmName();
         }
@@ -231,7 +231,7 @@ public class BCCipher implements Cipher, Wrapper<Object> {
         /**
          * 算法的参数
          */
-        private final CipherParameters parameters;
+        protected final CipherParameters parameters;
 
         /**
          * 构造

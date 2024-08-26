@@ -27,6 +27,11 @@
 */
 package org.miaixz.bus.office.excel;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -38,11 +43,6 @@ import org.miaixz.bus.office.excel.cell.CellEditor;
 import org.miaixz.bus.office.excel.cell.CellKit;
 import org.miaixz.bus.office.excel.style.StyleSet;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-
 /**
  * Excel中的行{@link Row}封装工具类
  *
@@ -50,6 +50,7 @@ import java.util.stream.IntStream;
  * @since Java 17+
  */
 public class RowKit {
+
     /**
      * 获取已有行或创建新行
      *
@@ -88,7 +89,7 @@ public class RowKit {
     public static List<Object> readRow(final Row row, final int startCellNumInclude, final int endCellNumInclude,
             final CellEditor cellEditor) {
         if (null == row) {
-            return new ArrayList<>(0);
+            return ListKit.empty();
         }
         final short rowLength = row.getLastCellNum();
         if (rowLength < 0) {

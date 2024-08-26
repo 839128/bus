@@ -25,45 +25,37 @@
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 */
-package org.miaixz.bus.office.excel.cell.setters;
+package org.miaixz.bus.core.convert;
 
-import org.miaixz.bus.core.xyz.PatternKit;
-import org.miaixz.bus.core.xyz.StringKit;
+import org.miaixz.bus.core.xyz.ObjectKit;
+import org.miaixz.bus.core.xyz.ReflectKit;
 
-import java.util.regex.Pattern;
+import java.io.Serializable;
+import java.lang.reflect.Type;
 
 /**
- * 字符串转义Cell值设置器 使用 _x005F前缀转义_xXXXX_，避免被decode的问题 如用户传入'_x5116_'会导致乱码，使用此设置器转义为'_x005F_x5116_'
+ * 空值或空对象转换器，转换结果为目标类型对象的实例化对象
  *
  * @author Kimi Liu
  * @since Java 17+
  */
-public class EscapeStrCellSetter extends CharSequenceCellSetter {
-
-    private static final Pattern utfPtrn = Pattern.compile("_x[0-9A-Fa-f]{4}_");
+public class EmptyBeanConverter extends AbstractConverter implements MatcherConverter, Serializable {
 
     /**
-     * 构造
-     *
-     * @param value 值
+     * 单例
      */
-    public EscapeStrCellSetter(final CharSequence value) {
-        super(escape(StringKit.toStringOrNull(value)));
+    public static final EmptyBeanConverter INSTANCE = new EmptyBeanConverter();
+    private static final long serialVersionUID = -1L;
+
+    @Override
+    public boolean match(final Type targetType, final Class<?> rawType, final Object value) {
+        return ObjectKit.isEmpty(value);
     }
 
-    /**
-     * 使用 _x005F前缀转义_xXXXX_，避免被decode的问题
-     *
-     * @param value 被转义的字符串
-     * @return 转义后的字符串
-     */
-    private static String escape(final String value) {
-        if (value == null || !value.contains("_x")) {
-            return value;
-        }
-
-        // 使用 _x005F前缀转义_xXXXX_，避免被decode的问题
-        return PatternKit.replaceAll(value, utfPtrn, "_x005F$0");
+    @Override
+    protected Object convertInternal(final Class<?> targetClass, final Object value) {
+        // 空值转空对象，则直接实例化
+        return ReflectKit.newInstanceIfPossible(targetClass);
     }
 
 }

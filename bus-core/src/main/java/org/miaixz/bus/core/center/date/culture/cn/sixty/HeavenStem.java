@@ -93,19 +93,12 @@ public class HeavenStem extends Samsara {
         if (null == target) {
             return null;
         }
-        Element host = getElement();
-        Element guest = target.getElement();
-        int index = 0;
-        if (host.getReinforce().equals(guest)) {
-            index = 1;
-        } else if (host.getRestrain().equals(guest)) {
-            index = 2;
-        } else if (host.getRestrained().equals(guest)) {
-            index = 3;
-        } else if (host.getReinforced().equals(guest)) {
-            index = 4;
+        int targetIndex = target.getIndex();
+        int offset = targetIndex - index;
+        if (index % 2 != 0 && targetIndex % 2 == 0) {
+            offset += 2;
         }
-        return TenStar.fromIndex(index * 2 + (getOpposite().equals(target.getOpposite()) ? 0 : 1));
+        return TenStar.fromIndex(offset);
     }
 
     /**
@@ -114,7 +107,7 @@ public class HeavenStem extends Samsara {
      * @return 方位
      */
     public Direction getDirection() {
-        return Direction.fromIndex(new int[] { 2, 8, 4, 6, 0 }[index / 2]);
+        return getElement().getDirection();
     }
 
     /**
@@ -181,6 +174,25 @@ public class HeavenStem extends Samsara {
         int earthBranchIndex = earthBranch.getIndex();
         return Terrain.fromIndex(new int[] { 1, 6, 10, 9, 10, 9, 7, 0, 4, 3 }[index]
                 + (Opposite.YANG == getOpposite() ? earthBranchIndex : -earthBranchIndex));
+    }
+
+    /**
+     * 五合（甲己合，乙庚合，丙辛合，丁壬合，戊癸合）
+     *
+     * @return 天干
+     */
+    public HeavenStem getCombine() {
+        return next(5);
+    }
+
+    /**
+     * 合化（甲己合化土，乙庚合化金，丙辛合化水，丁壬合化木，戊癸合化火）
+     *
+     * @param target 天干
+     * @return 五行，如果无法合化，返回null
+     */
+    public Element combine(HeavenStem target) {
+        return getCombine().equals(target) ? Element.fromIndex(index + 2) : null;
     }
 
 }

@@ -33,21 +33,15 @@ import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xssf.streaming.SXSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.miaixz.bus.core.data.id.ID;
 import org.miaixz.bus.core.lang.Assert;
-import org.miaixz.bus.core.lang.Charset;
-import org.miaixz.bus.core.net.url.UrlEncoder;
 import org.miaixz.bus.core.xyz.IoKit;
-import org.miaixz.bus.core.xyz.StringKit;
 import org.miaixz.bus.office.excel.cell.CellKit;
-import org.miaixz.bus.office.excel.style.Styles;
+import org.miaixz.bus.office.excel.style.StyleKit;
 
 import java.io.Closeable;
 import java.io.File;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Excel基础类，用于抽象ExcelWriter和ExcelReader中共用部分的对象和方法
@@ -56,7 +50,12 @@ import java.util.Map;
  * @author Kimi Liu
  * @since Java 17+
  */
-public class ExcelBase<T extends ExcelBase<T>> implements Closeable {
+public class ExcelBase<T extends ExcelBase<T, C>, C extends ExcelConfig> implements Closeable {
+
+    /**
+     * Excel配置，此项不为空
+     */
+    protected C config;
     /**
      * 是否被关闭
      */
@@ -73,20 +72,37 @@ public class ExcelBase<T extends ExcelBase<T>> implements Closeable {
      * Excel中对应的Sheet
      */
     protected Sheet sheet;
-    /**
-     * 标题行别名
-     */
-    protected Map<String, String> headerAlias;
 
     /**
      * 构造
      *
-     * @param sheet Excel中的sheet
+     * @param config config
+     * @param sheet  Excel中的sheet
      */
-    public ExcelBase(final Sheet sheet) {
-        Assert.notNull(sheet, "No Sheet provided.");
-        this.sheet = sheet;
+    public ExcelBase(final C config, final Sheet sheet) {
+        this.config = Assert.notNull(config);
+        this.sheet = Assert.notNull(sheet, "No Sheet provided.");
         this.workbook = sheet.getWorkbook();
+    }
+
+    /**
+     * 获取Excel配置
+     *
+     * @return Excel配置
+     */
+    public C getConfig() {
+        return this.config;
+    }
+
+    /**
+     * 设置Excel配置
+     *
+     * @param config Excel配置
+     * @return this
+     */
+    public T setConfig(final C config) {
+        this.config = config;
+        return (T) this;
     }
 
     /**
@@ -160,7 +176,7 @@ public class ExcelBase<T extends ExcelBase<T>> implements Closeable {
      * @return this
      */
     public T setSheet(final String sheetName) {
-        return setSheet(WorkbookKit.getOrCreateSheet(this.workbook, sheetName));
+        return setSheet(SheetKit.getOrCreateSheet(this.workbook, sheetName));
     }
 
     /**
@@ -170,13 +186,13 @@ public class ExcelBase<T extends ExcelBase<T>> implements Closeable {
      * @return this
      */
     public T setSheet(final int sheetIndex) {
-        return setSheet(WorkbookKit.getOrCreateSheet(this.workbook, sheetIndex));
+        return setSheet(SheetKit.getOrCreateSheet(this.workbook, sheetIndex));
     }
 
     /**
      * 设置自定义Sheet
      *
-     * @param sheet 自定义sheet，可以通过{@link WorkbookKit#getOrCreateSheet(Workbook, String)} 创建
+     * @param sheet 自定义sheet，可以通过{@link SheetKit#getOrCreateSheet(Workbook, String)} 创建
      * @return this
      */
     public T setSheet(final Sheet sheet) {
@@ -285,11 +301,7 @@ public class ExcelBase<T extends ExcelBase<T>> implements Closeable {
      * @return {@link Cell}
      */
     public Cell getCell(final int x, final int y, final boolean isCreateIfNotExist) {
-        final Row row = isCreateIfNotExist ? RowKit.getOrCreateRow(this.sheet, y) : this.sheet.getRow(y);
-        if (null != row) {
-            return isCreateIfNotExist ? CellKit.getOrCreateCell(row, x) : row.getCell(x);
-        }
-        return null;
+        return CellKit.getCell(this.sheet, x, y, isCreateIfNotExist);
     }
 
     /**
@@ -322,7 +334,7 @@ public class ExcelBase<T extends ExcelBase<T>> implements Closeable {
      */
     public CellStyle getOrCreateCellStyle(final int x, final int y) {
         final CellStyle cellStyle = getOrCreateCell(x, y).getCellStyle();
-        return Styles.isNullOrDefaultStyle(this.workbook, cellStyle) ? createCellStyle(x, y) : cellStyle;
+        return StyleKit.isNullOrDefaultStyle(this.workbook, cellStyle) ? createCellStyle(x, y) : cellStyle;
     }
 
     /**
@@ -357,7 +369,7 @@ public class ExcelBase<T extends ExcelBase<T>> implements Closeable {
      * @see Workbook#createCellStyle()
      */
     public CellStyle createCellStyle() {
-        return Styles.createCellStyle(this.workbook);
+        return StyleKit.createCellStyle(this.workbook);
     }
 
     /**
@@ -368,7 +380,7 @@ public class ExcelBase<T extends ExcelBase<T>> implements Closeable {
      */
     public CellStyle getOrCreateRowStyle(final int y) {
         final CellStyle rowStyle = getOrCreateRow(y).getRowStyle();
-        return Styles.isNullOrDefaultStyle(this.workbook, rowStyle) ? createRowStyle(y) : rowStyle;
+        return StyleKit.isNullOrDefaultStyle(this.workbook, rowStyle) ? createRowStyle(y) : rowStyle;
     }
 
     /**
@@ -391,7 +403,7 @@ public class ExcelBase<T extends ExcelBase<T>> implements Closeable {
      */
     public CellStyle getOrCreateColumnStyle(final int x) {
         final CellStyle columnStyle = this.sheet.getColumnStyle(x);
-        return Styles.isNullOrDefaultStyle(this.workbook, columnStyle) ? createColumnStyle(x) : columnStyle;
+        return StyleKit.isNullOrDefaultStyle(this.workbook, columnStyle) ? createColumnStyle(x) : columnStyle;
     }
 
     /**
@@ -513,31 +525,6 @@ public class ExcelBase<T extends ExcelBase<T>> implements Closeable {
     }
 
     /**
-     * 获取Content-Disposition头对应的值，可以通过调用以下方法快速设置下载Excel的头信息：
-     *
-     * <pre>
-     * response.setHeader("Content-Disposition", excelWriter.getDisposition("test.xlsx", Charset.UTF_8));
-     * </pre>
-     *
-     * @param fileName 文件名，如果文件名没有扩展名，会自动按照生成Excel类型补齐扩展名，如果提供空，使用随机UUID
-     * @param charset  编码，null则使用默认UTF-8编码
-     * @return Content-Disposition值
-     */
-    public String getDisposition(String fileName, java.nio.charset.Charset charset) {
-        if (null == charset) {
-            charset = Charset.UTF_8;
-        }
-
-        if (StringKit.isBlank(fileName)) {
-            // 未提供文件名使用随机UUID作为文件名
-            fileName = ID.objectId();
-        }
-
-        fileName = StringKit.addSuffixIfNot(UrlEncoder.encodeAll(fileName, charset), isXlsx() ? ".xlsx" : ".xls");
-        return StringKit.format("attachment; filename=\"{}\"", fileName);
-    }
-
-    /**
      * 关闭工作簿 如果用户设定了目标文件，先写出目标文件后给关闭工作簿
      */
     @Override
@@ -549,61 +536,10 @@ public class ExcelBase<T extends ExcelBase<T>> implements Closeable {
     }
 
     /**
-     * 获得标题行的别名Map
-     *
-     * @return 别名Map
+     * 校验Excel是否已经关闭
      */
-    public Map<String, String> getHeaderAlias() {
-        return headerAlias;
-    }
-
-    /**
-     * 设置标题行的别名Map
-     *
-     * @param headerAlias 别名Map
-     * @return this
-     */
-    public T setHeaderAlias(final Map<String, String> headerAlias) {
-        this.headerAlias = headerAlias;
-        return (T) this;
-    }
-
-    /**
-     * 增加标题别名
-     *
-     * @param header 标题
-     * @param alias  别名
-     * @return this
-     */
-    public T addHeaderAlias(final String header, final String alias) {
-        Map<String, String> headerAlias = this.headerAlias;
-        if (null == headerAlias) {
-            headerAlias = new LinkedHashMap<>();
-        }
-        this.headerAlias = headerAlias;
-        this.headerAlias.put(header, alias);
-        return (T) this;
-    }
-
-    /**
-     * 去除标题别名
-     *
-     * @param header 标题
-     * @return this
-     */
-    public T removeHeaderAlias(final String header) {
-        this.headerAlias.remove(header);
-        return (T) this;
-    }
-
-    /**
-     * 清空标题别名，key为Map中的key，value为别名
-     *
-     * @return this
-     */
-    public T clearHeaderAlias() {
-        this.headerAlias = null;
-        return (T) this;
+    protected void checkClosed() {
+        Assert.isFalse(this.isClosed, "Excel has been closed!");
     }
 
 }

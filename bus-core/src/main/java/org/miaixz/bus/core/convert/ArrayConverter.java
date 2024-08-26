@@ -33,6 +33,7 @@ import org.miaixz.bus.core.xyz.*;
 
 import java.io.Serializable;
 import java.lang.reflect.Array;
+import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -43,7 +44,7 @@ import java.util.List;
  * @author Kimi Liu
  * @since Java 17+
  */
-public class ArrayConverter extends AbstractConverter {
+public class ArrayConverter extends AbstractConverter implements MatcherConverter {
 
     private static final long serialVersionUID = -1L;
 
@@ -85,6 +86,11 @@ public class ArrayConverter extends AbstractConverter {
 
         return value.getClass().isArray() ? convertArrayToArray(targetComponentType, value)
                 : convertObjectToArray(targetComponentType, value);
+    }
+
+    @Override
+    public boolean match(final Type targetType, final Class<?> rawType, final Object value) {
+        return rawType.isArray();
     }
 
     /**

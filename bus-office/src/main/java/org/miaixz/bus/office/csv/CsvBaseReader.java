@@ -27,14 +27,6 @@
 */
 package org.miaixz.bus.office.csv;
 
-import org.miaixz.bus.core.center.function.ConsumerX;
-import org.miaixz.bus.core.lang.Assert;
-import org.miaixz.bus.core.lang.Charset;
-import org.miaixz.bus.core.lang.exception.InternalException;
-import org.miaixz.bus.core.xyz.FileKit;
-import org.miaixz.bus.core.xyz.IoKit;
-import org.miaixz.bus.core.xyz.ObjectKit;
-
 import java.io.File;
 import java.io.Reader;
 import java.io.Serializable;
@@ -45,6 +37,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import org.miaixz.bus.core.center.function.ConsumerX;
+import org.miaixz.bus.core.lang.Assert;
+import org.miaixz.bus.core.lang.Charset;
+import org.miaixz.bus.core.lang.exception.InternalException;
+import org.miaixz.bus.core.xyz.FileKit;
+import org.miaixz.bus.core.xyz.IoKit;
+import org.miaixz.bus.core.xyz.ObjectKit;
+
 /**
  * CSV文件读取器基础类，提供灵活的文件、路径中的CSV读取，一次构造可多次调用读取不同数据，参考：FastCSV
  *
@@ -53,11 +53,12 @@ import java.util.Objects;
  */
 public class CsvBaseReader implements Serializable {
 
+    private static final long serialVersionUID = -1L;
+
     /**
      * 默认编码
      */
     protected static final java.nio.charset.Charset DEFAULT_CHARSET = Charset.UTF_8;
-    private static final long serialVersionUID = -1L;
     private final CsvReadConfig config;
 
     /**

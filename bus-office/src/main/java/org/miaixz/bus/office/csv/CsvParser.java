@@ -27,6 +27,12 @@
 */
 package org.miaixz.bus.office.csv;
 
+import java.io.Closeable;
+import java.io.IOException;
+import java.io.Reader;
+import java.io.Serializable;
+import java.util.*;
+
 import org.miaixz.bus.core.center.iterator.ComputeIterator;
 import org.miaixz.bus.core.lang.Normal;
 import org.miaixz.bus.core.lang.Symbol;
@@ -35,12 +41,6 @@ import org.miaixz.bus.core.text.StringTrimer;
 import org.miaixz.bus.core.xyz.MapKit;
 import org.miaixz.bus.core.xyz.ObjectKit;
 import org.miaixz.bus.core.xyz.StringKit;
-
-import java.io.Closeable;
-import java.io.IOException;
-import java.io.Reader;
-import java.io.Serializable;
-import java.util.*;
 
 /**
  * CSV行解析器，参考：FastCSV
@@ -58,10 +58,6 @@ public final class CsvParser extends ComputeIterator<CsvRow> implements Closeabl
     private final CsvReadConfig config;
 
     private final Buffer buf;
-    /**
-     * 当前读取字段
-     */
-    private final StringBuilder currentField = new StringBuilder(512);
     /**
      * 前一个特殊分界字符
      */
@@ -94,6 +90,11 @@ public final class CsvParser extends ComputeIterator<CsvRow> implements Closeabl
      * 是否读取结束
      */
     private boolean finished;
+
+    /**
+     * 当前读取字段
+     */
+    private final StringBuilder currentField = new StringBuilder(512);
 
     /**
      * CSV解析器
@@ -319,8 +320,8 @@ public final class CsvParser extends ComputeIterator<CsvRow> implements Closeabl
                     buf.mark();
                     addField(currentFields, currentField.toString());
                     currentField.setLength(0);
-                } else if (c == config.textDelimiter) {
-                    // 引号开始
+                } else if (c == config.textDelimiter && isFieldBegin(preChar)) {
+                    // 引号开始且出现在字段开头
                     inQuotes = true;
                     copyLen++;
                 } else if (c == Symbol.C_CR) {
@@ -380,7 +381,13 @@ public final class CsvParser extends ComputeIterator<CsvRow> implements Closeabl
         // 忽略多余引号后的换行符
         field = StringKit.trim(field, StringTrimer.TrimMode.SUFFIX, (c -> c == Symbol.C_LF || c == Symbol.C_CR));
 
-        field = StringKit.unWrap(field, textDelimiter);
+        if (StringKit.isWrap(field, textDelimiter)) {
+            field = StringKit.sub(field, 1, field.length() - 1);
+            // https://datatracker.ietf.org/doc/html/rfc4180#section-2
+            // 第七条规则，只有包装内的包装符需要转义
+            field = StringKit.replace(field, String.valueOf(textDelimiter) + textDelimiter,
+                    String.valueOf(textDelimiter));
+        }
         field = StringKit.replace(field, String.valueOf(textDelimiter) + textDelimiter, String.valueOf(textDelimiter));
         if (this.config.trimField) {
             field = StringKit.trim(field);
@@ -397,6 +404,21 @@ public final class CsvParser extends ComputeIterator<CsvRow> implements Closeabl
      */
     private boolean isLineEnd(final char c, final int preChar) {
         return (c == Symbol.C_CR || c == Symbol.C_LF) && preChar != Symbol.C_CR;
+    }
+
+    /**
+     * 通过前一个字符，判断是否字段开始，几种情况：
+     * <ul>
+     * <li>正文开头，无前字符</li>
+     * <li>字段分隔符，即上个字段结束</li>
+     * <li>换行符，即新行开始</li>
+     * </ul>
+     *
+     * @param preChar 前字符
+     * @return 是否字段开始
+     */
+    private boolean isFieldBegin(final int preChar) {
+        return preChar == -1 || preChar == config.fieldSeparator || preChar == Symbol.C_LF || preChar == Symbol.C_CR;
     }
 
     /**

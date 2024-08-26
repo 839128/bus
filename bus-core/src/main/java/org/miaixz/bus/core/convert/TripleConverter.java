@@ -98,8 +98,11 @@ public class TripleConverter implements Converter {
     public Triplet<?, ?, ?> convert(final Type leftType, final Type middleType, final Type rightType,
             final Object value) throws ConvertException {
         Map map = null;
-        if (BeanKit.isReadableBean(value.getClass())) {
-            map = BeanKit.beanToMap(value);
+        if (value instanceof Map) {
+            map = (Map) value;
+        } else if (BeanKit.isReadableBean(value.getClass())) {
+            // 一次性只读场景，包装为Map效率更高
+            map = BeanKit.toBeanMap(value);
         }
 
         if (null != map) {

@@ -33,6 +33,7 @@ import org.miaixz.bus.core.lang.exception.ConvertException;
 import org.miaixz.bus.core.xyz.DateKit;
 import org.miaixz.bus.core.xyz.StringKit;
 
+import java.lang.reflect.Type;
 import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
 import java.util.Date;
@@ -43,7 +44,7 @@ import java.util.Date;
  * @author Kimi Liu
  * @since Java 17+
  */
-public class DateConverter extends AbstractConverter {
+public class DateConverter extends AbstractConverter implements MatcherConverter {
 
     private static final long serialVersionUID = -1L;
 
@@ -88,6 +89,11 @@ public class DateConverter extends AbstractConverter {
      */
     public void setFormat(final String format) {
         this.format = format;
+    }
+
+    @Override
+    public boolean match(final Type targetType, final Class<?> rawType, final Object value) {
+        return Date.class.isAssignableFrom(rawType);
     }
 
     @Override

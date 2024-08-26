@@ -273,7 +273,7 @@ public interface ForestMap<K, V> extends Map<K, TreeEntry<K, V>> {
      * @return 节点值，若节点不存在，或节点值为null都将返回null
      */
     default V getNodeValue(final K key) {
-        return Optional.ofNullable(get(key)).map(TreeEntry::getValue).get();
+        return Optional.ofNullable(get(key)).map(TreeEntry::getValue).getOrNull();
     }
 
     /**

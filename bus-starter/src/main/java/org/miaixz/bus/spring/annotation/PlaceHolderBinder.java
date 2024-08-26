@@ -55,7 +55,7 @@ public interface PlaceHolderBinder {
      * @return the object
      */
     static <T> T bind(Environment environment, Class<T> targetClass, String prefix) {
-        // 使用 Spring Boot 2.x 方式绑定
+        // 使用 Spring Boot 方式绑定
         try {
             Class<?> bindClass = Class.forName("org.springframework.boot.context.properties.bind.Binder");
             Method getMethod = bindClass.getDeclaredMethod("get", Environment.class);

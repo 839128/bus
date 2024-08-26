@@ -27,7 +27,6 @@
 */
 package org.miaixz.bus.core.convert;
 
-import org.miaixz.bus.core.lang.Assert;
 import org.miaixz.bus.core.lang.exception.ConvertException;
 import org.miaixz.bus.core.xyz.ArrayKit;
 import org.miaixz.bus.core.xyz.CharKit;
@@ -70,7 +69,7 @@ public abstract class AbstractConverter implements Converter, Serializable {
         // 尝试强转
         if (targetClass.isInstance(value)) {
             // 除Map外，已经是目标类型，不需要转换（Map类型涉及参数类型，需要单独转换）
-            return Assert.notNull(targetClass).cast(value);
+            return value;
         }
         return convertInternal(targetClass, value);
     }
