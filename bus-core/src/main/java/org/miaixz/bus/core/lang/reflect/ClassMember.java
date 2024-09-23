@@ -25,59 +25,64 @@
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 */
-package org.miaixz.bus.core.convert;
+package org.miaixz.bus.core.lang.reflect;
 
-import java.lang.ref.Reference;
-import java.lang.ref.SoftReference;
-import java.lang.ref.WeakReference;
-import java.lang.reflect.Type;
+import java.lang.reflect.Member;
 
 import org.miaixz.bus.core.lang.Assert;
-import org.miaixz.bus.core.xyz.StringKit;
-import org.miaixz.bus.core.xyz.TypeKit;
 
 /**
- * {@link Reference}转换器
- *
+ * 类成员，用于获取类的修饰符等，如：
+ * 
+ * <pre>
+ * ClassMember member = new ClassMember(String.class);
+ * Console.log(member.getModifiers());
+ * </pre>
+ * 
  * @author Kimi Liu
  * @since Java 17+
  */
-public class ReferenceConverter extends AbstractConverter {
+public class ClassMember implements Member {
 
-    private static final long serialVersionUID = -1L;
-
-    private final Converter rootConverter;
+    private final Class<?> clazz;
 
     /**
      * 构造
      *
-     * @param rootConverter 根转换器，用于转换Reference泛型的类型
+     * @param clazz 类
      */
-    public ReferenceConverter(final Converter rootConverter) {
-        this.rootConverter = Assert.notNull(rootConverter);
+    public ClassMember(final Class<?> clazz) {
+        this.clazz = Assert.notNull(clazz);
+    }
+
+    /**
+     * 静态工厂方法，用于创建ClassMember对象
+     *
+     * @param clazz 类
+     * @return ClassMember对象
+     */
+    public static ClassMember of(final Class<?> clazz) {
+        return new ClassMember(clazz);
     }
 
     @Override
-    protected Reference<?> convertInternal(final Class<?> targetClass, final Object value) {
+    public Class<?> getDeclaringClass() {
+        return this.clazz;
+    }
 
-        // 尝试将值转换为Reference泛型的类型
-        Object targetValue = null;
-        final Type paramType = TypeKit.getTypeArgument(targetClass);
-        if (!TypeKit.isUnknown(paramType)) {
-            targetValue = rootConverter.convert(paramType, value);
-        }
-        if (null == targetValue) {
-            targetValue = value;
-        }
+    @Override
+    public String getName() {
+        return this.clazz.getName();
+    }
 
-        if (targetClass == WeakReference.class) {
-            return new WeakReference(targetValue);
-        } else if (targetClass == SoftReference.class) {
-            return new SoftReference(targetValue);
-        }
+    @Override
+    public int getModifiers() {
+        return this.clazz.getModifiers();
+    }
 
-        throw new UnsupportedOperationException(
-                StringKit.format("Unsupport Reference type: {}", targetClass.getName()));
+    @Override
+    public boolean isSynthetic() {
+        return this.clazz.isSynthetic();
     }
 
 }
