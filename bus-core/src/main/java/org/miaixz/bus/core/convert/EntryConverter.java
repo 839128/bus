@@ -27,15 +27,16 @@
 */
 package org.miaixz.bus.core.convert;
 
+import java.io.Serializable;
+import java.lang.reflect.Type;
+import java.util.Map;
+
 import org.miaixz.bus.core.lang.Symbol;
+import org.miaixz.bus.core.lang.Wrapper;
 import org.miaixz.bus.core.lang.exception.ConvertException;
 import org.miaixz.bus.core.lang.reflect.TypeReference;
 import org.miaixz.bus.core.lang.tuple.Pair;
 import org.miaixz.bus.core.xyz.*;
-
-import java.io.Serializable;
-import java.lang.reflect.Type;
-import java.util.Map;
 
 /**
  * {@link Map.Entry} 转换器，支持以下类型转为Entry
@@ -49,30 +50,17 @@ import java.util.Map;
  * @author Kimi Liu
  * @since Java 17+
  */
-public class EntryConverter implements MatcherConverter, Serializable {
+public class EntryConverter extends ConverterWithRoot implements MatcherConverter, Serializable {
 
     private static final long serialVersionUID = -1L;
 
     /**
-     * 单例
-     */
-    public static final EntryConverter INSTANCE = new EntryConverter();
-
-    /**
-     * 字符串转单个键值对的Map，支持分隔符{@code :}、{@code =}、{@code ,}
+     * 构造
      *
-     * @param text 字符串
-     * @return map or null
+     * @param converter 转换器，用于将Entry中key和value转换为指定类型的对象
      */
-    private static Map<CharSequence, CharSequence> strToMap(final CharSequence text) {
-        // data:value data=value data,value
-        final int index = StringKit.indexOf(text,
-                c -> c == Symbol.C_COLON || c == Symbol.C_EQUAL || c == Symbol.C_COMMA, 0, text.length());
-
-        if (index > -1) {
-            return MapKit.of(text.subSequence(0, index), text.subSequence(index + 1, text.length()));
-        }
-        return null;
+    public EntryConverter(final Converter converter) {
+        super(converter);
     }
 
     @Override
@@ -87,32 +75,19 @@ public class EntryConverter implements MatcherConverter, Serializable {
     }
 
     /**
-     * Map转Entry
+     * 字符串转单个键值对的Map，支持分隔符{@code :}、{@code =}、{@code ,}
      *
-     * @param targetType 目标的Map类型
-     * @param keyType    键类型
-     * @param valueType  值类型
-     * @param map        被转换的map
-     * @return Entry
+     * @param text 字符串
+     * @return map or null
      */
-    private static Map.Entry<?, ?> mapToEntry(final Type targetType, final Type keyType, final Type valueType,
-                                              final Map map) {
-        final Object key;
-        final Object value;
-        if (1 == map.size()) {
-            final Map.Entry entry = (Map.Entry) map.entrySet().iterator().next();
-            key = entry.getKey();
-            value = entry.getValue();
-        } else {
-            // 忽略Map中其它属性
-            key = map.get("key");
-            value = map.get("value");
-        }
+    private static Map<CharSequence, CharSequence> strToMap(final CharSequence text) {
+        final int index = StringKit.indexOf(text,
+                c -> c == Symbol.C_COLON || c == Symbol.C_EQUAL || c == Symbol.C_COMMA, 0, text.length());
 
-        final CompositeConverter convert = CompositeConverter.getInstance();
-        return (Map.Entry<?, ?>) ReflectKit.newInstance(TypeKit.getClass(targetType),
-                TypeKit.isUnknown(keyType) ? key : convert.convert(keyType, key),
-                TypeKit.isUnknown(valueType) ? value : convert.convert(valueType, value));
+        if (index > -1) {
+            return MapKit.of(text.subSequence(0, index), text.subSequence(index + 1, text.length()));
+        }
+        return null;
     }
 
     /**
@@ -153,6 +128,37 @@ public class EntryConverter implements MatcherConverter, Serializable {
     @Override
     public boolean match(final Type targetType, final Class<?> rawType, final Object value) {
         return Map.Entry.class.isAssignableFrom(rawType);
+    }
+
+    /**
+     * Map转Entry
+     *
+     * @param targetType 目标的Map类型
+     * @param keyType    键类型
+     * @param valueType  值类型
+     * @param map        被转换的map
+     * @return Entry
+     */
+    private Map.Entry<?, ?> mapToEntry(final Type targetType, final Type keyType, final Type valueType, final Map map) {
+        final Object key;
+        Object value;
+        if (1 == map.size()) {
+            final Map.Entry entry = (Map.Entry) map.entrySet().iterator().next();
+            key = entry.getKey();
+            value = entry.getValue();
+        } else {
+            // 忽略Map中其它属性
+            key = map.get("key");
+            value = map.get("value");
+        }
+
+        if (value instanceof Wrapper) {
+            value = ((Wrapper) value).getRaw();
+        }
+
+        return (Map.Entry<?, ?>) ReflectKit.newInstance(TypeKit.getClass(targetType),
+                TypeKit.isUnknown(keyType) ? key : converter.convert(keyType, key),
+                TypeKit.isUnknown(valueType) ? value : converter.convert(valueType, value));
     }
 
 }

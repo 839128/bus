@@ -27,14 +27,6 @@
 */
 package org.miaixz.bus.core.lang;
 
-import org.miaixz.bus.core.center.function.ConsumerX;
-import org.miaixz.bus.core.center.function.FunctionX;
-import org.miaixz.bus.core.center.function.PredicateX;
-import org.miaixz.bus.core.center.function.SupplierX;
-import org.miaixz.bus.core.center.stream.EasyStream;
-import org.miaixz.bus.core.xyz.ObjectKit;
-import org.miaixz.bus.core.xyz.StringKit;
-
 import java.util.Collection;
 import java.util.NoSuchElementException;
 import java.util.Objects;
@@ -42,6 +34,14 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
+
+import org.miaixz.bus.core.center.function.ConsumerX;
+import org.miaixz.bus.core.center.function.FunctionX;
+import org.miaixz.bus.core.center.function.PredicateX;
+import org.miaixz.bus.core.center.function.SupplierX;
+import org.miaixz.bus.core.center.stream.EasyStream;
+import org.miaixz.bus.core.xyz.ObjectKit;
+import org.miaixz.bus.core.xyz.StringKit;
 
 /**
  * 复制jdk16中的Optional，以及进行了一点调整和新增，比jdk8中的Optional多了几个实用的函数
@@ -162,6 +162,19 @@ public class Optional<T> {
      * @return 包裹里的元素，有可能为{@code null}
      */
     public T getOrNull() {
+        return this.value;
+    }
+
+    /**
+     * 返回包裹里的元素，取不到则抛出异常
+     *
+     * @return 包裹里的元素
+     * @throws NoSuchElementException 如果元素为空，则抛出此异常
+     */
+    public T getOrThrow() throws NoSuchElementException {
+        if (this.value == null) {
+            throw new NoSuchElementException("No value present");
+        }
         return this.value;
     }
 
@@ -499,21 +512,21 @@ public class Optional<T> {
      * <li>它们包裹住的元素之间相互 {@code equals()}
      * </ul>
      *
-     * @param obj 一个要用来判断是否相等的参数
+     * @param object 一个要用来判断是否相等的参数
      * @return 如果传入的参数也是一个 {@code Optional}并且它们包裹住的元素都为空 或者它们包裹住的元素之间相互 {@code equals()} 就返回{@code true} 否则返回
      *         {@code false}
      */
     @Override
-    public boolean equals(final Object obj) {
-        if (this == obj) {
+    public boolean equals(final Object object) {
+        if (this == object) {
             return true;
         }
 
-        if (!(obj instanceof Optional)) {
+        if (!(object instanceof Optional)) {
             return false;
         }
 
-        final Optional<?> other = (Optional<?>) obj;
+        final Optional<?> other = (Optional<?>) object;
         return Objects.equals(value, other.value);
     }
 

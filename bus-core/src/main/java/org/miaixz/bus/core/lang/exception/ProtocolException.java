@@ -25,45 +25,104 @@
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 */
-package org.miaixz.bus.office.excel.cell.setters;
-
-import java.util.regex.Pattern;
-
-import org.miaixz.bus.core.xyz.PatternKit;
-import org.miaixz.bus.core.xyz.StringKit;
+package org.miaixz.bus.core.lang.exception;
 
 /**
- * 字符串转义Cell值设置器 使用 _x005F前缀转义_xXXXX_，避免被decode的问题 如用户传入'_x5116_'会导致乱码，使用此设置器转义为'_x005F_x5116_'
+ * 类型: 协议异常
  *
  * @author Kimi Liu
  * @since Java 17+
  */
-public class EscapeStringCellSetter extends CharSequenceCellSetter {
+public class ProtocolException extends UncheckedException {
 
-    private static final Pattern utfPtrn = Pattern.compile("_x[0-9A-Fa-f]{4}_");
+    private static final long serialVersionUID = -1L;
+
+    /**
+     * 构造
+     */
+    public ProtocolException() {
+        super();
+    }
 
     /**
      * 构造
      *
-     * @param value 值
+     * @param e 异常
      */
-    public EscapeStringCellSetter(final CharSequence value) {
-        super(escape(StringKit.toStringOrNull(value)));
+    public ProtocolException(final Throwable e) {
+        super(e);
     }
 
     /**
-     * 使用 _x005F前缀转义_xXXXX_，避免被decode的问题
+     * 构造
      *
-     * @param value 被转义的字符串
-     * @return 转义后的字符串
+     * @param message 消息
      */
-    private static String escape(final String value) {
-        if (value == null || !value.contains("_x")) {
-            return value;
-        }
+    public ProtocolException(final String message) {
+        super(message);
+    }
 
-        // 使用 _x005F前缀转义_xXXXX_，避免被decode的问题
-        return PatternKit.replaceAll(value, utfPtrn, "_x005F$0");
+    /**
+     * 构造
+     *
+     * @param format 消息模板
+     * @param args   参数
+     */
+    public ProtocolException(final String format, final Object... args) {
+        super(format, args);
+    }
+
+    /**
+     * 构造
+     *
+     * @param errcode 错误码
+     * @param errmsg  消息
+     */
+    public ProtocolException(final String errcode, final String errmsg) {
+        super(errcode, errmsg);
+    }
+
+    /**
+     * 构造
+     *
+     * @param errcode   错误码
+     * @param throwable 异常
+     */
+    public ProtocolException(final String errcode, final Throwable throwable) {
+        super(errcode, throwable);
+    }
+
+    /**
+     * 构造
+     *
+     * @param cause  被包装的子异常
+     * @param format 消息模板
+     * @param args   参数
+     */
+    public ProtocolException(final Throwable cause, final String format, final Object... args) {
+        super(cause, format, args);
+    }
+
+    /**
+     * @param errcode   错误码
+     * @param errmsg    消息
+     * @param throwable 异常
+     */
+    public ProtocolException(final String errcode, final String errmsg, final Throwable throwable) {
+        super(errcode, errmsg, throwable);
+    }
+
+    /**
+     * 构造
+     *
+     * @param message            消息
+     * @param cause              被包装的子异常
+     * @param enableSuppression  是否启用抑制
+     * @param writableStackTrace 堆栈跟踪是否应该是可写的
+     */
+    public ProtocolException(final String message, final Throwable cause, final boolean enableSuppression,
+            final boolean writableStackTrace) {
+        super(message, cause, enableSuppression, writableStackTrace);
     }
 
 }

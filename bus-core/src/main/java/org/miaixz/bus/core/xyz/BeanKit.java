@@ -27,6 +27,16 @@
 */
 package org.miaixz.bus.core.xyz;
 
+import java.beans.*;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.*;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
+import java.util.stream.Collectors;
+
 import org.miaixz.bus.core.bean.BeanCache;
 import org.miaixz.bus.core.bean.DynaBean;
 import org.miaixz.bus.core.bean.copier.BeanCopier;
@@ -41,18 +51,10 @@ import org.miaixz.bus.core.center.map.CaseInsensitiveMap;
 import org.miaixz.bus.core.center.map.Dictionary;
 import org.miaixz.bus.core.convert.Convert;
 import org.miaixz.bus.core.convert.RecordConverter;
+import org.miaixz.bus.core.lang.annotation.Readables;
+import org.miaixz.bus.core.lang.annotation.Writables;
 import org.miaixz.bus.core.lang.exception.BeanException;
 import org.miaixz.bus.core.lang.mutable.MutableEntry;
-
-import java.beans.*;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.util.*;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
-import java.util.function.UnaryOperator;
-import java.util.stream.Collectors;
 
 /**
  * Bean工具类
@@ -241,6 +243,14 @@ public class BeanKit {
         if (null == bean || StringKit.isBlank(expression)) {
             return null;
         }
+
+        // 先尝试直接获取属性
+        if (bean instanceof Map) {
+            final Map<?, ?> map = (Map<?, ?>) bean;
+            if (map.containsKey(expression)) {
+                return (T) map.get(expression);
+            }
+        }
         return (T) BeanPath.of(expression).getValue(bean);
     }
 
@@ -414,13 +424,14 @@ public class BeanKit {
      * 3. 自定义字段前缀或后缀等等
      * </pre>
      *
+     * @param <V>             Map中值类型
      * @param bean            bean对象
      * @param targetMap       目标的Map
      * @param ignoreNullValue 是否忽略值为空的字段
      * @param keyEditor       属性字段（Map的key）编辑器，用于筛选、编辑key，如果这个Editor返回null则忽略这个字段
      * @return Map
      */
-    public static Map<String, Object> beanToMap(final Object bean, final Map<String, Object> targetMap,
+    public static <V> Map<String, V> beanToMap(final Object bean, final Map<String, V> targetMap,
             final boolean ignoreNullValue, final UnaryOperator<MutableEntry<Object, Object>> keyEditor) {
         if (null == bean) {
             return null;
@@ -442,12 +453,13 @@ public class BeanKit {
      * ...
      * </pre>
      *
+     * @param <V>         Map中值类型
      * @param bean        bean对象
      * @param targetMap   目标的Map
      * @param copyOptions 拷贝选项
      * @return Map
      */
-    public static Map<String, Object> beanToMap(final Object bean, final Map<String, Object> targetMap,
+    public static <V> Map<String, V> beanToMap(final Object bean, final Map<String, V> targetMap,
             final CopyOptions copyOptions) {
         if (null == bean) {
             return null;
@@ -471,7 +483,7 @@ public class BeanKit {
         }
         if (RecordKit.isRecord(tClass)) {
             // 转换record时，ignoreProperties无效
-            return (T) RecordConverter.INSTANCE.convert(tClass, source);
+            return RecordConverter.INSTANCE.convert(tClass, source);
         }
         final T target = ReflectKit.newInstanceIfPossible(tClass);
         return copyProperties(source, target, CopyOptions.of().setIgnoreProperties(ignoreProperties));
@@ -676,6 +688,15 @@ public class BeanKit {
         if (null == clazz) {
             return false;
         }
+        if (clazz == String.class) {
+            // String中有getter方法，但为字符串，不是Bean
+            return false;
+        }
+
+        if (AnnoKit.hasAnnotation(clazz, Readables.class)) {
+            return true;
+        }
+
         return hasGetter(clazz) || hasPublicField(clazz);
     }
 
@@ -700,6 +721,10 @@ public class BeanKit {
         // 排除定义setXXX的预定义类
         if (Dictionary.class == clazz) {
             return false;
+        }
+
+        if (AnnoKit.hasAnnotation(clazz, Writables.class)) {
+            return true;
         }
 
         return hasSetter(clazz) || hasPublicField(clazz);
