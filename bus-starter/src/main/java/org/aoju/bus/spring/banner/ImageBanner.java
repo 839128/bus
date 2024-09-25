@@ -25,11 +25,6 @@
  ********************************************************************************/
 package org.aoju.bus.spring.banner;
 
-import org.aoju.bus.core.lang.Normal;
-import org.aoju.bus.core.lang.Symbol;
-import org.aoju.bus.logger.Logger;
-
-import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.color.ColorSpace;
 import java.awt.image.BufferedImage;
@@ -38,6 +33,12 @@ import java.io.FileInputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+
+import javax.imageio.ImageIO;
+
+import org.aoju.bus.core.lang.Normal;
+import org.aoju.bus.core.lang.Symbol;
+import org.aoju.bus.logger.Logger;
 
 /**
  * ASCII艺术产生的图像文件

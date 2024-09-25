@@ -23,65 +23,39 @@
  * THE SOFTWARE.                                                                 *
  *                                                                               *
  ********************************************************************************/
-package org.aoju.bus.spring;
+package org.aoju.bus.spring.banner;
 
-import org.aoju.bus.core.toolkit.ReflectKit;
+import java.io.PrintStream;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Array;
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
+import org.aoju.bus.core.Version;
+import org.aoju.bus.spring.BusXBuilder;
+import org.springframework.boot.Banner;
+import org.springframework.boot.SpringBootVersion;
+import org.springframework.boot.ansi.AnsiColor;
+import org.springframework.boot.ansi.AnsiOutput;
+import org.springframework.core.env.Environment;
 
 /**
- * 拦截响应的代理
+ * 旗标生成器
  *
  * @author Kimi Liu
  * @since Java 17+
  */
-public class PlaceHandler implements InvocationHandler {
+public class BusBanner implements Banner {
 
-    private final Annotation delegate;
-
-    private final PlaceBinder binder;
-
-    private PlaceHandler(Annotation delegate, PlaceBinder binder) {
-        this.delegate = delegate;
-        this.binder = binder;
-    }
+    private static final String SPRING_BOOT = "::Spring Boot::";
 
     @Override
-    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-        Object ret = method.invoke(delegate, args);
-        if (!ReflectKit.isEqualsMethod(method) && !ReflectKit.isHashCodeMethod(method)
-                && !ReflectKit.isToStringMethod(method) && isAttributeMethod(method)) {
-            return resolvePlaceHolder(ret);
+    public void printBanner(Environment environment, Class<?> sourceClass, PrintStream printStream) {
+        for (Object line : BusXBuilder.BUS_BANNER) {
+            printStream.println(AnsiOutput.toString(AnsiColor.BRIGHT_GREEN, line));
         }
-        return ret;
-    }
 
-    private boolean isAttributeMethod(Method method) {
-        return (null != method && method.getParameterTypes().length == 0 && method.getReturnType() != void.class);
-    }
-
-    public Object resolvePlaceHolder(Object origin) {
-        if (origin.getClass().isArray()) {
-            int length = Array.getLength(origin);
-            Object ret = Array.newInstance(origin.getClass().getComponentType(), length);
-            for (int i = 0; i < length; ++i) {
-                Array.set(ret, i, resolvePlaceHolder(Array.get(origin, i)));
-            }
-            return ret;
-        } else {
-            return doResolvePlaceHolder(origin);
-        }
-    }
-
-    private Object doResolvePlaceHolder(Object origin) {
-        if (origin instanceof String) {
-            return binder.bind((String) origin);
-        } else {
-            return origin;
-        }
+        printStream.println();
+        printStream.println(AnsiOutput.toString(
+                AnsiColor.BRIGHT_MAGENTA, SPRING_BOOT + String.format(" (v%s)", SpringBootVersion.getVersion()),
+                AnsiColor.BRIGHT_MAGENTA, "      " + BusXBuilder.BUS_BOOT + String.format(" (v%s)", Version.get())));
+        printStream.println();
     }
 
 }

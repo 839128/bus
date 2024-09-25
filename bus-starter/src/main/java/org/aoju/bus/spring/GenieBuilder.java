@@ -25,6 +25,11 @@
  ********************************************************************************/
 package org.aoju.bus.spring;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.stream.StreamSupport;
+
 import org.aoju.bus.core.toolkit.StringKit;
 import org.aoju.bus.spring.banner.BusBanner;
 import org.springframework.boot.SpringApplication;
@@ -33,11 +38,6 @@ import org.springframework.boot.context.event.ApplicationEnvironmentPreparedEven
 import org.springframework.context.ApplicationListener;
 import org.springframework.core.Ordered;
 import org.springframework.core.env.*;
-
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.stream.StreamSupport;
 
 /**
  * 启动监听器，初始化相关配置

@@ -23,39 +23,57 @@
  * THE SOFTWARE.                                                                 *
  *                                                                               *
  ********************************************************************************/
-package org.aoju.bus.spring.banner;
+package org.aoju.bus.spring;
 
-import org.aoju.bus.core.Version;
-import org.aoju.bus.spring.BusXBuilder;
-import org.springframework.boot.Banner;
-import org.springframework.boot.SpringBootVersion;
-import org.springframework.boot.ansi.AnsiColor;
-import org.springframework.boot.ansi.AnsiOutput;
-import org.springframework.core.env.Environment;
+import java.util.HashSet;
+import java.util.Set;
 
-import java.io.PrintStream;
+import org.aoju.bus.core.toolkit.ClassKit;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
+import org.springframework.core.type.classreading.CachingMetadataReaderFactory;
+import org.springframework.core.type.classreading.MetadataReader;
 
 /**
- * 旗标生成器
+ * 扫描包配置项及其他属性等
  *
  * @author Kimi Liu
  * @since Java 17+
  */
-public class BusBanner implements Banner {
+@ComponentScan("org.aoju.**")
+@Order(Ordered.HIGHEST_PRECEDENCE)
+public class BusXHolder {
 
-    private static final String SPRING_BOOT = "::Spring Boot::";
-
-    @Override
-    public void printBanner(Environment environment, Class<?> sourceClass, PrintStream printStream) {
-        for (Object line : BusXBuilder.BUS_BANNER) {
-            printStream.println(AnsiOutput.toString(AnsiColor.BRIGHT_GREEN, line));
+    /**
+     * 获取某个包下所有的class对象
+     *
+     * @param packageName 包路径
+     * @return
+     */
+    public static Set<Class<?>> scan(String packageName) {
+        Set<Class<?>> handlerSet = new HashSet();
+        try {
+            String pattern = "classpath*:" + ClassKit.convertClassNameToResourcePath(packageName) + "/**/*.class";
+            PathMatchingResourcePatternResolver resourcePatternResolver = new PathMatchingResourcePatternResolver();
+            Resource[] resources = resourcePatternResolver.getResources(pattern);
+            CachingMetadataReaderFactory readerFactory = new CachingMetadataReaderFactory(resourcePatternResolver);
+            for (Resource resource : resources) {
+                try {
+                    MetadataReader reader = readerFactory.getMetadataReader(resource);
+                    String className = reader.getClassMetadata().getClassName();
+                    Class<?> clazz = Class.forName(className);
+                    handlerSet.add(clazz);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-
-        printStream.println();
-        printStream.println(AnsiOutput.toString(
-                AnsiColor.BRIGHT_MAGENTA, SPRING_BOOT + String.format(" (v%s)", SpringBootVersion.getVersion()),
-                AnsiColor.BRIGHT_MAGENTA, "      " + BusXBuilder.BUS_BOOT + String.format(" (v%s)", Version.get())));
-        printStream.println();
+        return handlerSet;
     }
 
 }

@@ -25,55 +25,63 @@
  ********************************************************************************/
 package org.aoju.bus.spring;
 
-import org.aoju.bus.core.toolkit.ClassKit;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
-import org.springframework.core.type.classreading.CachingMetadataReaderFactory;
-import org.springframework.core.type.classreading.MetadataReader;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Array;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
 
-import java.util.HashSet;
-import java.util.Set;
+import org.aoju.bus.core.toolkit.ReflectKit;
 
 /**
- * 扫描包配置项及其他属性等
+ * 拦截响应的代理
  *
  * @author Kimi Liu
  * @since Java 17+
  */
-@ComponentScan("org.aoju.**")
-@Order(Ordered.HIGHEST_PRECEDENCE)
-public class BusXHolder {
+public class PlaceHandler implements InvocationHandler {
 
-    /**
-     * 获取某个包下所有的class对象
-     *
-     * @param packageName 包路径
-     * @return
-     */
-    public static Set<Class<?>> scan(String packageName) {
-        Set<Class<?>> handlerSet = new HashSet();
-        try {
-            String pattern = "classpath*:" + ClassKit.convertClassNameToResourcePath(packageName) + "/**/*.class";
-            PathMatchingResourcePatternResolver resourcePatternResolver = new PathMatchingResourcePatternResolver();
-            Resource[] resources = resourcePatternResolver.getResources(pattern);
-            CachingMetadataReaderFactory readerFactory = new CachingMetadataReaderFactory(resourcePatternResolver);
-            for (Resource resource : resources) {
-                try {
-                    MetadataReader reader = readerFactory.getMetadataReader(resource);
-                    String className = reader.getClassMetadata().getClassName();
-                    Class<?> clazz = Class.forName(className);
-                    handlerSet.add(clazz);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+    private final Annotation delegate;
+
+    private final PlaceBinder binder;
+
+    private PlaceHandler(Annotation delegate, PlaceBinder binder) {
+        this.delegate = delegate;
+        this.binder = binder;
+    }
+
+    @Override
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        Object ret = method.invoke(delegate, args);
+        if (!ReflectKit.isEqualsMethod(method) && !ReflectKit.isHashCodeMethod(method)
+                && !ReflectKit.isToStringMethod(method) && isAttributeMethod(method)) {
+            return resolvePlaceHolder(ret);
         }
-        return handlerSet;
+        return ret;
+    }
+
+    private boolean isAttributeMethod(Method method) {
+        return (null != method && method.getParameterTypes().length == 0 && method.getReturnType() != void.class);
+    }
+
+    public Object resolvePlaceHolder(Object origin) {
+        if (origin.getClass().isArray()) {
+            int length = Array.getLength(origin);
+            Object ret = Array.newInstance(origin.getClass().getComponentType(), length);
+            for (int i = 0; i < length; ++i) {
+                Array.set(ret, i, resolvePlaceHolder(Array.get(origin, i)));
+            }
+            return ret;
+        } else {
+            return doResolvePlaceHolder(origin);
+        }
+    }
+
+    private Object doResolvePlaceHolder(Object origin) {
+        if (origin instanceof String) {
+            return binder.bind((String) origin);
+        } else {
+            return origin;
+        }
     }
 
 }
