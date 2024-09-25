@@ -1,5 +1,5 @@
 #### 项目说明
----------------------------
+--------------------------- 
 Windows • Linux • Mac OS • Unix (Solaris, FreeBSD)
 
 Supported features
@@ -83,7 +83,7 @@ Swap used: 3.6 GiB/5 GiB
 Statistics for the system battery are provided.
 
 ```
-Power Sources:
+Power Sources: 
  Name: InternalBattery-0, Device Name: bq20z451,
  RemainingCapacityPercent: 100.0%, Time Remaining: 5:42, Time Remaining Instant: 5:42,
  Power Usage Rate: -16045.216mW, Voltage: 12.694V, Amperage: -1264.0mA,
@@ -101,14 +101,14 @@ Displays:
  Display 0:
   Manuf. ID=SAM, Product ID=2ad, Analog, Serial=HA19, ManufDate=3/2008, EDID v1.3
   41 x 27 cm (16.1 x 10.6 in)
-  Preferred Timing: Clock 106MHz, Active Pixels 3840x2880
+  Preferred Timing: Clock 106MHz, Active Pixels 3840x2880 
   Range Limits: Field Rate 56-75 Hz vertical, 30-81 Hz horizontal, Max clock: 140 MHz
   Monitor Name: SyncMaster
   Serial Number: H9FQ345476
  Display 1:
   Manuf. ID=SAM, Product ID=226, Analog, Serial=HA19, ManufDate=4/2007, EDID v1.3
   41 x 26 cm (16.1 x 10.2 in)
-  Preferred Timing: Clock 106MHz, Active Pixels 3840x2880
+  Preferred Timing: Clock 106MHz, Active Pixels 3840x2880 
   Range Limits: Field Rate 56-75 Hz vertical, 30-81 Hz horizontal, Max clock: 140 MHz
   Monitor Name: SyncMaster
   Serial Number: HMCP431880
@@ -168,7 +168,7 @@ USB Devices:
 
 ### Prepare
 
-* Make sure tests are green on [Travis CI](https://travis-ci.org/839128/bus).
+* Make sure tests are green on [Travis CI](https://travis-ci.org/aoju/bus).
 * Run `mvn clean test` on every OS you have access to
 * Choose an appropriate [version number](http://semver.org/) for the release
     * Proactively change version numbers in the download links on [README.md](README.md).
@@ -199,8 +199,7 @@ for a summary of the below steps
   and [release the deployment from OSSRH to the Central Repository](http://central.sonatype.org/pages/releasing-the-deployment.html)
   .
 
-* Add a title and release notes [to the tag](https://github.com/839128/bus/tags) on GitHub and publish the release to
-  make
+* Add a title and release notes [to the tag](https://github.com/aoju/bus/tags) on GitHub and publish the release to make
   it current.
 
 * As development progresses, update version in [pom.xml](pom.xml) using -SNAPSHOT appended to the new version

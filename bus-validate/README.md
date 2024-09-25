@@ -1,6 +1,6 @@
 #### 项目说明
 
-一个校验器框架，提供注解校验方法参数和对象属性的功能，在方法运行前，拦截方法并执行参数校验，如果校验失败可以抛出自定义异常和信息；便于拓展自定义校验器。
+一个校验器框架，提供注解校验方法参数和对象属性的功能，在方法运行前，拦截方法并执行参数校验，如果校验失败可以抛出自定义异常和信息；便于拓展自定义校验器。    
 开发时，参考了Hibernate-Validator 5.x，但是没有做到兼容，因为JSR-303提供的注解的方法太少，不方便拓展，所以写了这个框架。
 
 ## 运行环境
@@ -9,8 +9,8 @@
 
 使用说明：
 
-1. 在spring容器中定义`AspectjProxyPoint`， 这是校验器的切面拦截功能，会默认拦截所有的标记有`@Valid`
-   的方法或类上面有`@Valid`注解的内部所有方法。
+1. 在spring容器中定义`AspectjProxyPoint`， 这是校验器的切面拦截功能，会默认拦截所有的标记有`@Valid`的方法或类上面有
+   `@Valid`注解的内部所有方法。
 
 1) `@Valid` value 启用部分属性校验
 2) `@Valid` skip 忽略部分属性校验
@@ -44,25 +44,25 @@ public User create(@Valid(value = {"name"}) @NotNull User user){
         class User {
             @IntRange(max = 1880, min = 5)
             private int age;
-
+        
             @NotBlank
             private String name;
-
+        
             @Length(min = 10)
             private List<String> list;
         }
-
-        //校验对象
+        
+        //校验对象 
         public void test() {
             User user = new User();
             user.setAge(0);
             user.setList(Lists.newArrayList("12"));
             user.setName("asdf");
-
+    
             Context context = Context.newInstance();
             //fast=false表示即使校验过程中，存在校验失败，将校验结果仍然收集到校验收集器中，而不是立即抛出异常.
-            context.setFast(false);
-
+            context.setFast(false);   
+    
             Validated validated = new Validated(user, context);
             Collector check = validated.access();
             System.out.println(check.getResult());
@@ -71,7 +71,7 @@ public User create(@Valid(value = {"name"}) @NotNull User user){
 
 5. 框架内部可用校验器注解
     * 校验器注解的具体使用方法，可以阅读源代码的api注释文档。
-    * 注意该框架的校验器的包名为`org.miaixz.bus.validate.annotation`
+   * 注意该框架的校验器的包名为`org.aoju.bus.validate.annotation`
     * 下列校验器注解，默认都**不会**产生校验对象内部字段的功能。如需校验对象内部字段，请使用后文提到的`@Inside`注解。
 
 ```text

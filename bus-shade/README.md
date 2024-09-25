@@ -168,7 +168,7 @@ XEntryFilter and=Builder.and()
         .mix(new AntEntryFilter("com/company/project/**"))
         .mix(new AntEntryFilter("mapper/*Mapper.xml"));
 
-// 3. 非运算，即除此之外都满足，该示例中即排除项目或其他模块和第三方依赖jar中的静态文件。
+// 3. 非运算，即除此之外都满足，该例子中即排除项目或其他模块和第三方依赖jar中的静态文件。
         XEntryFilter not=Builder.not(
         XKit.or()
         .mix(new AntEntryFilter("static/**"))
@@ -274,12 +274,12 @@ public static final String TABLE="hi_user";
 public static final String CLASSCOMMENT="用户信息";
 public static final String AGILE=new Date().getTime()+"";
 // 路径信息，分开路径方便聚合工程项目，微服务项目
-public static final String ENTITY_URL="org.miaixz.test.entity";
-public static final String MAPPER_URL="org.miaixz.test.mapper";
+public static final String ENTITY_URL="org.aoju.test.entity";
+public static final String MAPPER_URL="org.aoju.test.mapper";
 public static final String MAPPER_XML_URL="mapper";
-public static final String SERVICE_URL="org.miaixz.test.service";
-public static final String SERVICE_IMPL_URL="org.miaixz.test.service.impl";
-public static final String CONTROLLER_URL="org.miaixz.test.spring";
+public static final String SERVICE_URL="org.aoju.test.service";
+public static final String SERVICE_IMPL_URL="org.aoju.test.service.impl";
+public static final String CONTROLLER_URL="org.aoju.test.spring";
 //是否启用Swagger
 public static final String IS_SWAGGER="false";
 //是否启用dbuuo
@@ -297,7 +297,7 @@ public static void main(String[]args){
         tb.setEntityComment(CLASSCOMMENT);
 
         tb=TableEntity.get(tb);
-        String path="/bus/bus-xtest/src/main/";
+        String path="/Volumes/Angela.Fang/Phoebe/Works/Aoju.org/bus/bus-xtest/src/main/";
         String javaUrl=path+"java/";
         String resourceUrl=path+"resources/";
         //开始生成文件
@@ -315,7 +315,7 @@ public static void main(String[]args){
         System.out.println(aa6);
         System.out.println(aa3);
         }
-```
+``` 
 
 ## 功能③: 生成数据库文档
 
