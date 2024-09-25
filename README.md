@@ -97,7 +97,7 @@ Bus (应用/服务总线) 是一个基础框架、服务套件，它基于Java17
 
 ```
 <dependency>
-    <groupId>org.aoju</groupId>
+    <groupId>org.miaixz</groupId>
     <artifactId>bus-all</artifactId>
     <version>x.x.x</version>
 </dependency>
@@ -107,7 +107,7 @@ Bus (应用/服务总线) 是一个基础框架、服务套件，它基于Java17
 
 ```
 <dependency>
-    <groupId>org.aoju</groupId>
+    <groupId>org.miaixz</groupId>
     <artifactId>bus-xxx</artifactId>
     <version>x.x.x</version>
 </dependency>

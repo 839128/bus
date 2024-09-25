@@ -16,7 +16,7 @@
 ```xml
 
 <dependency>
-    <groupId>org.aoju</groupId>
+    <groupId>org.miaixz</groupId>
     <artifactId>bus-oauth</artifactId>
     <version>6.6.1</version>
 </dependency>

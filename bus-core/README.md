@@ -12,7 +12,7 @@
 
 ```xml
 <dependency>
-    <groupId>org.aoju</groupId>
+    <groupId>org.miaixz</groupId>
     <artifactId>bus-core</artifactId>
     <version>6.6.1</version>
 </dependency>
