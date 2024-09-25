@@ -9,7 +9,6 @@ import ai.djl.modality.cv.util.NDImageUtils;
 import ai.djl.ndarray.NDArray;
 import ai.djl.ndarray.NDList;
 import ai.djl.ndarray.NDManager;
-import ai.djl.opencv.OpenCVImage;
 import ai.djl.opencv.OpenCVImageFactory;
 import ai.djl.repository.zoo.Criteria;
 import ai.djl.repository.zoo.ModelNotFoundException;
@@ -18,8 +17,8 @@ import ai.djl.repository.zoo.ZooModel;
 import ai.djl.translate.TranslateException;
 import org.aoju.bus.core.codec.Base64;
 import org.aoju.bus.logger.Logger;
-import org.aoju.bus.ocr.detect.OcrV4Det;
-import org.aoju.bus.ocr.detect.OcrV4Rec;
+import org.aoju.bus.ocr.factory.OcrV4DetFactory;
+import org.aoju.bus.ocr.factory.OcrV4RecFactory;
 import org.aoju.bus.ocr.entity.OcrResult;
 import org.aoju.bus.ocr.entity.RotatedBox;
 import org.aoju.bus.ocr.entity.RotatedBoxCompX;
@@ -36,32 +35,28 @@ import java.io.InputStream;
 import java.util.*;
 
 public class OcrV4Kit {
-
     public static OcrResult runOcr(InputStream inputStream)
             throws TranslateException, IOException, ModelNotFoundException, MalformedModelException {
-
-        Image image = OpenCVImageFactory.getInstance().fromInputStream(inputStream);
         Map<String, Object> param = new HashMap<>();
-        OcrV4Det ocrV4Det = new OcrV4Det(param);
+        OcrV4DetFactory ocrV4Det = new OcrV4DetFactory(param);
         Criteria<Image, NDList> criteria = ocrV4Det.criteria();
-        OcrV4Rec ocrV4Rec = new OcrV4Rec(param);
+        OcrV4RecFactory ocrV4Rec = new OcrV4RecFactory(param);
         Criteria<Image, WordBlock> criteria1 = ocrV4Rec.criteria();
         try (
                 ZooModel<Image, NDList> detModel = ModelZoo.loadModel(criteria);
-                Predictor<Image, NDList> detector = detModel.newPredictor();
-
                 ZooModel<Image, WordBlock> recModel = ModelZoo.loadModel(criteria1);
-                Predictor<Image, WordBlock> recognizer = recModel.newPredictor();
                 NDManager manager = NDManager.newBaseManager()
         ) {
-            long timeInferStart = System.currentTimeMillis();
-            List<RotatedBox> list = predict(manager, image, detector, recognizer);
-            long timeInferEnd = System.currentTimeMillis();
-            Logger.info("识别时间：{}", timeInferEnd - timeInferStart);
+            ImageFactory factory = OpenCVImageFactory.getInstance();
+            if(null == inputStream) {
+                return new OcrResult(null,"输入流为空");
+            }
+            Image image = factory.fromInputStream(inputStream);
+            List<RotatedBox> list = predict(manager, image, detModel, recModel);
+            
             // put low Y value at the head of the queue.
             List<RotatedBox> initList = new ArrayList<>(list);
             Collections.sort(initList);
-
             List<List<RotatedBoxCompX>> lines = new ArrayList<>();
             List<RotatedBoxCompX> line = new ArrayList<>();
             RotatedBoxCompX firstBox = new RotatedBoxCompX(initList.get(0));
@@ -83,7 +78,6 @@ public class OcrV4Kit {
                 }
             }
 
-
             StringBuilder fullText = new StringBuilder();
             for (List<RotatedBoxCompX> rotatedBoxCompXES : lines) {
                 for (RotatedBoxCompX rotatedBoxCompX : rotatedBoxCompXES) {
@@ -94,74 +88,92 @@ public class OcrV4Kit {
                 }
                 fullText.append('\n');
             }
-            Mat mat = (Mat) image.getWrappedImage();
-            BufferedImage bufferedImage = OpenCVKit.mat2Image(mat);
-            for (RotatedBox result : list) {
-                ImageKit.drawImageRectWithText(bufferedImage, result.getBox(), result.getText());
-            }
-            String base64 = toBase64(bufferedImage);
-            return new OcrResult(base64, fullText.toString());
+//            Mat mat = (Mat) image.getWrappedImage();
+//            BufferedImage bufferedImage = OpenCVKit.mat2Image(mat);
+//            for (RotatedBox result : list) {
+//                ImageKit.drawImageRectWithText(bufferedImage, result.getBox(), result.getText());
+//            }
+//            String base64 = toBase64(bufferedImage);
+            return new OcrResult(null, fullText.toString());
         }
     }
 
+    private static NDList detPredict(ZooModel<Image, NDList> detModel, Image image) throws TranslateException {
+        try (Predictor<Image, NDList> detector = detModel.newPredictor()) {
+            long timeInferStart = System.currentTimeMillis();
+            NDList boxes = detector.predict(image);
+            long timeInferEnd = System.currentTimeMillis();
+            Logger.info("检测时间：{}", timeInferEnd - timeInferStart);
+            return boxes;
+        }
+    }
 
     /**
      * 图像推理
      *
-     * @param manager 内存管理
-     * @param image   图片
-     * @param det     图像检测
-     * @param rec     图像识别
+     * @param image    图片
+     * @param detModel 图像检测模型
+     * @param recModel 图像识别
      * @return 文本块
      * @throws TranslateException 转换异常
      */
-    private static List<RotatedBox> predict(NDManager manager,
-                                            Image image, Predictor<Image, NDList> det, Predictor<Image, WordBlock> rec)
+    private static List<RotatedBox> predict(NDManager manager, Image image, ZooModel<Image, NDList> detModel, ZooModel<Image, WordBlock> recModel)
             throws TranslateException {
-        NDList boxes = det.predict(image);
-        // 交给 NDManager自动管理内存
+        NDList boxes = detPredict(detModel, image);
         boxes.attach(manager);
         List<RotatedBox> result = new ArrayList<>();
         Mat mat = (Mat) image.getWrappedImage();
-        for (NDArray box : boxes) {
-            float[] pointsArr = box.toFloatArray();
-            float[] lt = java.util.Arrays.copyOfRange(pointsArr, 0, 2);
-            float[] rt = java.util.Arrays.copyOfRange(pointsArr, 2, 4);
-            float[] rb = java.util.Arrays.copyOfRange(pointsArr, 4, 6);
-            float[] lb = java.util.Arrays.copyOfRange(pointsArr, 6, 8);
-            int img_crop_width = (int) Math.max(distance(lt, rt), distance(rb, lb));
-            int img_crop_height = (int) Math.max(distance(lt, lb), distance(rt, rb));
-            List<Point> srcPoints = new ArrayList<>();
-            srcPoints.add(new Point(lt[0], lt[1]));
-            srcPoints.add(new Point(rt[0], rt[1]));
-            srcPoints.add(new Point(rb[0], rb[1]));
-            srcPoints.add(new Point(lb[0], lb[1]));
-            List<Point> dstPoints = new ArrayList<>();
-            dstPoints.add(new Point(0, 0));
-            dstPoints.add(new Point(img_crop_width, 0));
-            dstPoints.add(new Point(img_crop_width, img_crop_height));
-            dstPoints.add(new Point(0, img_crop_height));
+        try (Predictor<Image, WordBlock> rec = recModel.newPredictor()) {
+            long timeInferStart = System.currentTimeMillis();
+            boxes.parallelStream().map(box -> {
+                float[] pointsArr = box.toFloatArray();
+                float[] lt = java.util.Arrays.copyOfRange(pointsArr, 0, 2);
+                float[] rt = java.util.Arrays.copyOfRange(pointsArr, 2, 4);
+                float[] rb = java.util.Arrays.copyOfRange(pointsArr, 4, 6);
+                float[] lb = java.util.Arrays.copyOfRange(pointsArr, 6, 8);
+                int img_crop_width = (int) Math.max(distance(lt, rt), distance(rb, lb));
+                int img_crop_height = (int) Math.max(distance(lt, lb), distance(rt, rb));
+                List<Point> srcPoints = new ArrayList<>();
+                srcPoints.add(new Point(lt[0], lt[1]));
+                srcPoints.add(new Point(rt[0], rt[1]));
+                srcPoints.add(new Point(rb[0], rb[1]));
+                srcPoints.add(new Point(lb[0], lb[1]));
+                List<Point> dstPoints = new ArrayList<>();
+                dstPoints.add(new Point(0, 0));
+                dstPoints.add(new Point(img_crop_width, 0));
+                dstPoints.add(new Point(img_crop_width, img_crop_height));
+                dstPoints.add(new Point(0, img_crop_height));
 
-            Mat srcPoint2f = NDArrayKit.toMat(srcPoints);
-            Mat dstPoint2f = NDArrayKit.toMat(dstPoints);
-            Mat cvMat = OpenCVKit.perspectiveTransform(mat, srcPoint2f, dstPoint2f);
-            Image subImg = new OpenCVImage(cvMat);
-            subImg = subImg.getSubImage(0, 0, img_crop_width, img_crop_height);
-            if (subImg.getHeight() * 1.0 / subImg.getWidth() > 1.5) {
-                subImg = rotateImg(manager, subImg);
-            }
-            WordBlock wordBlock = rec.predict(subImg);
-            wordBlock.setBoxPoint(dstPoints);
-            wordBlock.setBox(box);
-
-            RotatedBox rotatedBox = new RotatedBox(wordBlock);
-            result.add(rotatedBox);
-
-            cvMat.release();
-            srcPoint2f.release();
-            dstPoint2f.release();
+                Mat srcPoint2f = NDArrayKit.toMat(srcPoints);
+                Mat dstPoint2f = NDArrayKit.toMat(dstPoints);
+                //耗时
+                Mat cvMat = OpenCVKit.perspectiveTransform(mat, srcPoint2f, dstPoint2f);
+                Image subImg = OpenCVImageFactory.getInstance().fromImage(cvMat);
+                subImg = subImg.getSubImage(0, 0, img_crop_width, img_crop_height);
+                if (subImg.getHeight() * 1.0 / subImg.getWidth() > 1.5) {
+                    subImg = rotateImg(manager, subImg);
+                }
+                //耗时
+                WordBlock wordBlock;
+                try {
+                    wordBlock = rec.predict(subImg);
+                } catch (TranslateException e) {
+                    throw new RuntimeException(e);
+                }
+                wordBlock.setBoxPoint(dstPoints);
+                wordBlock.setBox(box);
+                cvMat.release();
+                srcPoint2f.release();
+                dstPoint2f.release();
+                return wordBlock;
+            }).forEach(wordBlock -> {
+                RotatedBox rotatedBox = new RotatedBox(wordBlock);
+                result.add(rotatedBox);
+            });
+            long timeInferEnd = System.currentTimeMillis();
+            Logger.info("识别时间：{}", timeInferEnd - timeInferStart);
+            return result;
         }
-        return result;
     }
 
     //欧式距离计算

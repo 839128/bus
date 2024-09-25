@@ -12,6 +12,7 @@ import ai.djl.translate.Batchifier;
 import ai.djl.translate.Translator;
 import ai.djl.translate.TranslatorContext;
 import ai.djl.util.Utils;
+import org.aoju.bus.logger.Logger;
 import org.aoju.bus.ocr.entity.WordBlock;
 
 import java.io.IOException;
@@ -56,17 +57,19 @@ public class OcrRecTranslator implements Translator<Image, WordBlock> {
         long[] indices = tokens.get(0).argMax(1).toLongArray();
         boolean[] selection = new boolean[indices.length];
         Arrays.fill(selection, true);
+
         for (int i = 1; i < indices.length; i++) {
             if (indices[i] == indices[i - 1]) {
                 selection[i] = false;
             }
         }
         // 字符置信度
-        float[] probs = new float[indices.length];
-        for (int row = 0; row < indices.length; row++) {
-            NDArray value = tokens.get(0).get(new NDIndex("" + row + ":" + (row + 1) + "," + indices[row] + ":" + (indices[row] + 1)));
-            probs[row] = value.toFloatArray()[0];
-        }
+
+//        float[] probs = new float[indices.length];
+//        for (int row = 0; row < indices.length; row++) {
+//            NDArray value = tokens.get(0).get(new NDIndex("" + row + ":" + (row + 1) + "," + indices[row] + ":" + (indices[row] + 1)));
+//            probs[row] = value.toFloatArray()[0];
+//        }
 
         int lastIdx = 0;
         for (int i = 0; i < indices.length; i++) {
@@ -76,7 +79,6 @@ public class OcrRecTranslator implements Translator<Image, WordBlock> {
         }
         WordBlock res = new WordBlock();
         res.setText(sb.toString());
-        res.setCharScores(probs);
         return res;
     }
 

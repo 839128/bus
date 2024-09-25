@@ -25,7 +25,6 @@ public class OpenCVKit {
         Mat warp_mat = Imgproc.getPerspectiveTransform(srcPoints, dstPoints);
         Imgproc.warpPerspective(src, dst, warp_mat, dst.size());
         warp_mat.release();
-
         return dst;
     }
 

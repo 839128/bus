@@ -6,7 +6,7 @@
 
     <groupId>org.aoju</groupId>
     <artifactId>bus-ocr</artifactId>
-    <version>6.6.1</version>
+    <version>8.0.0</version>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
@@ -56,32 +56,11 @@
             <artifactId>model-zoo</artifactId>
             <version>${djl.version}</version>
         </dependency>
-        <!-- Pytorch -->
-        <dependency>
-            <groupId>ai.djl.pytorch</groupId>
-            <artifactId>pytorch-engine</artifactId>
-            <version>${djl.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>ai.djl.pytorch</groupId>
-            <artifactId>pytorch-model-zoo</artifactId>
-            <version>${djl.version}</version>
-        </dependency>
         <!-- ONNX -->
         <dependency>
             <groupId>ai.djl.onnxruntime</groupId>
             <artifactId>onnxruntime-engine</artifactId>
             <version>${djl.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>ai.djl.onnxruntime</groupId>
-            <artifactId>onnxruntime-engine</artifactId>
-            <version>${djl.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.microsoft.onnxruntime</groupId>
-            <artifactId>onnxruntime</artifactId>
-            <version>1.18.0</version>
         </dependency>
     </dependencies>
 </project>

@@ -12,6 +12,7 @@ import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
+import org.opencv.osgi.OpenCVNativeLoader;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,6 +26,7 @@ import java.nio.file.Path;
  */
 public class OpenCVImageFactory extends ImageFactory {
     static {
+        new OpenCVNativeLoader().init();
         if (System.getProperty("apple.awt.UIElement") == null) {
             // disables coffee cup image showing up on macOS
             System.setProperty("apple.awt.UIElement", "true");

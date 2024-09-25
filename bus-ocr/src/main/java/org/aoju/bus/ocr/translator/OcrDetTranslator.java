@@ -44,7 +44,7 @@ public class OcrDetTranslator implements Translator<Image, NDList> {
         limit_side_len =
                 arguments.containsKey("limit_side_len")
                         ? Integer.parseInt(arguments.get("limit_side_len").toString())
-                        : 960;
+                        : 320;
         max_candidates =
                 arguments.containsKey("max_candidates")
                         ? Integer.parseInt(arguments.get("max_candidates").toString())
