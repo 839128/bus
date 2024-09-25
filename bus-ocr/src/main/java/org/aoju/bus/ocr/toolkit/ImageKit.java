@@ -1,15 +1,5 @@
 package org.aoju.bus.ocr.toolkit;
 
-import ai.djl.modality.cv.Image;
-import ai.djl.modality.cv.ImageFactory;
-import ai.djl.modality.cv.output.DetectedObjects;
-import ai.djl.ndarray.NDArray;
-import org.aoju.bus.logger.Logger;
-import org.opencv.core.Mat;
-import org.opencv.core.Point;
-import org.opencv.core.Scalar;
-import org.opencv.imgproc.Imgproc;
-
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -19,12 +9,21 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.aoju.bus.logger.Logger;
+import org.opencv.core.Mat;
+import org.opencv.core.Point;
+import org.opencv.core.Scalar;
+import org.opencv.imgproc.Imgproc;
+
+import ai.djl.modality.cv.Image;
+import ai.djl.modality.cv.ImageFactory;
+import ai.djl.modality.cv.output.DetectedObjects;
+import ai.djl.ndarray.NDArray;
+
 /**
  * 图像工具类
  *
  * @author Calvin
- * @mail 179209347@qq.com
- * @website www.aias.top
  */
 public class ImageKit {
 

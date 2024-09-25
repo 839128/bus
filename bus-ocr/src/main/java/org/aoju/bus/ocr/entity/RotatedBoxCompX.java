@@ -7,8 +7,6 @@ import lombok.Data;
  * 旋转检测框 - 支持左上角 X 坐标升序排序
  *
  * @author Calvin
- * @mail 179209347@qq.com
- * @website www.aias.top
  */
 @Data
 public class RotatedBoxCompX extends WordBlock implements Comparable<RotatedBoxCompX> {
