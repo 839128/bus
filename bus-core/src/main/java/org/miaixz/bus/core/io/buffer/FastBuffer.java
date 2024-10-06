@@ -25,113 +25,112 @@
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 */
-package org.miaixz.bus.core.center.date.culture.solar;
+package org.miaixz.bus.core.io.buffer;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.miaixz.bus.core.center.date.culture.Loops;
-import org.miaixz.bus.core.center.date.culture.en.Quarter;
+import org.miaixz.bus.core.lang.Normal;
 
 /**
- * 公历季度
+ * 快速缓冲抽象类，用于快速读取、写入数据到缓冲区，减少内存复制 相对于普通Buffer，使用二维数组扩展长度，减少内存复制，提升性能
  *
  * @author Kimi Liu
  * @since Java 17+
  */
-public class SolarQuarter extends Loops {
+public abstract class FastBuffer {
 
     /**
-     * 年
+     * 一个缓冲区的最小字节数
      */
-    protected SolarYear year;
+    protected final int minChunkLen;
 
     /**
-     * 索引，0-3
+     * 缓冲数
      */
-    protected int index;
+    protected int buffersCount;
+    /**
+     * 当前缓冲索引
+     */
+    protected int currentBufferIndex = -1;
+    /**
+     * 当前缓冲偏移量
+     */
+    protected int offset;
+    /**
+     * 缓冲字节数
+     */
+    protected int size;
 
     /**
-     * 初始化
+     * 构造
      *
-     * @param year  年
-     * @param index 索引，0-3
+     * @param size 一个缓冲区的最小字节数
      */
-    public SolarQuarter(int year, int index) {
-        if (index < 0 || index > 3) {
-            throw new IllegalArgumentException(String.format("illegal solar season index: %d", index));
+    public FastBuffer(int size) {
+        if (size <= 0) {
+            size = Normal._8192;
         }
-        this.year = SolarYear.fromYear(year);
-        this.index = index;
-    }
-
-    public static SolarQuarter fromIndex(int year, int index) {
-        return new SolarQuarter(year, index);
+        this.minChunkLen = Math.abs(size);
     }
 
     /**
-     * 公历年
+     * 当前缓冲位于缓冲区的索引位
      *
-     * @return 公历年
+     * @return {@link #currentBufferIndex}
      */
-    public SolarYear getSolarYear() {
-        return year;
+    public int index() {
+        return this.currentBufferIndex;
     }
 
     /**
-     * 年
+     * 获取当前缓冲偏移量
      *
-     * @return 年
+     * @return 当前缓冲偏移量
      */
-    public int getYear() {
-        return year.getYear();
+    public int offset() {
+        return this.offset;
     }
 
     /**
-     * 索引
-     *
-     * @return 索引，0-3
+     * 复位缓冲
      */
-    public int getIndex() {
-        return index;
-    }
-
-    public String getName() {
-        return Quarter.getName(index);
-    }
-
-    @Override
-    public String toString() {
-        return year + getName();
-    }
-
-    public SolarQuarter next(int n) {
-        int i = index;
-        int y = getYear();
-        if (n != 0) {
-            i += n;
-            y += i / 4;
-            i %= 4;
-            if (i < 0) {
-                i += 4;
-                y -= 1;
-            }
-        }
-        return fromIndex(y, i);
+    public void reset() {
+        this.size = 0;
+        this.offset = 0;
+        this.currentBufferIndex = -1;
+        this.buffersCount = 0;
     }
 
     /**
-     * 月份列表
+     * 获取缓冲总长度
      *
-     * @return 月份列表，1季度有3个月。
+     * @return 缓冲总长度
      */
-    public List<SolarMonth> getMonths() {
-        List<SolarMonth> l = new ArrayList<>(3);
-        int y = getYear();
-        for (int i = 1; i < 4; i++) {
-            l.add(SolarMonth.fromYm(y, index * 3 + i));
-        }
-        return l;
+    public int size() {
+        return this.size;
     }
+
+    /**
+     * 获取缓冲总长度
+     *
+     * @return 缓冲总长度
+     */
+    public int length() {
+        return this.size;
+    }
+
+    /**
+     * 是否为空
+     *
+     * @return 是否为空
+     */
+    public boolean isEmpty() {
+        return this.size == 0;
+    }
+
+    /**
+     * 检查现有缓冲区是否满足capacity，不满足则分配新的区域分配下一个缓冲区，不会小于1024
+     *
+     * @param capacity 理想缓冲区字节数
+     */
+    abstract protected void ensureCapacity(final int capacity);
 
 }

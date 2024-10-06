@@ -31,27 +31,26 @@ import org.miaixz.bus.core.lang.Assert;
 import org.miaixz.bus.core.lang.Normal;
 
 /**
- * 
- * 快速缓冲，将数据存放在缓冲集中，取代以往的单一数组
+ * 快速字符缓冲，将数据存放在缓冲集中，取代以往的单一数组 注意：此缓存在大量重复append时，性能比{@link StringBuilder}要好，但是{@link #toArray()}性能很差
  *
  * @author Kimi Liu
  * @since Java 17+
  */
-public class FastByteBuffer extends FastBuffer {
+public class FastCharBuffer extends FastBuffer implements CharSequence, Appendable {
 
     /**
      * 缓冲集
      */
-    private byte[][] buffers = new byte[16][];
+    private char[][] buffers = new char[16][];
     /**
      * 当前缓冲
      */
-    private byte[] currentBuffer;
+    private char[] currentBuffer;
 
     /**
      * 构造
      */
-    public FastByteBuffer() {
+    public FastCharBuffer() {
         this(Normal._8192);
     }
 
@@ -60,7 +59,7 @@ public class FastByteBuffer extends FastBuffer {
      *
      * @param size 一个缓冲区的最小字节数
      */
-    public FastByteBuffer(final int size) {
+    public FastCharBuffer(final int size) {
         super(size);
     }
 
@@ -72,7 +71,7 @@ public class FastByteBuffer extends FastBuffer {
      * @param len   字节数
      * @return 快速缓冲自身 @see FastByteBuffer
      */
-    public FastByteBuffer append(final byte[] array, final int off, final int len) {
+    public FastCharBuffer append(final char[] array, final int off, final int len) {
         final int end = off + len;
         if ((off < 0) || (len < 0) || (end > array.length)) {
             throw new IndexOutOfBoundsException();
@@ -80,7 +79,7 @@ public class FastByteBuffer extends FastBuffer {
         if (len == 0) {
             return this;
         }
-        final int newSize = size + len;
+        final int newSize = this.size + len;
         int remaining = len;
 
         if (currentBuffer != null) {
@@ -89,7 +88,7 @@ public class FastByteBuffer extends FastBuffer {
             System.arraycopy(array, end - remaining, currentBuffer, offset, part);
             remaining -= part;
             offset += part;
-            size += part;
+            this.size += part;
         }
 
         if (remaining > 0) {
@@ -102,7 +101,7 @@ public class FastByteBuffer extends FastBuffer {
             final int part = Math.min(remaining, currentBuffer.length - offset);
             System.arraycopy(array, end - remaining, currentBuffer, offset, part);
             offset += part;
-            size += part;
+            this.size += part;
         }
 
         return this;
@@ -114,7 +113,7 @@ public class FastByteBuffer extends FastBuffer {
      * @param array 数据
      * @return 快速缓冲自身 @see FastByteBuffer
      */
-    public FastByteBuffer append(final byte[] array) {
+    public FastCharBuffer append(final char[] array) {
         return append(array, 0, array.length);
     }
 
@@ -124,9 +123,9 @@ public class FastByteBuffer extends FastBuffer {
      * @param element 一个字节的数据
      * @return 快速缓冲自身 @see FastByteBuffer
      */
-    public FastByteBuffer append(final byte element) {
+    public FastCharBuffer append(final char element) {
         if ((currentBuffer == null) || (offset == currentBuffer.length)) {
-            ensureCapacity(size + 1);
+            ensureCapacity(this.size + 1);
         }
 
         currentBuffer[offset] = element;
@@ -142,7 +141,7 @@ public class FastByteBuffer extends FastBuffer {
      * @param buff 快速缓冲
      * @return 快速缓冲自身 @see FastByteBuffer
      */
-    public FastByteBuffer append(final FastByteBuffer buff) {
+    public FastCharBuffer append(final FastCharBuffer buff) {
         if (buff.size == 0) {
             return this;
         }
@@ -159,7 +158,7 @@ public class FastByteBuffer extends FastBuffer {
      * @param index 索引位
      * @return 缓冲
      */
-    public byte[] array(final int index) {
+    public char[] array(final int index) {
         return buffers[index];
     }
 
@@ -169,21 +168,16 @@ public class FastByteBuffer extends FastBuffer {
         currentBuffer = null;
     }
 
-    @Override
-    public int length() {
-        return this.size;
-    }
-
     /**
      * 返回快速缓冲中的数据，如果缓冲区中的数据长度固定，则直接返回原始数组<br>
      * 注意此方法共享数组，不能修改数组内容！
      *
      * @return 快速缓冲中的数据
      */
-    public byte[] toArrayZeroCopyIfPossible() {
+    public char[] toArrayZeroCopyIfPossible() {
         if (1 == currentBufferIndex) {
             final int len = buffers[0].length;
-            if (len == size) {
+            if (len == this.size) {
                 return buffers[0];
             }
         }
@@ -196,7 +190,7 @@ public class FastByteBuffer extends FastBuffer {
      *
      * @return 快速缓冲中的数据
      */
-    public byte[] toArray() {
+    public char[] toArray() {
         return toArray(0, this.size);
     }
 
@@ -207,19 +201,19 @@ public class FastByteBuffer extends FastBuffer {
      * @param len   逻辑字节长
      * @return 快速缓冲中的数据
      */
-    public byte[] toArray(int start, int len) {
+    public char[] toArray(int start, int len) {
         Assert.isTrue(start >= 0, "Start must be greater than zero!");
         Assert.isTrue(len >= 0, "Length must be greater than zero!");
 
         if (start >= this.size || len == 0) {
-            return new byte[0];
+            return new char[0];
         }
         if (len > (this.size - start)) {
             len = this.size - start;
         }
         int remaining = len;
         int pos = 0;
-        final byte[] result = new byte[len];
+        final char[] result = new char[len];
 
         int i = 0;
         while (start >= buffers[i].length) {
@@ -228,7 +222,7 @@ public class FastByteBuffer extends FastBuffer {
         }
 
         while (i < buffersCount) {
-            final byte[] buf = buffers[i];
+            final char[] buf = buffers[i];
             final int bufLen = Math.min(buf.length - start, remaining);
             System.arraycopy(buf, start, result, pos, bufLen);
             pos += bufLen;
@@ -248,13 +242,13 @@ public class FastByteBuffer extends FastBuffer {
      * @param index 索引位
      * @return 一个字节
      */
-    public byte get(int index) {
+    public char get(int index) {
         if ((index >= this.size) || (index < 0)) {
             throw new IndexOutOfBoundsException();
         }
         int ndx = 0;
         while (true) {
-            final byte[] b = buffers[ndx];
+            final char[] b = buffers[ndx];
             if (index < b.length) {
                 return b[index];
             }
@@ -264,18 +258,95 @@ public class FastByteBuffer extends FastBuffer {
     }
 
     @Override
+    public String toString() {
+        return new String(toArray());
+    }
+
+    @Override
+    public char charAt(final int index) {
+        return get(index);
+    }
+
+    @Override
+    public CharSequence subSequence(final int start, final int end) {
+        final int len = end - start;
+        return new StringBuilder(len).append(toArray(start, len));
+    }
+
+    @Override
+    public FastCharBuffer append(final CharSequence csq) {
+        if (csq instanceof String) {
+            return append((String) csq);
+        }
+        return append(csq, 0, csq.length());
+    }
+
+    /**
+     * Appends character sequence to buffer.
+     */
+    @Override
+    public FastCharBuffer append(final CharSequence csq, final int start, final int end) {
+        for (int i = start; i < end; i++) {
+            append(csq.charAt(i));
+        }
+        return this;
+    }
+
+    /**
+     * 追加字符串
+     *
+     * @param string String
+     * @return this
+     */
+    public FastCharBuffer append(final String string) {
+        final int len = string.length();
+        if (len == 0) {
+            return this;
+        }
+
+        final int newSize = this.size + len;
+        int remaining = len;
+        int start = 0;
+
+        if (currentBuffer != null) {
+            // first try to fill current buffer
+            final int part = Math.min(remaining, currentBuffer.length - offset);
+            string.getChars(0, part, currentBuffer, offset);
+            remaining -= part;
+            offset += part;
+            this.size += part;
+            start += part;
+        }
+
+        if (remaining > 0) {
+            // still some data left
+            // ask for new buffer
+            ensureCapacity(newSize);
+
+            // then copy remaining
+            // but this time we are sure that it will fit
+            final int part = Math.min(remaining, currentBuffer.length - offset);
+            string.getChars(start, start + part, currentBuffer, offset);
+            offset += part;
+            this.size += part;
+        }
+
+        return this;
+    }
+
+    @Override
     protected void ensureCapacity(final int capacity) {
         final int delta = capacity - this.size;
         final int newBufferSize = Math.max(minChunkLen, delta);
 
         currentBufferIndex++;
-        currentBuffer = new byte[newBufferSize];
+        currentBuffer = new char[newBufferSize];
         offset = 0;
 
         // add buffer
         if (currentBufferIndex >= buffers.length) {
             final int newLen = buffers.length << 1;
-            final byte[][] newBuffers = new byte[newLen][];
+            final char[][] newBuffers = new char[newLen][];
             System.arraycopy(buffers, 0, newBuffers, 0, buffers.length);
             buffers = newBuffers;
         }

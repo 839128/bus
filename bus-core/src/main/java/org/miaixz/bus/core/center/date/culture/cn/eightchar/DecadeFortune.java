@@ -25,113 +25,107 @@
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 */
-package org.miaixz.bus.core.center.date.culture.solar;
-
-import java.util.ArrayList;
-import java.util.List;
+package org.miaixz.bus.core.center.date.culture.cn.eightchar;
 
 import org.miaixz.bus.core.center.date.culture.Loops;
-import org.miaixz.bus.core.center.date.culture.en.Quarter;
+import org.miaixz.bus.core.center.date.culture.cn.sixty.SixtyCycle;
+import org.miaixz.bus.core.center.date.culture.lunar.LunarYear;
 
 /**
- * 公历季度
+ * 大运（10年1大运）
  *
  * @author Kimi Liu
  * @since Java 17+
  */
-public class SolarQuarter extends Loops {
+public class DecadeFortune extends Loops {
 
     /**
-     * 年
+     * 童限
      */
-    protected SolarYear year;
+    protected ChildLimit childLimit;
 
     /**
-     * 索引，0-3
+     * 序号
      */
     protected int index;
 
-    /**
-     * 初始化
-     *
-     * @param year  年
-     * @param index 索引，0-3
-     */
-    public SolarQuarter(int year, int index) {
-        if (index < 0 || index > 3) {
-            throw new IllegalArgumentException(String.format("illegal solar season index: %d", index));
-        }
-        this.year = SolarYear.fromYear(year);
+    public DecadeFortune(ChildLimit childLimit, int index) {
+        this.childLimit = childLimit;
         this.index = index;
     }
 
-    public static SolarQuarter fromIndex(int year, int index) {
-        return new SolarQuarter(year, index);
+    /**
+     * 通过童限初始化
+     *
+     * @param childLimit 童限
+     * @param index      序号
+     * @return 大运
+     */
+    public static DecadeFortune fromChildLimit(ChildLimit childLimit, int index) {
+        return new DecadeFortune(childLimit, index);
     }
 
     /**
-     * 公历年
+     * 开始年龄
      *
-     * @return 公历年
+     * @return 开始年龄
      */
-    public SolarYear getSolarYear() {
-        return year;
+    public int getStartAge() {
+        return childLimit.getYearCount() + 1 + index * 10;
     }
 
     /**
-     * 年
+     * 结束年龄
      *
-     * @return 年
+     * @return 结束年龄
      */
-    public int getYear() {
-        return year.getYear();
+    public int getEndAge() {
+        return getStartAge() + 9;
     }
 
     /**
-     * 索引
+     * 开始农历年
      *
-     * @return 索引，0-3
+     * @return 农历年
      */
-    public int getIndex() {
-        return index;
+    public LunarYear getStartLunarYear() {
+        return childLimit.getEndTime().getLunarHour().getLunarDay().getLunarMonth().getLunarYear().next(index * 10);
+    }
+
+    /**
+     * 结束农历年
+     *
+     * @return 农历年
+     */
+    public LunarYear getEndLunarYear() {
+        return getStartLunarYear().next(9);
+    }
+
+    /**
+     * 干支
+     *
+     * @return 干支
+     */
+    public SixtyCycle getSixtyCycle() {
+        int n = index + 1;
+        return childLimit.getEightChar().getMonth().next(childLimit.isForward() ? n : -n);
     }
 
     public String getName() {
-        return Quarter.getName(index);
+        return getSixtyCycle().getName();
     }
 
-    @Override
-    public String toString() {
-        return year + getName();
-    }
-
-    public SolarQuarter next(int n) {
-        int i = index;
-        int y = getYear();
-        if (n != 0) {
-            i += n;
-            y += i / 4;
-            i %= 4;
-            if (i < 0) {
-                i += 4;
-                y -= 1;
-            }
-        }
-        return fromIndex(y, i);
+    public DecadeFortune next(int n) {
+        return fromChildLimit(childLimit, index + n);
     }
 
     /**
-     * 月份列表
+     * 开始小运
      *
-     * @return 月份列表，1季度有3个月。
+     * @return 小运
      */
-    public List<SolarMonth> getMonths() {
-        List<SolarMonth> l = new ArrayList<>(3);
-        int y = getYear();
-        for (int i = 1; i < 4; i++) {
-            l.add(SolarMonth.fromYm(y, index * 3 + i));
-        }
-        return l;
+    public Fortune getStartFortune() {
+        return Fortune.fromChildLimit(childLimit, index * 10);
     }
 
 }
