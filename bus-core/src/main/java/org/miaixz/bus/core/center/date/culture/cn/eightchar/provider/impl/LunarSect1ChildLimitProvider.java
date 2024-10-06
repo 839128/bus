@@ -25,113 +25,46 @@
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 */
-package org.miaixz.bus.core.center.date.culture.solar;
+package org.miaixz.bus.core.center.date.culture.cn.eightchar.provider.impl;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.miaixz.bus.core.center.date.culture.Loops;
-import org.miaixz.bus.core.center.date.culture.en.Quarter;
+import org.miaixz.bus.core.center.date.culture.cn.eightchar.ChildLimitInfo;
+import org.miaixz.bus.core.center.date.culture.solar.SolarTerms;
+import org.miaixz.bus.core.center.date.culture.solar.SolarTime;
 
 /**
- * 公历季度
+ * Lunar的流派1童限计算（按天数和时辰数计算，3天1年，1天4个月，1时辰10天）
  *
  * @author Kimi Liu
  * @since Java 17+
  */
-public class SolarQuarter extends Loops {
-
-    /**
-     * 年
-     */
-    protected SolarYear year;
-
-    /**
-     * 索引，0-3
-     */
-    protected int index;
-
-    /**
-     * 初始化
-     *
-     * @param year  年
-     * @param index 索引，0-3
-     */
-    public SolarQuarter(int year, int index) {
-        if (index < 0 || index > 3) {
-            throw new IllegalArgumentException(String.format("illegal solar season index: %d", index));
-        }
-        this.year = SolarYear.fromYear(year);
-        this.index = index;
-    }
-
-    public static SolarQuarter fromIndex(int year, int index) {
-        return new SolarQuarter(year, index);
-    }
-
-    /**
-     * 公历年
-     *
-     * @return 公历年
-     */
-    public SolarYear getSolarYear() {
-        return year;
-    }
-
-    /**
-     * 年
-     *
-     * @return 年
-     */
-    public int getYear() {
-        return year.getYear();
-    }
-
-    /**
-     * 索引
-     *
-     * @return 索引，0-3
-     */
-    public int getIndex() {
-        return index;
-    }
-
-    public String getName() {
-        return Quarter.getName(index);
-    }
+public class LunarSect1ChildLimitProvider extends AbstractChildLimitProvider {
 
     @Override
-    public String toString() {
-        return year + getName();
-    }
-
-    public SolarQuarter next(int n) {
-        int i = index;
-        int y = getYear();
-        if (n != 0) {
-            i += n;
-            y += i / 4;
-            i %= 4;
-            if (i < 0) {
-                i += 4;
-                y -= 1;
-            }
+    public ChildLimitInfo getInfo(SolarTime birthTime, SolarTerms term) {
+        SolarTime termTime = term.getJulianDay().getSolarTime();
+        SolarTime end = termTime;
+        SolarTime start = birthTime;
+        if (birthTime.isAfter(termTime)) {
+            end = birthTime;
+            start = termTime;
         }
-        return fromIndex(y, i);
-    }
-
-    /**
-     * 月份列表
-     *
-     * @return 月份列表，1季度有3个月。
-     */
-    public List<SolarMonth> getMonths() {
-        List<SolarMonth> l = new ArrayList<>(3);
-        int y = getYear();
-        for (int i = 1; i < 4; i++) {
-            l.add(SolarMonth.fromYm(y, index * 3 + i));
+        int endTimeZhiIndex = (end.getHour() == 23) ? 11 : end.getLunarHour().getIndexInDay();
+        int startTimeZhiIndex = (start.getHour() == 23) ? 11 : start.getLunarHour().getIndexInDay();
+        // 时辰差
+        int hourDiff = endTimeZhiIndex - startTimeZhiIndex;
+        // 天数差
+        int dayDiff = end.getSolarDay().subtract(start.getSolarDay());
+        if (hourDiff < 0) {
+            hourDiff += 12;
+            dayDiff--;
         }
-        return l;
+        int monthDiff = hourDiff * 10 / 30;
+        int month = dayDiff * 4 + monthDiff;
+        int day = hourDiff * 10 - monthDiff * 30;
+        int year = month / 12;
+        month = month - year * 12;
+
+        return next(birthTime, year, month, day, 0, 0, 0);
     }
 
 }
