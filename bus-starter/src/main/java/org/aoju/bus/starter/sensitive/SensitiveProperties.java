@@ -25,25 +25,19 @@
  ********************************************************************************/
 package org.aoju.bus.starter.sensitive;
 
-import jakarta.annotation.Resource;
 import lombok.Data;
 import org.aoju.bus.spring.BusXConfig;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 
 /**
  * @author Kimi Liu
  * @since Java 17+
  */
 @Data
-@EnableConfigurationProperties(value = {SensitiveProperties.Encrypt.class, SensitiveProperties.Decrypt.class})
 @ConfigurationProperties(prefix = BusXConfig.SENSITIVE)
 public class SensitiveProperties {
-
-    @Resource
-    private Encrypt encrypt;
-    @Resource
-    private Decrypt decrypt;
+    private final Encrypt encrypt = new Encrypt();
+    private final Decrypt decrypt = new Decrypt();
 
     /**
      * 是否调试模式
@@ -54,8 +48,7 @@ public class SensitiveProperties {
      * 加密信息
      */
     @Data
-    @ConfigurationProperties(prefix = BusXConfig.SENSITIVE + ".encrypt")
-    public class Encrypt {
+    public static class Encrypt {
         private String key;
         private String type;
     }
@@ -64,8 +57,7 @@ public class SensitiveProperties {
      * 解密信息
      */
     @Data
-    @ConfigurationProperties(prefix = BusXConfig.SENSITIVE + ".decrypt")
-    public class Decrypt {
+    public static class Decrypt {
         private String key;
         private String type;
     }

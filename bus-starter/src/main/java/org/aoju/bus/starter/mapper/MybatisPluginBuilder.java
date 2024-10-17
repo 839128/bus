@@ -70,7 +70,7 @@ public class MybatisPluginBuilder {
                 list.add(pageSqlHandler);
             }
 
-            SensitiveProperties sensitiveProperties = PlaceBinder.bind(environment, SensitiveProperties.class, BusXConfig.MYBATIS);
+            SensitiveProperties sensitiveProperties = PlaceBinder.bind(environment, SensitiveProperties.class, BusXConfig.SENSITIVE);
             if (ObjectKit.isNotEmpty(sensitiveProperties)) {
                 Properties p = new Properties();
                 p.setProperty("debug", String.valueOf(sensitiveProperties.isDebug()));
