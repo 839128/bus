@@ -25,52 +25,23 @@
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 */
-package org.miaixz.bus.core.xml;
-
-import org.miaixz.bus.core.Loader;
-import org.miaixz.bus.core.lang.loader.LazyFunLoader;
+package org.miaixz.bus.core.data.masking;
 
 /**
- * {@link javax.xml.parsers.SAXParserFactory} 工具
+ * 脱敏处理器，用于自定义脱敏规则
  *
  * @author Kimi Liu
  * @since Java 17+
  */
-public class SAXParserFactory {
+@FunctionalInterface
+public interface MaskingHandler {
 
     /**
-     * Sax读取器工厂缓存
-     */
-    private static final Loader<javax.xml.parsers.SAXParserFactory> factory = LazyFunLoader
-            .of(() -> createFactory(false, true));
-
-    /**
-     * 获取全局{@link javax.xml.parsers.SAXParserFactory}
-     * <ul>
-     * <li>默认不验证</li>
-     * <li>默认打开命名空间支持</li>
-     * </ul>
+     * 处理传入的数据字符串，经过脱敏逻辑后，返回处理后的值
      *
-     * @return {@link javax.xml.parsers.SAXParserFactory}
+     * @param value 待处理的值
+     * @return 处理后的值
      */
-    public static javax.xml.parsers.SAXParserFactory getFactory() {
-        return factory.get();
-    }
-
-    /**
-     * 创建{@link javax.xml.parsers.SAXParserFactory}
-     *
-     * @param validating     是否验证
-     * @param namespaceAware 是否打开命名空间支持
-     * @return {@link javax.xml.parsers.SAXParserFactory}
-     */
-    public static javax.xml.parsers.SAXParserFactory createFactory(final boolean validating,
-            final boolean namespaceAware) {
-        final javax.xml.parsers.SAXParserFactory factory = javax.xml.parsers.SAXParserFactory.newInstance();
-        factory.setValidating(validating);
-        factory.setNamespaceAware(namespaceAware);
-
-        return XXE.disableXXE(factory);
-    }
+    String handle(CharSequence value);
 
 }

@@ -25,52 +25,10 @@
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 */
-package org.miaixz.bus.core.xml;
-
-import org.miaixz.bus.core.Loader;
-import org.miaixz.bus.core.lang.loader.LazyFunLoader;
-
 /**
- * {@link javax.xml.parsers.SAXParserFactory} 工具
+ * 发布订阅模式封装，发布/订阅是一种消息范式 消息的发送者（EventPublisher）将事件或消息（Event）广播出去，订阅者（Subscriber）接收到消息后处理。
  *
  * @author Kimi Liu
  * @since Java 17+
  */
-public class SAXParserFactory {
-
-    /**
-     * Sax读取器工厂缓存
-     */
-    private static final Loader<javax.xml.parsers.SAXParserFactory> factory = LazyFunLoader
-            .of(() -> createFactory(false, true));
-
-    /**
-     * 获取全局{@link javax.xml.parsers.SAXParserFactory}
-     * <ul>
-     * <li>默认不验证</li>
-     * <li>默认打开命名空间支持</li>
-     * </ul>
-     *
-     * @return {@link javax.xml.parsers.SAXParserFactory}
-     */
-    public static javax.xml.parsers.SAXParserFactory getFactory() {
-        return factory.get();
-    }
-
-    /**
-     * 创建{@link javax.xml.parsers.SAXParserFactory}
-     *
-     * @param validating     是否验证
-     * @param namespaceAware 是否打开命名空间支持
-     * @return {@link javax.xml.parsers.SAXParserFactory}
-     */
-    public static javax.xml.parsers.SAXParserFactory createFactory(final boolean validating,
-            final boolean namespaceAware) {
-        final javax.xml.parsers.SAXParserFactory factory = javax.xml.parsers.SAXParserFactory.newInstance();
-        factory.setValidating(validating);
-        factory.setNamespaceAware(namespaceAware);
-
-        return XXE.disableXXE(factory);
-    }
-
-}
+package org.miaixz.bus.core.lang.event;

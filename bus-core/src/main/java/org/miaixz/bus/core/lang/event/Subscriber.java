@@ -25,52 +25,48 @@
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 */
-package org.miaixz.bus.core.xml;
+package org.miaixz.bus.core.lang.event;
 
-import org.miaixz.bus.core.Loader;
-import org.miaixz.bus.core.lang.loader.LazyFunLoader;
+import java.util.EventListener;
+
+import org.miaixz.bus.core.xyz.CompareKit;
 
 /**
- * {@link javax.xml.parsers.SAXParserFactory} 工具
+ * 订阅者接口
  *
  * @author Kimi Liu
  * @since Java 17+
  */
-public class SAXParserFactory {
+public interface Subscriber extends EventListener, Comparable<Subscriber> {
 
     /**
-     * Sax读取器工厂缓存
-     */
-    private static final Loader<javax.xml.parsers.SAXParserFactory> factory = LazyFunLoader
-            .of(() -> createFactory(false, true));
-
-    /**
-     * 获取全局{@link javax.xml.parsers.SAXParserFactory}
-     * <ul>
-     * <li>默认不验证</li>
-     * <li>默认打开命名空间支持</li>
-     * </ul>
+     * 当事件发生时的操作
      *
-     * @return {@link javax.xml.parsers.SAXParserFactory}
+     * @param event 事件对象，根据不同事件，可选是否执行
      */
-    public static javax.xml.parsers.SAXParserFactory getFactory() {
-        return factory.get();
+    void update(Event event);
+
+    /**
+     * 获取事件执行顺序，值越小越先执行
+     *
+     * @return 执行顺序
+     */
+    default int order() {
+        return 1000;
+    }
+
+    @Override
+    default int compareTo(final Subscriber o) {
+        return CompareKit.compare(this.order(), o.order());
     }
 
     /**
-     * 创建{@link javax.xml.parsers.SAXParserFactory}
+     * 是否异步执行，默认为false，同步执行
      *
-     * @param validating     是否验证
-     * @param namespaceAware 是否打开命名空间支持
-     * @return {@link javax.xml.parsers.SAXParserFactory}
+     * @return 是否异步执行
      */
-    public static javax.xml.parsers.SAXParserFactory createFactory(final boolean validating,
-            final boolean namespaceAware) {
-        final javax.xml.parsers.SAXParserFactory factory = javax.xml.parsers.SAXParserFactory.newInstance();
-        factory.setValidating(validating);
-        factory.setNamespaceAware(namespaceAware);
-
-        return XXE.disableXXE(factory);
+    default boolean async() {
+        return false;
     }
 
 }
