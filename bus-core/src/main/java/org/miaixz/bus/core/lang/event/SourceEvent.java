@@ -25,73 +25,27 @@
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 */
-package org.miaixz.bus.core.center.date.printer;
+package org.miaixz.bus.core.lang.event;
 
-import java.util.Calendar;
-import java.util.Date;
+import java.util.EventObject;
 
 /**
- * 日期格式化输出接口
- *
+ * 基于事件源的事件实现
+ * 
  * @author Kimi Liu
  * @since Java 17+
  */
-public interface FormatPrinter extends DatePrinter {
+public class SourceEvent extends EventObject implements Event {
+
+    private static final long serialVersionUID = -1L;
 
     /**
-     * 格式化日期表示的毫秒数
+     * 构造
      *
-     * @param millis 日期毫秒数
-     * @return the formatted string
+     * @param source 事件源
      */
-    String format(long millis);
-
-    /**
-     * 使用 {@code GregorianCalendar} 格式化 {@code Date}
-     *
-     * @param date 日期 {@link Date}
-     * @return 格式化后的字符串
-     */
-    String format(Date date);
-
-    /**
-     * Formats a {@code Calendar} object. 格式化 {@link Calendar}
-     *
-     * @param calendar {@link Calendar}
-     * @return 格式化后的字符串
-     */
-    String format(Calendar calendar);
-
-    /**
-     * Formats a millisecond {@code long} value into the supplied {@code Appendable}.
-     *
-     * @param millis the millisecond value to format
-     * @param buf    the buffer to format into
-     * @param <B>    the Appendable class type, usually StringBuilder or StringBuffer.
-     * @return the specified string buffer
-     */
-    <B extends Appendable> B format(long millis, B buf);
-
-    /**
-     * Formats a {@code Date} object into the supplied {@code Appendable} using a {@code GregorianCalendar}.
-     *
-     * @param date the date to format
-     * @param buf  the buffer to format into
-     * @param <B>  the Appendable class type, usually StringBuilder or StringBuffer.
-     * @return the specified string buffer
-     */
-    <B extends Appendable> B format(Date date, B buf);
-
-    /**
-     * Formats a {@code Calendar} object into the supplied {@code Appendable}. The TimeZone set on the Calendar is only
-     * used to adjust the time offset. The TimeZone specified during the construction of the Parser will determine the
-     * TimeZone used in the formatted string.
-     *
-     * @param calendar the calendar to format
-     * @param buf      the buffer to format into
-     * @param <B>      the Appendable class type, usually StringBuilder or StringBuffer.
-     * @return the specified string buffer
-     */
-    <B extends Appendable> B format(Calendar calendar, B buf);
+    public SourceEvent(final Object source) {
+        super(source);
+    }
 
 }

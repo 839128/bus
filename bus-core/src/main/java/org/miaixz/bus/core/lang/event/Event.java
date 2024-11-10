@@ -25,52 +25,14 @@
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 */
-package org.miaixz.bus.core.xml;
-
-import org.miaixz.bus.core.Loader;
-import org.miaixz.bus.core.lang.loader.LazyFunLoader;
+package org.miaixz.bus.core.lang.event;
 
 /**
- * {@link javax.xml.parsers.SAXParserFactory} 工具
- *
+ * 事件接口，所有事件必须实现此接口
+ * 
  * @author Kimi Liu
  * @since Java 17+
  */
-public class SAXParserFactory {
-
-    /**
-     * Sax读取器工厂缓存
-     */
-    private static final Loader<javax.xml.parsers.SAXParserFactory> factory = LazyFunLoader
-            .of(() -> createFactory(false, true));
-
-    /**
-     * 获取全局{@link javax.xml.parsers.SAXParserFactory}
-     * <ul>
-     * <li>默认不验证</li>
-     * <li>默认打开命名空间支持</li>
-     * </ul>
-     *
-     * @return {@link javax.xml.parsers.SAXParserFactory}
-     */
-    public static javax.xml.parsers.SAXParserFactory getFactory() {
-        return factory.get();
-    }
-
-    /**
-     * 创建{@link javax.xml.parsers.SAXParserFactory}
-     *
-     * @param validating     是否验证
-     * @param namespaceAware 是否打开命名空间支持
-     * @return {@link javax.xml.parsers.SAXParserFactory}
-     */
-    public static javax.xml.parsers.SAXParserFactory createFactory(final boolean validating,
-            final boolean namespaceAware) {
-        final javax.xml.parsers.SAXParserFactory factory = javax.xml.parsers.SAXParserFactory.newInstance();
-        factory.setValidating(validating);
-        factory.setNamespaceAware(namespaceAware);
-
-        return XXE.disableXXE(factory);
-    }
+public interface Event {
 
 }
