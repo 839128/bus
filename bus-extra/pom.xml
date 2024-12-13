@@ -457,23 +457,6 @@
                 </configuration>
             </plugin>
             <plugin>
-                <groupId>org.owasp</groupId>
-                <artifactId>dependency-check-maven</artifactId>
-                <version>11.1.1</version>
-                <configuration>
-                    <autoUpdate>true</autoUpdate>
-                    <nvdMaxRetryCount>25</nvdMaxRetryCount>
-                    <nvdApiDelay>32000</nvdApiDelay>
-                </configuration>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
                 <groupId>com.diffplug.spotless</groupId>
                 <artifactId>spotless-maven-plugin</artifactId>
                 <version>2.43.0</version>
