@@ -25,12 +25,12 @@
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 */
-package org.miaixz.bus.oauth.metric.gitee;
+package org.miaixz.bus.oauth.metric.qq;
 
 import org.miaixz.bus.cache.metric.ExtendCache;
-import org.miaixz.bus.core.lang.Gender;
 import org.miaixz.bus.core.lang.Symbol;
 import org.miaixz.bus.core.lang.exception.AuthorizedException;
+import org.miaixz.bus.http.Httpx;
 import org.miaixz.bus.oauth.Builder;
 import org.miaixz.bus.oauth.Context;
 import org.miaixz.bus.oauth.Registry;
@@ -40,68 +40,79 @@ import org.miaixz.bus.oauth.magic.Material;
 import org.miaixz.bus.oauth.metric.AbstractProvider;
 
 import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.annotation.JSONField;
+
+import lombok.Data;
 
 /**
- * Gitee 登录
+ * QQ 登录
  *
  * @author Kimi Liu
  * @since Java 17+
  */
-public class GiteeProvider extends AbstractProvider {
+public class QqMiniProvider extends AbstractProvider {
 
-    public GiteeProvider(Context context) {
-        super(context, Registry.GITEE);
+    public QqMiniProvider(Context context) {
+        super(context, Registry.QQ_MINI);
     }
 
-    public GiteeProvider(Context context, ExtendCache cache) {
-        super(context, Registry.GITEE, cache);
-    }
-
-    @Override
-    public AccToken getAccessToken(Callback callback) {
-        String response = doPostAuthorizationCode(callback.getCode());
-        JSONObject accessTokenObject = JSONObject.parseObject(response);
-        this.checkResponse(accessTokenObject);
-        return AccToken.builder().accessToken(accessTokenObject.getString("access_token"))
-                .refreshToken(accessTokenObject.getString("refresh_token")).scope(accessTokenObject.getString("scope"))
-                .tokenType(accessTokenObject.getString("token_type"))
-                .expireIn(accessTokenObject.getIntValue("expires_in")).build();
+    public QqMiniProvider(Context context, ExtendCache cache) {
+        super(context, Registry.QQ_MINI, cache);
     }
 
     @Override
-    public Material getUserInfo(AccToken accToken) {
-        String userInfo = doGetUserInfo(accToken);
-        JSONObject object = JSONObject.parseObject(userInfo);
-        this.checkResponse(object);
-        return Material.builder().rawJson(object).uuid(object.getString("id")).username(object.getString("login"))
-                .avatar(object.getString("avatar_url")).blog(object.getString("blog"))
-                .nickname(object.getString("name")).company(object.getString("company"))
-                .location(object.getString("address")).email(object.getString("email")).remark(object.getString("bio"))
-                .gender(Gender.UNKNOWN).token(accToken).source(complex.toString()).build();
+    public AccToken getAccessToken(Callback authCallback) {
+        // 参见 https://q.qq.com/wiki/develop/miniprogram/server/open_port/port_login.html#code2session 文档
+        // 使用 code 获取对应的 openId、unionId 等字段
+        String response = Httpx.get(accessTokenUrl(authCallback.getCode()));
+
+        JSCode2SessionResponse accessTokenObject = JSONObject.parseObject(response, JSCode2SessionResponse.class);
+        assert accessTokenObject != null;
+        checkResponse(accessTokenObject);
+        // 拼装结果
+        return AccToken.builder().openId(accessTokenObject.getOpenid()).unionId(accessTokenObject.getUnionId())
+                .accessToken(accessTokenObject.getSessionKey()).build();
+    }
+
+    @Override
+    public Material getUserInfo(AccToken authToken) {
+        // 参见 https://q.qq.com/wiki/develop/game/API/open-port/user-info.html#qq-getuserinfo 文档
+        // 如果需要用户信息，需要在小程序调用函数后传给后端
+        return Material.builder().username("").nickname("").avatar("").uuid(authToken.getOpenId()).token(authToken)
+                .source(complex.toString()).build();
     }
 
     /**
      * 检查响应内容是否正确
      *
-     * @param object 请求响应内容
+     * @param response 请求响应内容
      */
-    private void checkResponse(JSONObject object) {
-        if (object.containsKey("error")) {
-            throw new AuthorizedException(object.getString("error_description"));
+    private void checkResponse(JSCode2SessionResponse response) {
+        if (!Symbol.ZERO.equals(response.getErrorCode())) {
+            throw new AuthorizedException(response.getErrorCode(), response.getErrorMsg());
         }
     }
 
-    /**
-     * 返回带{@code state}参数的授权url，授权回调时会带上这个{@code state}
-     *
-     * @param state state 验证授权流程的参数，可以防止csrf
-     * @return 返回授权地址
-     */
     @Override
-    public String authorize(String state) {
-        return Builder.fromUrl(super.authorize(state))
-                .queryParam("scope", this.getScopes(Symbol.SPACE, true, this.getDefaultScopes(GiteeScope.values())))
-                .build();
+    protected String accessTokenUrl(String code) {
+        return Builder.fromUrl(complex.accessToken()).queryParam("appid", context.getAppKey())
+                .queryParam("secret", context.getAppSecret()).queryParam("js_code", code)
+                .queryParam("grant_type", "authorization_code").build();
+    }
+
+    @Data
+    private static class JSCode2SessionResponse {
+
+        @JSONField(name = "errcode")
+        private String errorCode;
+        @JSONField(name = "errmsg")
+        private String errorMsg;
+        @JSONField(name = "session_key")
+        private String sessionKey;
+        private String openid;
+        @JSONField(name = "unionid")
+        private String unionId;
+
     }
 
 }

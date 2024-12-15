@@ -28,38 +28,49 @@
 package org.miaixz.bus.storage.metric;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.miaixz.bus.core.basic.entity.Message;
 import org.miaixz.bus.core.lang.Assert;
-import org.miaixz.bus.core.lang.Symbol;
-import org.miaixz.bus.logger.Logger;
+import org.miaixz.bus.core.xyz.StringKit;
 import org.miaixz.bus.storage.Context;
 import org.miaixz.bus.storage.magic.ErrorCode;
+import org.miaixz.bus.storage.magic.Material;
 
-import com.UpYun;
-import com.upyun.UpException;
+import com.baidubce.auth.DefaultBceCredentials;
+import com.baidubce.services.bos.BosClient;
+import com.baidubce.services.bos.BosClientConfiguration;
+import com.baidubce.services.bos.model.GetObjectRequest;
+import com.baidubce.services.bos.model.ListObjectsRequest;
+import com.baidubce.services.bos.model.ListObjectsResponse;
 
 /**
- * 存储服务-又拍云
+ * 存储服务-百度云
  *
  * @author Kimi Liu
  * @since Java 17+
  */
-public class UpyunOssProvider extends AbstractProvider {
+public class BaiduBosProvider extends AbstractProvider {
 
-    private volatile UpYun client;
+    private volatile BosClient client;
 
-    public UpyunOssProvider(Context context) {
+    public BaiduBosProvider(Context context) {
         this.context = context;
         Assert.notBlank(this.context.getPrefix(), "[prefix] not defined");
+        Assert.notBlank(this.context.getEndpoint(), "[endpoint] not defined");
         Assert.notBlank(this.context.getBucket(), "[bucket] not defined");
         Assert.notBlank(this.context.getAccessKey(), "[accessKey] not defined");
         Assert.notBlank(this.context.getSecretKey(), "[secure] not defined");
+        Assert.notNull(this.context.isSecure(), "[secure] not defined");
 
-        this.client = new UpYun(this.context.getBucket(), this.context.getAccessKey(), this.context.getSecretKey());
+        BosClientConfiguration config = new BosClientConfiguration();
+        config.setCredentials(new DefaultBceCredentials(this.context.getAccessKey(), this.context.getSecretKey()));
+        config.setEndpoint(this.context.getEndpoint());
+        this.client = new BosClient(config);
     }
 
     @Override
@@ -74,18 +85,30 @@ public class UpyunOssProvider extends AbstractProvider {
 
     @Override
     public Message download(String fileName, File file) {
-        try {
-            this.client.writeFile(fileName, file);
-            return Message.builder().errcode(ErrorCode.SUCCESS.getCode()).errmsg(ErrorCode.SUCCESS.getDesc()).build();
-        } catch (IOException | UpException e) {
-            Logger.error("file download failed" + e.getMessage());
-        }
-        return Message.builder().errcode(ErrorCode.FAILURE.getCode()).errmsg(ErrorCode.FAILURE.getDesc()).build();
+        return download(this.context.getBucket(), fileName, file);
     }
 
     @Override
     public Message download(String bucket, String fileName, File file) {
-        return Message.builder().errcode(ErrorCode.FAILURE.getCode()).errmsg(ErrorCode.FAILURE.getDesc()).build();
+        this.client.getObject(new GetObjectRequest(bucket, fileName), file);
+
+        return Message.builder().errcode(ErrorCode.SUCCESS.getCode()).errmsg(ErrorCode.SUCCESS.getDesc()).build();
+    }
+
+    @Override
+    public Message list() {
+        ListObjectsRequest request = new ListObjectsRequest(this.context.getBucket());
+        ListObjectsResponse objectListing = this.client.listObjects(request);
+
+        return Message.builder().errcode(ErrorCode.SUCCESS.getCode()).errmsg(ErrorCode.SUCCESS.getDesc())
+                .data(objectListing.getContents().stream().map(item -> {
+                    Map<String, Object> extend = new HashMap<>();
+                    extend.put("tag", item.getETag());
+                    extend.put("storageClass", item.getStorageClass());
+                    extend.put("lastModified", item.getLastModified());
+                    return Material.builder().name(item.getKey()).owner(item.getOwner().getDisplayName())
+                            .size(StringKit.toString(item.getSize())).extend(extend).build();
+                }).collect(Collectors.toList())).build();
     }
 
     @Override
@@ -105,28 +128,25 @@ public class UpyunOssProvider extends AbstractProvider {
 
     @Override
     public Message upload(String bucket, String fileName, InputStream content) {
-        return Message.builder().errcode(ErrorCode.FAILURE.getCode()).errmsg(ErrorCode.FAILURE.getDesc()).build();
+        this.client.putObject(bucket, fileName, content);
+        return Message.builder().errcode(ErrorCode.SUCCESS.getCode()).errmsg(ErrorCode.SUCCESS.getDesc()).build();
     }
 
     @Override
     public Message upload(String bucket, String fileName, byte[] content) {
-        return Message.builder().errcode(ErrorCode.FAILURE.getCode()).errmsg(ErrorCode.FAILURE.getDesc()).build();
+        this.client.putObject(bucket, fileName, content);
+        return Message.builder().errcode(ErrorCode.SUCCESS.getCode()).errmsg(ErrorCode.SUCCESS.getDesc()).build();
     }
 
     @Override
     public Message remove(String fileName) {
-        try {
-            client.deleteFile(Symbol.C_SLASH + fileName, null);
-            return Message.builder().errcode(ErrorCode.SUCCESS.getCode()).errmsg(ErrorCode.SUCCESS.getDesc()).build();
-        } catch (IOException | UpException e) {
-            Logger.error("file remove failed", e.getMessage());
-        }
-        return Message.builder().errcode(ErrorCode.FAILURE.getCode()).errmsg(ErrorCode.FAILURE.getDesc()).build();
+        return remove(this.context.getBucket(), fileName);
     }
 
     @Override
     public Message remove(String bucket, String fileName) {
-        return Message.builder().errcode(ErrorCode.FAILURE.getCode()).errmsg(ErrorCode.FAILURE.getDesc()).build();
+        client.deleteObject(bucket, fileName);
+        return Message.builder().errcode(ErrorCode.SUCCESS.getCode()).errmsg(ErrorCode.SUCCESS.getDesc()).build();
     }
 
     @Override

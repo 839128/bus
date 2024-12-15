@@ -25,49 +25,36 @@
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 */
-package org.miaixz.bus.oauth.metric.wechat.ee;
+package org.miaixz.bus.oauth.metric.figma;
 
-import org.miaixz.bus.cache.metric.ExtendCache;
-import org.miaixz.bus.core.lang.exception.AuthorizedException;
-import org.miaixz.bus.core.xyz.StringKit;
-import org.miaixz.bus.oauth.Builder;
-import org.miaixz.bus.oauth.Context;
-import org.miaixz.bus.oauth.Registry;
-import org.miaixz.bus.oauth.magic.ErrorCode;
+import org.miaixz.bus.oauth.metric.AuthorizeScope;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 
 /**
- * 企业微信 二维码登录
- *
+ * Figma 授权范围
+ * 
  * @author Kimi Liu
  * @since Java 17+
  */
-public class WeChatEeQrcodeProvider extends AbstractWeChatEeProvider {
+@Getter
+@AllArgsConstructor
+public enum FigmaScope implements AuthorizeScope {
 
-    public WeChatEeQrcodeProvider(Context context) {
-        super(context, Registry.WECHAT_EE);
-    }
+    FILE_CONTENT("files:read", "Read files, projects, users, versions, comments, components & styles, and webhooks",
+            true),
+    VARIABLES("file_variables:read,file_variables:write",
+            "Read and write to variables in Figma file. Note: this is only available to members in Enterprise organizations",
+            false),
+    COMMENTS("file_comments:write", "Post and delete comments and comment reactions in files", false),
+    DEV_RESOURCES("file_dev_resources:read,file_dev_resources:write", "Read and write to dev resources in files",
+            false),
+    LIBRARY_ANALYTICS("library_analytics:read", "Read your design system analytics", false),
+    WEBHOOKS("webhooks:write", "Create and manage webhooks", false);
 
-    public WeChatEeQrcodeProvider(Context context, ExtendCache cache) {
-        super(context, Registry.WECHAT_EE, cache);
-    }
-
-    @Override
-    public String authorize(String state) {
-        return Builder.fromUrl(complex.authorize()).queryParam("login_type", context.getLoginType())
-                // 登录类型为企业自建应用/服务商代开发应用时填企业 CorpID，第三方登录时填登录授权 SuiteID
-                .queryParam("appid", context.getAppKey())
-                // 企业自建应用/服务商代开发应用 AgentID，当login_type=CorpApp时填写
-                .queryParam("agentid", context.getUnionId()).queryParam("redirect_uri", context.getRedirectUri())
-                .queryParam("state", getRealState(state)).queryParam("lang", context.getLang()).build()
-                .concat("#wechat_redirect");
-    }
-
-    @Override
-    protected void checkConfig(Context context) {
-        super.checkConfig(context);
-        if ("CorpApp".equals(context.getLoginType()) && StringKit.isEmpty(context.getUnionId())) {
-            throw new AuthorizedException(ErrorCode.ILLEGAL_WECHAT_AGENT_ID.getCode(), this.complex);
-        }
-    }
+    private final String scope;
+    private final String description;
+    private final boolean isDefault;
 
 }

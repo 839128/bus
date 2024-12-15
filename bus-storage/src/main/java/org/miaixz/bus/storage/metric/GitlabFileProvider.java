@@ -28,110 +28,92 @@
 package org.miaixz.bus.storage.metric;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 
 import org.miaixz.bus.core.basic.entity.Message;
 import org.miaixz.bus.core.lang.Assert;
-import org.miaixz.bus.core.lang.Symbol;
-import org.miaixz.bus.logger.Logger;
+import org.miaixz.bus.gitlab.GitLabApiClient;
 import org.miaixz.bus.storage.Context;
-import org.miaixz.bus.storage.magic.ErrorCode;
-
-import com.UpYun;
-import com.upyun.UpException;
 
 /**
- * 存储服务-又拍云
+ * 存储服务-Gitlab
  *
  * @author Kimi Liu
  * @since Java 17+
  */
-public class UpyunOssProvider extends AbstractProvider {
+public class GitlabFileProvider extends AbstractProvider {
 
-    private volatile UpYun client;
+    GitLabApiClient client;
 
-    public UpyunOssProvider(Context context) {
+    public GitlabFileProvider(Context context) {
         this.context = context;
         Assert.notBlank(this.context.getPrefix(), "[prefix] not defined");
         Assert.notBlank(this.context.getBucket(), "[bucket] not defined");
         Assert.notBlank(this.context.getAccessKey(), "[accessKey] not defined");
         Assert.notBlank(this.context.getSecretKey(), "[secure] not defined");
 
-        this.client = new UpYun(this.context.getBucket(), this.context.getAccessKey(), this.context.getSecretKey());
+        this.client = new GitLabApiClient(this.context.getEndpoint(), this.context.getAccessKey());
     }
 
     @Override
     public Message download(String fileName) {
-        return download(this.context.getBucket(), fileName);
+        return null;
     }
 
     @Override
     public Message download(String bucket, String fileName) {
-        return Message.builder().errcode(ErrorCode.FAILURE.getCode()).errmsg(ErrorCode.FAILURE.getDesc()).build();
-    }
-
-    @Override
-    public Message download(String fileName, File file) {
-        try {
-            this.client.writeFile(fileName, file);
-            return Message.builder().errcode(ErrorCode.SUCCESS.getCode()).errmsg(ErrorCode.SUCCESS.getDesc()).build();
-        } catch (IOException | UpException e) {
-            Logger.error("file download failed" + e.getMessage());
-        }
-        return Message.builder().errcode(ErrorCode.FAILURE.getCode()).errmsg(ErrorCode.FAILURE.getDesc()).build();
+        return null;
     }
 
     @Override
     public Message download(String bucket, String fileName, File file) {
-        return Message.builder().errcode(ErrorCode.FAILURE.getCode()).errmsg(ErrorCode.FAILURE.getDesc()).build();
+        return null;
+    }
+
+    @Override
+    public Message download(String fileName, File file) {
+        return null;
     }
 
     @Override
     public Message rename(String oldName, String newName) {
-        return Message.builder().errcode(ErrorCode.FAILURE.getCode()).errmsg(ErrorCode.FAILURE.getDesc()).build();
+        return null;
     }
 
     @Override
     public Message rename(String bucket, String oldName, String newName) {
-        return Message.builder().errcode(ErrorCode.FAILURE.getCode()).errmsg(ErrorCode.FAILURE.getDesc()).build();
+        return null;
     }
 
     @Override
     public Message upload(String fileName, byte[] content) {
-        return upload(this.context.getBucket(), fileName, content);
+        return null;
     }
 
     @Override
     public Message upload(String bucket, String fileName, InputStream content) {
-        return Message.builder().errcode(ErrorCode.FAILURE.getCode()).errmsg(ErrorCode.FAILURE.getDesc()).build();
+        return null;
     }
 
     @Override
     public Message upload(String bucket, String fileName, byte[] content) {
-        return Message.builder().errcode(ErrorCode.FAILURE.getCode()).errmsg(ErrorCode.FAILURE.getDesc()).build();
+        return null;
     }
 
     @Override
     public Message remove(String fileName) {
-        try {
-            client.deleteFile(Symbol.C_SLASH + fileName, null);
-            return Message.builder().errcode(ErrorCode.SUCCESS.getCode()).errmsg(ErrorCode.SUCCESS.getDesc()).build();
-        } catch (IOException | UpException e) {
-            Logger.error("file remove failed", e.getMessage());
-        }
-        return Message.builder().errcode(ErrorCode.FAILURE.getCode()).errmsg(ErrorCode.FAILURE.getDesc()).build();
+        return null;
     }
 
     @Override
     public Message remove(String bucket, String fileName) {
-        return Message.builder().errcode(ErrorCode.FAILURE.getCode()).errmsg(ErrorCode.FAILURE.getDesc()).build();
+        return null;
     }
 
     @Override
     public Message remove(String bucket, Path path) {
-        return remove(bucket, path.toString());
+        return null;
     }
 
 }

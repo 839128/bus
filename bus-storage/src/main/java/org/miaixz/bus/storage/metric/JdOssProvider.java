@@ -28,38 +28,62 @@
 package org.miaixz.bus.storage.metric;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.miaixz.bus.core.basic.entity.Message;
 import org.miaixz.bus.core.lang.Assert;
-import org.miaixz.bus.core.lang.Symbol;
-import org.miaixz.bus.logger.Logger;
+import org.miaixz.bus.core.xyz.StringKit;
 import org.miaixz.bus.storage.Context;
 import org.miaixz.bus.storage.magic.ErrorCode;
+import org.miaixz.bus.storage.magic.Material;
 
-import com.UpYun;
-import com.upyun.UpException;
+import com.amazonaws.ClientConfiguration;
+import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.AWSCredentialsProvider;
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.client.builder.AwsClientBuilder;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.model.GetObjectRequest;
+import com.amazonaws.services.s3.model.ListObjectsRequest;
+import com.amazonaws.services.s3.model.ObjectListing;
 
 /**
- * 存储服务-又拍云
+ * 存储服务-京东云
  *
  * @author Kimi Liu
  * @since Java 17+
  */
-public class UpyunOssProvider extends AbstractProvider {
+public class JdOssProvider extends AbstractProvider {
 
-    private volatile UpYun client;
+    private volatile AmazonS3 client;
 
-    public UpyunOssProvider(Context context) {
+    public JdOssProvider(Context context) {
         this.context = context;
         Assert.notBlank(this.context.getPrefix(), "[prefix] not defined");
+        Assert.notBlank(this.context.getEndpoint(), "[endpoint] not defined");
         Assert.notBlank(this.context.getBucket(), "[bucket] not defined");
         Assert.notBlank(this.context.getAccessKey(), "[accessKey] not defined");
-        Assert.notBlank(this.context.getSecretKey(), "[secure] not defined");
+        Assert.notBlank(this.context.getSecretKey(), "[secretKey] not defined");
+        Assert.notBlank(this.context.getRegion(), "[region] not defined");
 
-        this.client = new UpYun(this.context.getBucket(), this.context.getAccessKey(), this.context.getSecretKey());
+        ClientConfiguration config = new ClientConfiguration();
+
+        AwsClientBuilder.EndpointConfiguration endpointConfig = new AwsClientBuilder.EndpointConfiguration(
+                this.context.getEndpoint(), this.context.getRegion());
+
+        AWSCredentials awsCredentials = new BasicAWSCredentials(this.context.getAccessKey(),
+                this.context.getSecretKey());
+        AWSCredentialsProvider awsCredentialsProvider = new AWSStaticCredentialsProvider(awsCredentials);
+
+        this.client = AmazonS3Client.builder().withEndpointConfiguration(endpointConfig).withClientConfiguration(config)
+                .withCredentials(awsCredentialsProvider).disableChunkedEncoding().withPathStyleAccessEnabled(true)
+                .build();
     }
 
     @Override
@@ -69,28 +93,39 @@ public class UpyunOssProvider extends AbstractProvider {
 
     @Override
     public Message download(String bucket, String fileName) {
-        return Message.builder().errcode(ErrorCode.FAILURE.getCode()).errmsg(ErrorCode.FAILURE.getDesc()).build();
+        return Message.builder().errcode(ErrorCode.FAILURE.getCode()).errmsg("failure to provide services").build();
     }
 
     @Override
     public Message download(String fileName, File file) {
-        try {
-            this.client.writeFile(fileName, file);
-            return Message.builder().errcode(ErrorCode.SUCCESS.getCode()).errmsg(ErrorCode.SUCCESS.getDesc()).build();
-        } catch (IOException | UpException e) {
-            Logger.error("file download failed" + e.getMessage());
-        }
-        return Message.builder().errcode(ErrorCode.FAILURE.getCode()).errmsg(ErrorCode.FAILURE.getDesc()).build();
+        return download(this.context.getBucket(), fileName, file);
     }
 
     @Override
     public Message download(String bucket, String fileName, File file) {
-        return Message.builder().errcode(ErrorCode.FAILURE.getCode()).errmsg(ErrorCode.FAILURE.getDesc()).build();
+        this.client.getObject(new GetObjectRequest(bucket, fileName), file);
+        return Message.builder().errcode(ErrorCode.SUCCESS.getCode()).errmsg(ErrorCode.SUCCESS.getDesc()).build();
+    }
+
+    @Override
+    public Message list() {
+        ListObjectsRequest request = new ListObjectsRequest().withBucketName(this.context.getBucket());
+        ObjectListing objectListing = client.listObjects(request);
+
+        return Message.builder().errcode(ErrorCode.SUCCESS.getCode()).errmsg(ErrorCode.SUCCESS.getDesc())
+                .data(objectListing.getObjectSummaries().stream().map(item -> {
+                    Map<String, Object> extend = new HashMap<>();
+                    extend.put("tag", item.getETag());
+                    extend.put("storageClass", item.getStorageClass());
+                    extend.put("lastModified", item.getLastModified());
+                    return Material.builder().name(item.getKey()).owner(item.getOwner().getDisplayName())
+                            .size(StringKit.toString(item.getSize())).extend(extend).build();
+                }).collect(Collectors.toList())).build();
     }
 
     @Override
     public Message rename(String oldName, String newName) {
-        return Message.builder().errcode(ErrorCode.FAILURE.getCode()).errmsg(ErrorCode.FAILURE.getDesc()).build();
+        return Message.builder().errcode(ErrorCode.FAILURE.getCode()).errmsg("failure to provide services").build();
     }
 
     @Override
@@ -105,7 +140,8 @@ public class UpyunOssProvider extends AbstractProvider {
 
     @Override
     public Message upload(String bucket, String fileName, InputStream content) {
-        return Message.builder().errcode(ErrorCode.FAILURE.getCode()).errmsg(ErrorCode.FAILURE.getDesc()).build();
+        client.putObject(bucket, fileName, content, null);
+        return Message.builder().errcode(ErrorCode.SUCCESS.getCode()).errmsg(ErrorCode.SUCCESS.getDesc()).build();
     }
 
     @Override
@@ -115,18 +151,13 @@ public class UpyunOssProvider extends AbstractProvider {
 
     @Override
     public Message remove(String fileName) {
-        try {
-            client.deleteFile(Symbol.C_SLASH + fileName, null);
-            return Message.builder().errcode(ErrorCode.SUCCESS.getCode()).errmsg(ErrorCode.SUCCESS.getDesc()).build();
-        } catch (IOException | UpException e) {
-            Logger.error("file remove failed", e.getMessage());
-        }
-        return Message.builder().errcode(ErrorCode.FAILURE.getCode()).errmsg(ErrorCode.FAILURE.getDesc()).build();
+        return remove(this.context.getBucket(), fileName);
     }
 
     @Override
     public Message remove(String bucket, String fileName) {
-        return Message.builder().errcode(ErrorCode.FAILURE.getCode()).errmsg(ErrorCode.FAILURE.getDesc()).build();
+        this.client.deleteObject(bucket, fileName);
+        return Message.builder().errcode(ErrorCode.SUCCESS.getCode()).errmsg(ErrorCode.SUCCESS.getDesc()).build();
     }
 
     @Override
