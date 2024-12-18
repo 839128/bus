@@ -25,107 +25,63 @@
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 */
-package org.miaixz.bus.core.center.date.culture.cn.eightchar;
+package org.miaixz.bus.core.center.date.culture.cn.sixty;
 
-import org.miaixz.bus.core.center.date.culture.Loops;
-import org.miaixz.bus.core.center.date.culture.cn.sixty.SixtyCycle;
-import org.miaixz.bus.core.center.date.culture.lunar.LunarYear;
+import org.miaixz.bus.core.center.date.culture.Tradition;
+import org.miaixz.bus.core.center.date.culture.cn.HiddenStems;
 
 /**
- * 大运（10年1大运）
+ * 藏干（即人元，司令取天干，分野取天干的五行）
  *
  * @author Kimi Liu
  * @since Java 17+
  */
-public class DecadeFortune extends Loops {
+public class HiddenStem extends Tradition {
 
     /**
-     * 童限
+     * 天干
      */
-    protected ChildLimit childLimit;
+    protected HeavenStem heavenStem;
 
     /**
-     * 序号
+     * 藏干类型
      */
-    protected int index;
+    protected HiddenStems type;
 
-    public DecadeFortune(ChildLimit childLimit, int index) {
-        this.childLimit = childLimit;
-        this.index = index;
+    public HiddenStem(HeavenStem heavenStem, HiddenStems type) {
+        this.heavenStem = heavenStem;
+        this.type = type;
+    }
+
+    public HiddenStem(String heavenStemName, HiddenStems type) {
+        this(HeavenStem.fromName(heavenStemName), type);
+    }
+
+    public HiddenStem(int heavenStemIndex, HiddenStems type) {
+        this(HeavenStem.fromIndex(heavenStemIndex), type);
     }
 
     /**
-     * 通过童限初始化
+     * 天干
      *
-     * @param childLimit 童限
-     * @param index      序号
-     * @return 大运
+     * @return 天干
      */
-    public static DecadeFortune fromChildLimit(ChildLimit childLimit, int index) {
-        return new DecadeFortune(childLimit, index);
+    public HeavenStem getHeavenStem() {
+        return heavenStem;
     }
 
     /**
-     * 开始年龄
+     * 藏干类型
      *
-     * @return 开始年龄
+     * @return 藏干类型
      */
-    public int getStartAge() {
-        return childLimit.getEndTime().getYear() - childLimit.getStartTime().getYear() + 1 + index * 10;
+    public HiddenStems getType() {
+        return type;
     }
 
-    /**
-     * 结束年龄
-     *
-     * @return 结束年龄
-     */
-    public int getEndAge() {
-        return getStartAge() + 9;
-    }
-
-    /**
-     * 开始农历年
-     *
-     * @return 农历年
-     */
-    public LunarYear getStartLunarYear() {
-        return childLimit.getEndLunarYear().next(index * 10);
-    }
-
-    /**
-     * 结束农历年
-     *
-     * @return 农历年
-     */
-    public LunarYear getEndLunarYear() {
-        return getStartLunarYear().next(9);
-    }
-
-    /**
-     * 干支
-     *
-     * @return 干支
-     */
-    public SixtyCycle getSixtyCycle() {
-        int n = index + 1;
-        return childLimit.getEightChar().getMonth().next(childLimit.isForward() ? n : -n);
-    }
-
+    @Override
     public String getName() {
-        return getSixtyCycle().getName();
-    }
-
-    public DecadeFortune next(int n) {
-        return fromChildLimit(childLimit, index + n);
-    }
-
-    /**
-     * 开始小运
-     *
-     * @return 小运
-     */
-    public Fortune getStartFortune() {
-        return Fortune.fromChildLimit(childLimit, index * 10);
+        return heavenStem.getName();
     }
 
 }

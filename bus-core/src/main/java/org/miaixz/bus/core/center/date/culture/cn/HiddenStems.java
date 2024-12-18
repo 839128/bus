@@ -25,107 +25,67 @@
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 */
-package org.miaixz.bus.core.center.date.culture.cn.eightchar;
-
-import org.miaixz.bus.core.center.date.culture.Loops;
-import org.miaixz.bus.core.center.date.culture.cn.sixty.SixtyCycle;
-import org.miaixz.bus.core.center.date.culture.lunar.LunarYear;
+package org.miaixz.bus.core.center.date.culture.cn;
 
 /**
- * 大运（10年1大运）
+ * 藏干类型
  *
  * @author Kimi Liu
  * @since Java 17+
  */
-public class DecadeFortune extends Loops {
+public enum HiddenStems {
+    RESIDUAL(0, "余气"), MIDDLE(1, "中气"), PRINCIPAL(2, "本气");
 
     /**
-     * 童限
+     * 代码
      */
-    protected ChildLimit childLimit;
+    private final int code;
 
     /**
-     * 序号
+     * 名称
      */
-    protected int index;
+    private final String name;
 
-    public DecadeFortune(ChildLimit childLimit, int index) {
-        this.childLimit = childLimit;
-        this.index = index;
+    HiddenStems(int code, String name) {
+        this.code = code;
+        this.name = name;
     }
 
-    /**
-     * 通过童限初始化
-     *
-     * @param childLimit 童限
-     * @param index      序号
-     * @return 大运
-     */
-    public static DecadeFortune fromChildLimit(ChildLimit childLimit, int index) {
-        return new DecadeFortune(childLimit, index);
+    public static HiddenStems fromCode(Integer code) {
+        if (null == code) {
+            return null;
+        }
+        for (HiddenStems item : values()) {
+            if (item.getCode() == code) {
+                return item;
+            }
+        }
+        return null;
     }
 
-    /**
-     * 开始年龄
-     *
-     * @return 开始年龄
-     */
-    public int getStartAge() {
-        return childLimit.getEndTime().getYear() - childLimit.getStartTime().getYear() + 1 + index * 10;
+    public static HiddenStems fromName(String name) {
+        if (null == name) {
+            return null;
+        }
+        for (HiddenStems item : values()) {
+            if (item.getName().equals(name)) {
+                return item;
+            }
+        }
+        return null;
     }
 
-    /**
-     * 结束年龄
-     *
-     * @return 结束年龄
-     */
-    public int getEndAge() {
-        return getStartAge() + 9;
-    }
-
-    /**
-     * 开始农历年
-     *
-     * @return 农历年
-     */
-    public LunarYear getStartLunarYear() {
-        return childLimit.getEndLunarYear().next(index * 10);
-    }
-
-    /**
-     * 结束农历年
-     *
-     * @return 农历年
-     */
-    public LunarYear getEndLunarYear() {
-        return getStartLunarYear().next(9);
-    }
-
-    /**
-     * 干支
-     *
-     * @return 干支
-     */
-    public SixtyCycle getSixtyCycle() {
-        int n = index + 1;
-        return childLimit.getEightChar().getMonth().next(childLimit.isForward() ? n : -n);
+    public int getCode() {
+        return code;
     }
 
     public String getName() {
-        return getSixtyCycle().getName();
+        return name;
     }
 
-    public DecadeFortune next(int n) {
-        return fromChildLimit(childLimit, index + n);
-    }
-
-    /**
-     * 开始小运
-     *
-     * @return 小运
-     */
-    public Fortune getStartFortune() {
-        return Fortune.fromChildLimit(childLimit, index * 10);
+    @Override
+    public String toString() {
+        return getName();
     }
 
 }
