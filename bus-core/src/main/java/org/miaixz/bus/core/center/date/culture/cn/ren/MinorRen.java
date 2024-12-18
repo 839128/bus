@@ -25,38 +25,58 @@
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 */
-package org.miaixz.bus.core.center.date.culture.cn.star.six;
+package org.miaixz.bus.core.center.date.culture.cn.ren;
 
 import org.miaixz.bus.core.center.date.culture.Samsara;
+import org.miaixz.bus.core.center.date.culture.cn.Element;
+import org.miaixz.bus.core.center.date.culture.cn.Luck;
 
 /**
- * 六曜（孔明六曜星）
+ * 小六壬
  *
  * @author Kimi Liu
  * @since Java 17+
  */
-public class SixStar extends Samsara {
+public class MinorRen extends Samsara {
 
-    public static final String[] NAMES = { "先胜", "友引", "先负", "佛灭", "大安", "赤口" };
+    public static final String[] NAMES = { "大安", "留连", "速喜", "赤口", "小吉", "空亡" };
 
-    public SixStar(int index) {
+    public MinorRen(int index) {
         super(NAMES, index);
     }
 
-    public SixStar(String name) {
+    public MinorRen(String name) {
         super(NAMES, name);
     }
 
-    public static SixStar fromIndex(int index) {
-        return new SixStar(index);
+    public static MinorRen fromIndex(int index) {
+        return new MinorRen(index);
     }
 
-    public static SixStar fromName(String name) {
-        return new SixStar(name);
+    public static MinorRen fromName(String name) {
+        return new MinorRen(name);
     }
 
-    public SixStar next(int n) {
+    public MinorRen next(int n) {
         return fromIndex(nextIndex(n));
+    }
+
+    /**
+     * 吉凶
+     *
+     * @return 吉凶
+     */
+    public Luck getLuck() {
+        return Luck.fromIndex(index % 2);
+    }
+
+    /**
+     * 五行
+     *
+     * @return 五行
+     */
+    public Element getElement() {
+        return Element.fromIndex(new int[] { 0, 4, 1, 3, 0, 2 }[index]);
     }
 
 }
