@@ -26,7 +26,6 @@
 package org.aoju.bus.extra.json;
 
 import org.aoju.bus.core.exception.InternalException;
-import org.aoju.bus.core.instance.Instances;
 import org.aoju.bus.core.toolkit.ClassKit;
 import org.aoju.bus.core.toolkit.StringKit;
 import org.aoju.bus.extra.pinyin.PinyinProvider;
@@ -39,6 +38,7 @@ import org.aoju.bus.logger.Logger;
  * @since Java 17+
  */
 public class JsonFactory {
+    static JsonProvider provider = create();
 
     /**
      * 获得单例的 {@link JsonProvider}
@@ -46,7 +46,7 @@ public class JsonFactory {
      * @return 单例的 {@link JsonProvider}
      */
     public static JsonProvider get() {
-        return Instances.singletion(JsonFactory.class).create();
+        return provider;
     }
 
     /**

@@ -89,7 +89,7 @@ public class MybatisPluginBuilder {
             }
         }
         plugins.addAll(list);
-        return plugins.stream().toArray(Interceptor[]::new);
+        return plugins.toArray(Interceptor[]::new);
     }
 
 }

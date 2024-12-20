@@ -2,7 +2,7 @@
  *                                                                               *
  * The MIT License (MIT)                                                         *
  *                                                                               *
- * Copyright (c) 2015-2023 aoju.org and other contributors.                      *
+ * Copyright (c) 2015-2022 aoju.org and other contributors.                      *
  *                                                                               *
  * Permission is hereby granted, free of charge, to any person obtaining a copy  *
  * of this software and associated documentation files (the "Software"), to deal *
@@ -25,6 +25,7 @@
  ********************************************************************************/
 package org.aoju.bus.goalie.handler;
 
+import io.netty.handler.timeout.ReadTimeoutException;
 import org.aoju.bus.base.normal.ErrorCode;
 import org.aoju.bus.base.spring.Controller;
 import org.aoju.bus.core.exception.BusinessException;
@@ -66,12 +67,14 @@ public class GlobalExceptionHandler extends Controller implements ErrorWebExcept
             method = map.get(Config.METHOD);
         }
         Logger.error("traceId:{},request: {},error:{}", exchange.getLogPrefix(), method, ex.getMessage());
-        Logger.error(ex);
         Object message;
         if (ex instanceof WebClientException) {
-            message = Controller.write(ErrorCode.EM_FAILURE);
-        } else if (ex instanceof BusinessException) {
-            BusinessException e = (BusinessException) ex;
+            if (ex.getCause() instanceof ReadTimeoutException) {
+                message = Controller.write(ErrorCode.EM_TIMEOUT);
+            } else {
+                message = Controller.write(ErrorCode.EM_ANR);
+            }
+        } else if (ex instanceof BusinessException e) {
             if (StringKit.isNotBlank(e.getErrcode())) {
                 message = Controller.write(e.getErrcode());
             } else {
@@ -88,8 +91,8 @@ public class GlobalExceptionHandler extends Controller implements ErrorWebExcept
             formatBody = Context.Format.json.getProvider().serialize(message);
         }
         DataBuffer db = response.bufferFactory().wrap(formatBody.getBytes());
-        return response.writeWith(Mono.just(db)).doOnTerminate(() -> Logger.info("traceId:{},exec time :{}ms",
-                exchange.getLogPrefix(), System.currentTimeMillis() - context.getStartTime()));
+        return response.writeWith(Mono.just(db))
+                .doOnTerminate(() -> Logger.info("traceId:{},exec time :{}ms", exchange.getLogPrefix(), System.currentTimeMillis() - context.getStartTime()));
     }
 
 }

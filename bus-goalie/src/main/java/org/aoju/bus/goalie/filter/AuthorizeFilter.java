@@ -25,11 +25,11 @@
  ********************************************************************************/
 package org.aoju.bus.goalie.filter;
 
-import org.aoju.bus.base.entity.OAuth2;
 import org.aoju.bus.base.normal.ErrorCode;
+import org.aoju.bus.base.entity.OAuth2;
+import org.aoju.bus.core.beans.copier.CopyOptions;
 import org.aoju.bus.core.exception.BusinessException;
 import org.aoju.bus.core.toolkit.BeanKit;
-import org.aoju.bus.core.toolkit.CollKit;
 import org.aoju.bus.core.toolkit.StringKit;
 import org.aoju.bus.goalie.Assets;
 import org.aoju.bus.goalie.Config;
@@ -48,14 +48,12 @@ import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
 import java.net.InetSocketAddress;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
 /**
  * 访问鉴权
- *
- * @author Justubborn
- * @since Java 17+
  */
 @Order(Ordered.HIGHEST_PRECEDENCE + 2)
 public class AuthorizeFilter implements WebFilter {
@@ -85,14 +83,18 @@ public class AuthorizeFilter implements WebFilter {
         if (null == assets) {
             return Mono.error(new BusinessException(ErrorCode.EM_100500));
         }
-        // 校验方法
+        //校验方法
         checkMethod(exchange.getRequest(), assets);
-        // 校验参数
+        //
+        checkAnonymous(context,assets);
+        //校验参数
         checkTokenIfNecessary(context, assets, params);
-        // 填充Ip
+        //校验 appid
+        checkAppId(assets, params);
+        //填充Ip
         fillXParam(exchange, params);
 
-        // 清理 method 和 version
+        //清理 method 和 version
         cleanParam(params);
         context.setAssets(assets);
 
@@ -118,6 +120,12 @@ public class AuthorizeFilter implements WebFilter {
         }
     }
 
+    private void checkAnonymous(Context context, Assets assets) {
+        if(assets.isToken() && StringKit.isBlank(context.getToken()) &&  "2".equals(assets.getMode())) {
+            context.setToken("anonymous");
+        }
+    }
+
     /**
      * 校验 token 并 填充参数
      *
@@ -131,16 +139,12 @@ public class AuthorizeFilter implements WebFilter {
             if (StringKit.isBlank(context.getToken())) {
                 throw new BusinessException(ErrorCode.EM_100106);
             }
-            Token access = new Token(context.getToken(), context.getChannel().getTokenType());
+            Token access = new Token(context.getToken(), context.getChannel().getTokenType(), assets);
             Delegate delegate = authorize.authorize(access);
             if (delegate.isOk()) {
                 OAuth2 auth2 = delegate.getOAuth2();
-                // api permissions
-                if (!apiPermissions(auth2, assets)) {
-                    throw new BusinessException(ErrorCode.EM_100500, "没有权限");
-                }
-
-                Map<String, Object> map = BeanKit.beanToMap(auth2, false, true);
+                Map<String, Object> map = new HashMap<>();
+                BeanKit.beanToMap(auth2, map, CopyOptions.of().setTransientSupport(false).ignoreNullValue());
                 map.forEach((k, v) -> params.put(k, v.toString()));
             } else {
                 throw new BusinessException(delegate.getMessage().errcode, delegate.getMessage().errmsg);
@@ -169,36 +173,33 @@ public class AuthorizeFilter implements WebFilter {
     private void fillXParam(ServerWebExchange exchange, Map<String, String> requestParam) {
         String ip = exchange.getRequest().getHeaders().getFirst("x_remote_ip");
         if (StringKit.isBlank(ip)) {
-            InetSocketAddress address = exchange.getRequest().getRemoteAddress();
-            if (null != address) {
-                ip = address.getAddress().getHostAddress();
+            ip = exchange.getRequest().getHeaders().getFirst("X-Forwarded-For");
+            if (!StringKit.isBlank(ip)) {
+                ip = ip.contains(",") ? ip.split(",")[0] : ip;
+            } else {
+                InetSocketAddress address = exchange.getRequest().getRemoteAddress();
+                if (null != address) {
+                    ip = address.getAddress().getHostAddress();
+                }
             }
+            requestParam.put("x_remote_ip", ip);
         }
-        requestParam.put("x_remote_ip", ip);
     }
 
     /**
-     * 是否有权限
+     * 设置appid
      *
-     * @param oAuth2 认证
-     * @param assets 路由
-     * @return 是否
+     * @param assets       资源
+     * @param requestParam 参数
      */
-    private boolean apiPermissions(OAuth2 oAuth2, Assets assets) {
-        if (CollKit.isEmpty(assets.getRoleIds())) {
-            return false;
+    private void checkAppId(Assets assets, Map<String, String> requestParam) {
+        String appId = assets.getMethod().split("\\.")[0];
+        requestParam.putIfAbsent("x_app_id", appId);
+        String xAppId = requestParam.get("x_app_id");
+        if (StringKit.isNotBlank(xAppId) && !appId.equals(xAppId)) {
+            throw new BusinessException(ErrorCode.EM_100511);
         }
-        if (StringKit.isEmpty(oAuth2.getX_role_id())) {
-            return false;
-        }
-        boolean result = false;
-        for (String roleId : assets.getRoleIds()) {
-            if (oAuth2.getX_role_id().contains(roleId)) {
-                result = true;
-                break;
-            }
-        }
-        return result;
+
     }
 
 }

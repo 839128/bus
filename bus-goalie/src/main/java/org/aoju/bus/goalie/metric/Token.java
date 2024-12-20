@@ -27,6 +27,8 @@ package org.aoju.bus.goalie.metric;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.RequiredArgsConstructor;
+import org.aoju.bus.goalie.Assets;
 
 /**
  * token参数
@@ -35,11 +37,15 @@ import lombok.Data;
  * @since Java 17+
  */
 @AllArgsConstructor
+@RequiredArgsConstructor
 @Data
 public class Token {
 
-    String token;
+    final String token;
 
-    int channel;
+    final int channel;
 
+    final Assets assets;
+
+    transient String orgId;
 }

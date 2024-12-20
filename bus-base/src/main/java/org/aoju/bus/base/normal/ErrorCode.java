@@ -52,6 +52,14 @@ public class ErrorCode {
      */
     public static String EM_LIMITER = "-2";
     /**
+     * 请求超时
+     */
+    public static String EM_TIMEOUT = "-3";
+    /**
+     * 请求未响应
+     */
+    public static String EM_ANR = "-4";
+    /**
      * 无效的令牌
      */
     public static String EM_100100 = "100100";

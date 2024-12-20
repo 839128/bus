@@ -117,7 +117,8 @@ public class PrimaryFilter implements WebFilter {
     private void doParams(ServerWebExchange exchange) {
         Context context = Context.get(exchange);
         Map<String, String> params = context.getRequestMap();
-
+        Logger.info("traceId:{},method:{},req =>{}", exchange.getLogPrefix(), params.get(Config.METHOD),
+                JsonKit.toJsonString(context.getRequestMap()));
         // 过滤无效参数及值- undefined
         for (Map.Entry<String, String> entry : params.entrySet()) {
             if (Normal.UNDEFINED.equals(StringKit.lowerCase(entry.getKey()))
@@ -125,7 +126,6 @@ public class PrimaryFilter implements WebFilter {
                 throw new BusinessException(ErrorCode.EM_100101);
             }
         }
-
         if (StringKit.isBlank(params.get(Config.METHOD))) {
             throw new BusinessException(ErrorCode.EM_100108);
         }
@@ -139,8 +139,7 @@ public class PrimaryFilter implements WebFilter {
         if (StringKit.isNotBlank(params.get(Config.SIGN))) {
             context.setNeedDecrypt(true);
         }
-        Logger.info("traceId:{},method:{},req =>{}", exchange.getLogPrefix(), params.get(Config.METHOD),
-                JsonKit.toJsonString(context.getRequestMap()));
+
     }
 
     /**

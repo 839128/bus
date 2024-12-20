@@ -31,6 +31,7 @@ import org.aoju.bus.core.toolkit.StringKit;
 import org.aoju.bus.goalie.Assets;
 import org.aoju.bus.goalie.Config;
 import org.aoju.bus.goalie.Context;
+import org.aoju.bus.logger.Logger;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -46,8 +47,10 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.netty.http.client.HttpClientRequest;
 import reactor.util.annotation.NonNull;
 
+import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -57,6 +60,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author Justubborn
  * @since Java 17+
  */
+
 public class ApiRouterHandler {
 
     private final Map<String, WebClient> clients = new ConcurrentHashMap<>();
@@ -67,15 +71,14 @@ public class ApiRouterHandler {
         Assets assets = context.getAssets();
         Map<String, String> params = context.getRequestMap();
 
-        String port = StringKit.isEmpty(Normal.EMPTY + assets.getPort()) ? Normal.EMPTY
-                : Symbol.COLON + assets.getPort();
+        String port = StringKit.isEmpty(Normal.EMPTY + assets.getPort()) ? Normal.EMPTY : Symbol.COLON + assets.getPort();
         String path = StringKit.isEmpty(assets.getPath()) ? Normal.EMPTY : Symbol.SLASH + assets.getPath();
         String baseUrl = assets.getHost() + port + path;
 
         WebClient webClient = clients.computeIfAbsent(baseUrl, client -> WebClient.builder()
                 .exchangeStrategies(ExchangeStrategies.builder()
-                        .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(Config.MAX_INMEMORY_SIZE))
-                        .build())
+                        .codecs(configurer -> configurer.defaultCodecs()
+                                .maxInMemorySize(Config.MAX_INMEMORY_SIZE)).build())
                 .baseUrl(baseUrl).build());
         UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl).path(assets.getUrl());
         MultiValueMap<String, String> multiValueMap = new LinkedMultiValueMap<>();
@@ -83,8 +86,10 @@ public class ApiRouterHandler {
         if (HttpMethod.GET.equals(assets.getHttpMethod())) {
             builder.queryParams(multiValueMap);
         }
-        WebClient.RequestBodySpec bodySpec = webClient.method(assets.getHttpMethod())
-                .uri(builder.build().encode().toUri()).headers(headers -> {
+        WebClient.RequestBodySpec bodySpec = webClient
+                .method(assets.getHttpMethod())
+                .uri(builder.build().encode().toUri())
+                .headers(headers -> {
                     headers.addAll(request.headers().asHttpHeaders());
                     headers.remove(HttpHeaders.HOST);
                     headers.clearContentHeaders();
@@ -104,12 +109,18 @@ public class ApiRouterHandler {
                 }
             }
         }
-        return bodySpec.retrieve().toEntity(DataBuffer.class)
+        long start_time = System.currentTimeMillis();
+        return bodySpec.httpRequest(clientHttpRequest -> {
+                    //设置超时
+                    HttpClientRequest reactorRequest = clientHttpRequest.getNativeRequest();
+                    reactorRequest.responseTimeout(Duration.ofMillis(assets.getTimeout()));
+                }).retrieve().toEntity(DataBuffer.class)
                 .flatMap(responseEntity -> ServerResponse.ok().headers(headers -> {
                     headers.addAll(responseEntity.getHeaders());
                     headers.remove(HttpHeaders.CONTENT_LENGTH);
                 }).body(null == responseEntity.getBody() ? BodyInserters.empty()
-                        : BodyInserters.fromDataBuffers(Flux.just(responseEntity.getBody()))));
+                        : BodyInserters.fromDataBuffers(Flux.just(responseEntity.getBody()))))
+                .doOnTerminate(() -> Logger.info("method:{} 请求耗时:{} ms", context.getAssets().getMethod(), System.currentTimeMillis() - start_time));
     }
 
 }

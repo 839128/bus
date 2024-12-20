@@ -70,6 +70,10 @@ public class Assets {
      */
     private String method;
     /**
+     * 模式
+     */
+    private String mode;
+    /**
      * 授权
      */
     private boolean token;
@@ -92,12 +96,12 @@ public class Assets {
     private List<String> roleIds;
     private HttpMethod httpMethod;
 
+    private long timeout = 10000;
+
     @Override
     public boolean equals(Object o) {
-        if (this == o)
-            return true;
-        if (null == o || getClass() != o.getClass())
-            return false;
+        if (this == o) return true;
+        if (null == o || getClass() != o.getClass()) return false;
         Assets assets = (Assets) o;
         return id.equals(assets.id);
     }
