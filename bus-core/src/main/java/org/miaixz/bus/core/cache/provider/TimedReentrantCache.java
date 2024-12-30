@@ -27,95 +27,89 @@
 */
 package org.miaixz.bus.core.cache.provider;
 
+import java.util.HashMap;
 import java.util.Iterator;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Map;
+import java.util.concurrent.ScheduledFuture;
 
-import org.miaixz.bus.core.lang.thread.lock.NoLock;
+import org.miaixz.bus.core.cache.GlobalPruneTimer;
+import org.miaixz.bus.core.lang.mutable.Mutable;
 
 /**
- * LFU(least frequently used) 最少使用率缓存 根据使用次数来判定对象是否被持续缓存 使用率是通过访问次数计算的。 当缓存满时清理过期对象。
- * 清理后依旧满的情况下清除最少访问（访问计数最小）的对象并将其他对象的访问数减去这个最小访问数，以便新对象进入后可以公平计数。
+ * 定时缓存, 此缓存没有容量限制，对象只有在过期后才会被移除
  *
  * @param <K> 键类型
  * @param <V> 值类型
  * @author Kimi Liu
  * @since Java 17+
  */
-public class LFUCache<K, V> extends LockedCache<K, V> {
+public class TimedReentrantCache<K, V> extends LockedCache<K, V> {
 
     private static final long serialVersionUID = -1L;
 
+    /** 正在执行的定时任务 */
+    private ScheduledFuture<?> pruneJobFuture;
+
     /**
      * 构造
      *
-     * @param capacity 容量
+     * @param timeout 超时（过期）时长，单位毫秒
      */
-    public LFUCache(final int capacity) {
-        this(capacity, 0);
+    public TimedReentrantCache(final long timeout) {
+        this(timeout, new HashMap<>());
     }
 
     /**
      * 构造
      *
-     * @param capacity 容量
-     * @param timeout  过期时长
+     * @param timeout 过期时长
+     * @param map     存储缓存对象的map
      */
-    public LFUCache(int capacity, final long timeout) {
-        if (Integer.MAX_VALUE == capacity) {
-            capacity -= 1;
-        }
-
-        this.capacity = capacity;
+    public TimedReentrantCache(final long timeout, final Map<Mutable<K>, CacheObject<K, V>> map) {
+        this.capacity = 0;
         this.timeout = timeout;
-        this.lock = NoLock.INSTANCE;
-        this.cacheMap = new ConcurrentHashMap<>(capacity + 1, 1.0f);
+        this.cacheMap = map;
     }
 
     /**
-     * 清理过期对象。 清理后依旧满的情况下清除最少访问（访问计数最小）的对象并将其他对象的访问数减去这个最小访问数，以便新对象进入后可以公平计数。
+     * 清理过期对象
      *
-     * @return 清理个数
+     * @return 清理数
      */
     @Override
     protected int pruneCache() {
         int count = 0;
-        CacheObject<K, V> comin = null;
-
-        // 清理过期对象并找出访问最少的对象
-        Iterator<CacheObject<K, V>> values = cacheObjIter();
+        final Iterator<CacheObject<K, V>> values = cacheObjIter();
         CacheObject<K, V> co;
         while (values.hasNext()) {
             co = values.next();
-            if (co.isExpired() == true) {
+            if (co.isExpired()) {
                 values.remove();
                 onRemove(co.key, co.object);
                 count++;
-                continue;
-            }
-
-            // 找出访问最少的对象
-            if (comin == null || co.accessCount.get() < comin.accessCount.get()) {
-                comin = co;
             }
         }
-
-        // 减少所有对象访问量，并清除减少后为0的访问对象
-        if (isFull() && comin != null) {
-            final long minAccessCount = comin.accessCount.get();
-
-            values = cacheObjIter();
-            CacheObject<K, V> co1;
-            while (values.hasNext()) {
-                co1 = values.next();
-                if (co1.accessCount.addAndGet(-minAccessCount) <= 0) {
-                    values.remove();
-                    onRemove(co1.key, co1.object);
-                    count++;
-                }
-            }
-        }
-
         return count;
+    }
+
+    /**
+     * 定时清理
+     *
+     * @param delay 间隔时长，单位毫秒
+     * @return this
+     */
+    public TimedReentrantCache<K, V> schedulePrune(final long delay) {
+        this.pruneJobFuture = GlobalPruneTimer.INSTANCE.schedule(this::prune, delay);
+        return this;
+    }
+
+    /**
+     * 取消定时清理
+     */
+    public void cancelPruneSchedule() {
+        if (null != pruneJobFuture) {
+            pruneJobFuture.cancel(true);
+        }
     }
 
 }
