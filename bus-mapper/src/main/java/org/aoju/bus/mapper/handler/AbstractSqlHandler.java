@@ -27,6 +27,8 @@ package org.aoju.bus.mapper.handler;
 
 import org.aoju.bus.core.lang.Symbol;
 import org.apache.ibatis.mapping.MappedStatement;
+import org.apache.ibatis.plugin.Plugin;
+import org.apache.ibatis.reflection.DefaultReflectorFactory;
 import org.apache.ibatis.reflection.MetaObject;
 import org.apache.ibatis.reflection.SystemMetaObject;
 
@@ -41,7 +43,11 @@ import java.util.concurrent.ConcurrentHashMap;
  * @since Java 17+
  */
 public abstract class AbstractSqlHandler implements SQLHandler {
-
+    /**
+     * 缓存内置的插件对象反射信息
+     */
+    public static final DefaultReflectorFactory DEFAULT_REFLECTOR_FACTORY = new DefaultReflectorFactory();
+    
     public static final String DELEGATE_BOUNDSQL = "delegate.boundSql";
     public static final String DELEGATE_BOUNDSQL_SQL = "delegate.boundSql.sql";
     public static final String DELEGATE_MAPPEDSTATEMENT = "delegate.mappedStatement";
@@ -90,19 +96,30 @@ public abstract class AbstractSqlHandler implements SQLHandler {
         return (MappedStatement) metaObject.getValue(property);
     }
 
+
     /**
-     * 获得真正的处理对象,可能多层代理
-     *
-     * @param <T>    泛型
-     * @param target 对象
-     * @return the object
+     * 获得真正的处理对象,可能多层代理.
      */
-    protected static <T> T realTarget(Object target) {
+    @SuppressWarnings("unchecked")
+    public static <T> T realTarget(Object target) {
         if (Proxy.isProxyClass(target.getClass())) {
-            MetaObject metaObject = SystemMetaObject.forObject(target);
-            return realTarget(metaObject.getValue("h.target"));
+            Plugin plugin = (Plugin) Proxy.getInvocationHandler(target);
+            MetaObject metaObject = getMetaObject(plugin);
+            return realTarget(metaObject.getValue("target"));
         }
         return (T) target;
     }
+
+    /**
+     * 获取对象元数据信息
+     *
+     * @param object 参数
+     * @return 元数据信息
+     * @since 3.5.3
+     */
+    public static MetaObject getMetaObject(Object object) {
+        return MetaObject.forObject(object, SystemMetaObject.DEFAULT_OBJECT_FACTORY, SystemMetaObject.DEFAULT_OBJECT_WRAPPER_FACTORY, DEFAULT_REFLECTOR_FACTORY);
+    }
+
 
 }
