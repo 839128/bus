@@ -25,58 +25,80 @@
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 */
-package org.miaixz.bus.extra.qrcode;
+package org.miaixz.bus.extra.qrcode.render;
 
-import org.miaixz.bus.core.codec.Encoder;
-import org.miaixz.bus.core.xyz.ObjectKit;
-import org.miaixz.bus.core.xyz.StringKit;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 
-import com.google.zxing.MultiFormatWriter;
-import com.google.zxing.WriterException;
+import org.miaixz.bus.core.lang.ansi.AnsiElement;
+import org.miaixz.bus.core.lang.ansi.AnsiEncoder;
+import org.miaixz.bus.core.lang.exception.InternalException;
+import org.miaixz.bus.core.xyz.ColorKit;
+import org.miaixz.bus.extra.qrcode.QrConfig;
+
 import com.google.zxing.common.BitMatrix;
 
 /**
- * 二维码（条形码等）编码器，用于将文本内容转换为二维码
+ * ASCII Art渲染
  *
  * @author Kimi Liu
  * @since Java 17+
  */
-public class QrEncoder implements Encoder<CharSequence, BitMatrix> {
+public class AsciiArtRender implements BitMatrixRender {
 
     private final QrConfig config;
 
     /**
      * 构造
      *
-     * @param config {@link QrConfig}
+     * @param config 二维码配置
      */
-    public QrEncoder(final QrConfig config) {
-        this.config = ObjectKit.defaultIfNull(config, QrConfig::of);
-    }
-
-    /**
-     * 创建QrEncoder
-     *
-     * @param config {@link QrConfig}
-     * @return QrEncoder
-     */
-    public static QrEncoder of(final QrConfig config) {
-        return new QrEncoder(config);
+    public AsciiArtRender(final QrConfig config) {
+        this.config = config;
     }
 
     @Override
-    public BitMatrix encode(final CharSequence content) {
-        final MultiFormatWriter multiFormatWriter = new MultiFormatWriter();
+    public void render(final BitMatrix matrix, final OutputStream out) {
+        render(matrix, new OutputStreamWriter(out, config.getCharset()));
+    }
 
-        final BitMatrix bitMatrix;
+    /**
+     * 渲染SVG
+     *
+     * @param matrix 二维码
+     * @param writer 输出
+     */
+    public void render(final BitMatrix matrix, final Appendable writer) {
+        final int width = matrix.getWidth();
+        final int height = matrix.getHeight();
+
+        final Integer foreColor = config.getForeColor();
+        final AnsiElement foreground = foreColor == null ? null : ColorKit.toAnsiColor(foreColor, true, false);
+        final Integer backColor = config.getBackColor();
+        final AnsiElement background = backColor == null ? null : ColorKit.toAnsiColor(backColor, true, true);
+
         try {
-            bitMatrix = multiFormatWriter.encode(StringKit.toString(content), config.format, config.width,
-                    config.height, config.toHints());
-        } catch (final WriterException e) {
-            throw new QrCodeException(e);
+            for (int i = 0; i <= height; i += 2) {
+                final StringBuilder rowBuilder = new StringBuilder();
+                for (int j = 0; j < width; j++) {
+                    final boolean tp = matrix.get(i, j);
+                    final boolean bt = i + 1 >= height || matrix.get(i + 1, j);
+                    if (tp && bt) {
+                        rowBuilder.append(' ');// '\u0020'
+                    } else if (tp) {
+                        rowBuilder.append('▄');// '\u2584'
+                    } else if (bt) {
+                        rowBuilder.append('▀');// '\u2580'
+                    } else {
+                        rowBuilder.append('█');// '\u2588'
+                    }
+                }
+                writer.append(AnsiEncoder.encode(foreground, background, rowBuilder)).append('\n');
+            }
+        } catch (final IOException e) {
+            throw new InternalException(e);
         }
-
-        return bitMatrix;
     }
 
 }

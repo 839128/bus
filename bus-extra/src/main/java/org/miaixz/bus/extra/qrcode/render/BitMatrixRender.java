@@ -25,46 +25,26 @@
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 */
-package org.miaixz.bus.core.text.escape;
+package org.miaixz.bus.extra.qrcode.render;
 
-import org.miaixz.bus.core.text.replacer.LookupReplacer;
-import org.miaixz.bus.core.text.replacer.ReplacerChain;
+import java.io.OutputStream;
+
+import com.google.zxing.common.BitMatrix;
 
 /**
- * XML的UNESCAPE
+ * BitMatrix渲染接口
  *
  * @author Kimi Liu
  * @since Java 17+
  */
-public class XmlUnescape extends ReplacerChain {
+public interface BitMatrixRender {
 
     /**
-     * 基础反转义符
-     */
-    protected static final String[][] BASIC_UNESCAPE = invert(XmlEscape.BASIC_ESCAPE);
-    private static final long serialVersionUID = -1L;
-
-    /**
-     * 构造
-     */
-    public XmlUnescape() {
-        addChain(new LookupReplacer(BASIC_UNESCAPE));
-        addChain(new NumericEntityUnescaper());
-    }
-
-    /**
-     * 将数组中的0和1位置的值互换，即键值转换
+     * 渲染
      *
-     * @param array String[][] 被转换的数组
-     * @return String[][] 转换后的数组
+     * @param matrix 二维码矩阵
+     * @param out    输出流
      */
-    public static String[][] invert(final String[][] array) {
-        final String[][] newarray = new String[array.length][2];
-        for (int i = 0; i < array.length; i++) {
-            newarray[i][0] = array[i][1];
-            newarray[i][1] = array[i][0];
-        }
-        return newarray;
-    }
+    void render(BitMatrix matrix, OutputStream out);
 
 }
