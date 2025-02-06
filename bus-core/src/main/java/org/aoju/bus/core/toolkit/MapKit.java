@@ -603,16 +603,17 @@ public class MapKit {
             return map;
         }
 
+
         Map<K, V> map2 = ReflectKit.newInstanceIfPossible(map.getClass());
         if (null == map2) {
             map2 = new HashMap<>(map.size(), 1f);
         }
-        if (isEmpty(map)) {
+        if (map.isEmpty()) {
             return map2;
         }
 
         Entry<K, V> modified;
-        for (final Entry<K, V> entry : map.entrySet()) {
+        for (Entry<K, V> entry : map.entrySet()) {
             modified = editor.apply(entry);
             if (null != modified) {
                 map2.put(modified.getKey(), modified.getValue());
@@ -620,6 +621,7 @@ public class MapKit {
         }
         return map2;
     }
+
 
     /**
      * 过滤 过滤过程通过传入的Editor实现来返回需要的元素内容,这个Editor实现可以实现以下功能：
@@ -698,23 +700,11 @@ public class MapKit {
      * @return 互换后的Map
      */
     public static <T> Map<T, T> reverse(final Map<T, T> map) {
-        return edit(map, t -> new Entry<>() {
-
-            @Override
-            public T getKey() {
-                return t.getValue();
-            }
-
-            @Override
-            public T getValue() {
-                return t.getKey();
-            }
-
-            @Override
-            public T setValue(final T value) {
-                throw new UnsupportedOperationException("Unsupported setValue method !");
-            }
-        });
+        Map<T, T> swappedMap = new HashMap<>();
+        for (Map.Entry<T, T> entry : map.entrySet()) {
+            swappedMap.put(entry.getValue(), entry.getKey());
+        }
+        return swappedMap;
     }
 
     /**
