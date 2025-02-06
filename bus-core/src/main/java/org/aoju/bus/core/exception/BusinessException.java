@@ -25,7 +25,7 @@
  ********************************************************************************/
 package org.aoju.bus.core.exception;
 
-import lombok.ToString;
+import java.io.Serial;
 
 /**
  * 自定义异常: 业务异常
@@ -33,9 +33,9 @@ import lombok.ToString;
  * @author Kimi Liu
  * @since Java 17+
  */
-@ToString
 public class BusinessException extends UncheckedException {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     public BusinessException() {
@@ -62,4 +62,10 @@ public class BusinessException extends UncheckedException {
         super(errcode, errmsg);
     }
 
+    @Override
+    public String toString() {
+        return "BusinessException{" + "errcode='" + errcode + '\'' +
+                ", errmsg='" + errmsg + '\'' +
+                '}';
+    }
 }
