@@ -25,57 +25,44 @@
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 */
-package org.miaixz.bus.core.center.date.culture.solar;
+package org.miaixz.bus.core.center.date.culture.cn.sixty;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import org.miaixz.bus.core.center.date.culture.Loops;
-import org.miaixz.bus.core.center.date.culture.en.Quarter;
+import org.miaixz.bus.core.center.date.culture.cn.Direction;
+import org.miaixz.bus.core.center.date.culture.cn.Twenty;
+import org.miaixz.bus.core.center.date.culture.cn.star.nine.NineStar;
 
 /**
- * 公历季度
+ * 干支年
  *
  * @author Kimi Liu
  * @since Java 17+
  */
-public class SolarQuarter extends Loops {
+public class SixtyCycleYear extends Loops {
 
     /**
      * 年
      */
-    protected SolarYear year;
+    protected int year;
 
-    /**
-     * 索引，0-3
-     */
-    protected int index;
-
-    /**
-     * 初始化
-     *
-     * @param year  年
-     * @param index 索引，0-3
-     */
-    public SolarQuarter(int year, int index) {
-        if (index < 0 || index > 3) {
-            throw new IllegalArgumentException(String.format("illegal solar season index: %d", index));
+    public SixtyCycleYear(int year) {
+        if (year < -1 || year > 9999) {
+            throw new IllegalArgumentException(String.format("illegal sixty cycle year: %d", year));
         }
-        this.year = SolarYear.fromYear(year);
-        this.index = index;
-    }
-
-    public static SolarQuarter fromIndex(int year, int index) {
-        return new SolarQuarter(year, index);
+        this.year = year;
     }
 
     /**
-     * 公历年
+     * 从年初始化
      *
-     * @return 公历年
+     * @param year 年，支持-1到9999年
+     * @return 干支年
      */
-    public SolarYear getSolarYear() {
-        return year;
+    public static SixtyCycleYear fromYear(int year) {
+        return new SixtyCycleYear(year);
     }
 
     /**
@@ -84,42 +71,81 @@ public class SolarQuarter extends Loops {
      * @return 年
      */
     public int getYear() {
-        return year.getYear();
+        return year;
     }
 
     /**
-     * 索引
+     * 干支
      *
-     * @return 索引，0-3
+     * @return 干支
      */
-    public int getIndex() {
-        return index;
+    public SixtyCycle getSixtyCycle() {
+        return SixtyCycle.fromIndex(year - 4);
     }
 
     public String getName() {
-        return Quarter.getName(index);
-    }
-
-    @Override
-    public String toString() {
-        return year + getName();
-    }
-
-    public SolarQuarter next(int n) {
-        int i = index + n;
-        return fromIndex((getYear() * 4 + i) / 4, indexOf(i, 4));
+        return String.format("%s年", getSixtyCycle());
     }
 
     /**
-     * 月份列表
+     * 运
      *
-     * @return 月份列表，1季度有3个月。
+     * @return 运
      */
-    public List<SolarMonth> getMonths() {
-        List<SolarMonth> l = new ArrayList<>(3);
-        int y = getYear();
-        for (int i = 1; i < 4; i++) {
-            l.add(SolarMonth.fromYm(y, index * 3 + i));
+    public Twenty getTwenty() {
+        return Twenty.fromIndex((int) Math.floor((year - 1864) / 20D));
+    }
+
+    /**
+     * 九星
+     *
+     * @return 九星
+     */
+    public NineStar getNineStar() {
+        return NineStar.fromIndex(63 + getTwenty().getSixty().getIndex() * 3 - getSixtyCycle().getIndex());
+    }
+
+    /**
+     * 太岁方位
+     *
+     * @return 方位
+     */
+    public Direction getJupiterDirection() {
+        return Direction.fromIndex(
+                new int[] { 0, 7, 7, 2, 3, 3, 8, 1, 1, 6, 0, 0 }[getSixtyCycle().getEarthBranch().getIndex()]);
+    }
+
+    /**
+     * 推移
+     *
+     * @param n 推移年数
+     * @return 干支年
+     */
+    public SixtyCycleYear next(int n) {
+        return fromYear(year + n);
+    }
+
+    /**
+     * 首月（依据五虎遁和正月起寅的规律）
+     *
+     * @return 干支月
+     */
+    public SixtyCycleMonth getFirstMonth() {
+        HeavenStem h = HeavenStem.fromIndex((getSixtyCycle().getHeavenStem().getIndex() + 1) * 2);
+        return new SixtyCycleMonth(this, SixtyCycle.fromName(h.getName() + "寅"));
+    }
+
+    /**
+     * 干支月列表
+     *
+     * @return 干支月列表
+     */
+    public List<SixtyCycleMonth> getMonths() {
+        List<SixtyCycleMonth> l = new ArrayList<>();
+        SixtyCycleMonth m = getFirstMonth();
+        l.add(m);
+        for (int i = 1; i < 12; i++) {
+            l.add(m.next(i));
         }
         return l;
     }
