@@ -27,81 +27,86 @@
 */
 package org.miaixz.bus.spring.web;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
-import com.fasterxml.jackson.databind.jsontype.PolymorphicTypeValidator;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
-import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
-import org.miaixz.bus.core.lang.Fields;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonParseException;
+import com.google.gson.TypeAdapter;
+import com.google.gson.reflect.TypeToken;
 import org.miaixz.bus.logger.Logger;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConverter;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.http.converter.json.GsonHttpMessageConverter;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 /**
- * Jackson JSON 框架的配置器，与 Spring MVC 集成。支持自定义日期格式和 Java 8/11 时间 API（LocalDateTime）。 支持 autoType 配置，限制反序列化到指定包前缀的类。
+ * Gson JSON 转换器配置器，与 Spring MVC 集成。 支持 autoType 配置，限制反序列化到指定包前缀的类。
  *
  * @author Kimi Liu
  * @since Java 17+
  */
 @Component
-@ConditionalOnClass({ObjectMapper.class})
-public class JacksonConverterConfigurer implements JsonConverterConfigurer {
+@ConditionalOnClass({com.google.gson.Gson.class})
+public class GsonConverterConfigurer implements JsonConverterConfigurer {
 
     private String autoType;
 
     @Override
     public String name() {
-        return "Jackson";
+        return "Gson";
     }
 
     @Override
     public int order() {
-        return 0; // 最高优先级
+        return 2; // 最低优先级
     }
 
     @Override
     public void configure(List<HttpMessageConverter<?>> converters) {
-        Logger.debug("Configuring MappingJackson2HttpMessageConverter with autoType: {}", autoType);
-        // 配置 ObjectMapper，启用非空序列化和自定义日期处理
-        ObjectMapper jacksonMapper = new ObjectMapper().setSerializationInclusion(JsonInclude.Include.NON_NULL)
-                .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        Logger.debug("Configuring GsonHttpMessageConverter with autoType: {}", autoType);
 
-        // 配置 autoType 限制
+        // 配置 Gson，添加 autoType 限制
+        GsonBuilder gsonBuilder = new GsonBuilder();
         if (autoType != null && !autoType.isEmpty()) {
-            PolymorphicTypeValidator ptv = BasicPolymorphicTypeValidator.builder().allowIfBaseType(autoType).build();
-            jacksonMapper.activateDefaultTyping(ptv, ObjectMapper.DefaultTyping.NON_FINAL);
-            Logger.debug("Jackson autoType enabled for package prefix: {}", autoType);
+            gsonBuilder.registerTypeAdapterFactory(new AutoTypeAdapterFactory(autoType));
+            Logger.debug("Gson autoType enabled for package prefix: {}", autoType);
         }
 
-        // 添加对 Java 时间 API（LocalDateTime）的支持，使用自定义格式
-        JavaTimeModule javaTimeModule = new JavaTimeModule();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(Fields.NORM_DATETIME);
-        javaTimeModule.addSerializer(LocalDateTime.class, new LocalDateTimeSerializer(formatter));
-        javaTimeModule.addDeserializer(LocalDateTime.class, new LocalDateTimeDeserializer(formatter));
-        jacksonMapper.registerModule(javaTimeModule);
-
-        // 创建并配置 Jackson 转换器
-        MappingJackson2HttpMessageConverter jacksonConverter = new MappingJackson2HttpMessageConverter();
-        jacksonConverter.setObjectMapper(jacksonMapper);
-        jacksonConverter.setSupportedMediaTypes(
-                List.of(MediaType.APPLICATION_JSON, new MediaType("application", "json+jackson")));
-        converters.add(order(), jacksonConverter);
-        Logger.debug("Jackson converter configured with media types: {}", jacksonConverter.getSupportedMediaTypes());
+        Gson gson = gsonBuilder.create();
+        GsonHttpMessageConverter converter = new GsonHttpMessageConverter();
+        converter.setGson(gson);
+        converter
+                .setSupportedMediaTypes(List.of(MediaType.APPLICATION_JSON, new MediaType("application", "json+gson")));
+        converters.add(order(), converter);
+        Logger.debug("Gson converter configured with media types: {}", converter.getSupportedMediaTypes());
     }
 
     @Override
     public void autoType(String autoType) {
         this.autoType = autoType;
+    }
+
+    /**
+     * 自定义 TypeAdapterFactory，限制反序列化类型到 autoType 包前缀。
+     */
+    private static class AutoTypeAdapterFactory implements com.google.gson.TypeAdapterFactory {
+        private final String autoTypePrefix;
+
+        public AutoTypeAdapterFactory(String autoTypePrefix) {
+            this.autoTypePrefix = autoTypePrefix;
+        }
+
+        @Override
+        public <T> TypeAdapter<T> create(Gson gson, TypeToken<T> type) {
+            Class<?> rawType = type.getRawType();
+            if (autoTypePrefix != null && !rawType.getName().startsWith(autoTypePrefix)) {
+                throw new JsonParseException("Type not allowed: " + rawType.getName()
+                        + ", must start with package prefix: " + autoTypePrefix);
+            }
+            return null; // Delegate to default adapter
+        }
     }
 
 }
