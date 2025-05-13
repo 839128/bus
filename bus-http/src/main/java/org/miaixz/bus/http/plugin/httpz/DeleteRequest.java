@@ -3,7 +3,7 @@
  ~                                                                               ~
  ~ The MIT License (MIT)                                                         ~
  ~                                                                               ~
- ~ Copyright (c) 2015-2025 miaixz.org OSHI and other contributors.               ~
+ ~ Copyright (c) 2015-2025 miaixz.org and other contributors.                    ~
  ~                                                                               ~
  ~ Permission is hereby granted, free of charge, to any person obtaining a copy  ~
  ~ of this software and associated documentation files (the "Software"), to deal ~
@@ -25,45 +25,53 @@
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 */
-package org.miaixz.bus.health.linux;
+package org.miaixz.bus.http.plugin.httpz;
 
-import java.io.File;
+import java.util.Map;
 
-import org.miaixz.bus.core.lang.Normal;
-import org.miaixz.bus.core.lang.annotation.ThreadSafe;
-import org.miaixz.bus.core.lang.exception.NotFoundException;
-import org.miaixz.bus.health.Config;
+import org.miaixz.bus.http.Request;
+import org.miaixz.bus.http.bodys.RequestBody;
 
 /**
- * Provides constants for paths in the {@code /dev} filesystem on Linux. If the user desires to configure a custom
- * {@code /dev} path, it must be declared in the configuration file or updated in the {@link Config} class prior to
- * initializing this class.
+ * DELETE 请求处理类，封装 DELETE 请求的参数和配置。 DELETE 请求用于删除指定资源，不包含请求体。
  *
  * @author Kimi Liu
  * @since Java 17+
  */
-@ThreadSafe
-public final class DevPath {
+public class DeleteRequest extends HttpRequest {
 
     /**
-     * The /dev filesystem location.
+     * 构造函数，初始化 DELETE 请求的参数。
+     *
+     * @param url     请求的 URL
+     * @param tag     请求的标签，用于取消请求
+     * @param params  查询参数
+     * @param headers 请求头
+     * @param id      请求的唯一标识
      */
-    public static final String DEV = queryDevConfig() + "/";
+    public DeleteRequest(String url, Object tag, Map<String, String> params, Map<String, String> headers, String id) {
+        super(url, tag, params, headers, null, null, null, id);
+    }
 
-    public static final String DISK_BY_UUID = DEV + "disk/by-uuid";
-    public static final String DM = DEV + "dm";
-    public static final String LOOP = DEV + "loop";
-    public static final String MAPPER = DEV + "mapper/";
-    public static final String RAM = DEV + "ram";
+    /**
+     * 构建 DELETE 请求的请求体。 DELETE 请求无请求体，返回 null。
+     *
+     * @return 始终返回 null
+     */
+    @Override
+    protected RequestBody buildRequestBody() {
+        return null;
+    }
 
-    private static String queryDevConfig() {
-        String devPath = Config.get(Config._UTIL_DEV_PATH, "/dev");
-        // Ensure prefix begins with path separator, but doesn't end with one
-        devPath = '/' + devPath.replaceAll("/$|^/", Normal.EMPTY);
-        if (!new File(devPath).exists()) {
-            throw new NotFoundException(Config._UTIL_DEV_PATH, "The path does not exist");
-        }
-        return devPath;
+    /**
+     * 构建 DELETE 请求对象。
+     *
+     * @param requestBody 请求体（DELETE 请求为 null）
+     * @return 构建完成的 Request 对象
+     */
+    @Override
+    protected Request buildRequest(RequestBody requestBody) {
+        return builder.delete().build(); // 使用 DELETE 方法构建请求
     }
 
 }

@@ -3,7 +3,7 @@
  ~                                                                               ~
  ~ The MIT License (MIT)                                                         ~
  ~                                                                               ~
- ~ Copyright (c) 2015-2025 miaixz.org OSHI and other contributors.               ~
+ ~ Copyright (c) 2015-2025 miaixz.org and other contributors.                    ~
  ~                                                                               ~
  ~ Permission is hereby granted, free of charge, to any person obtaining a copy  ~
  ~ of this software and associated documentation files (the "Software"), to deal ~
@@ -25,45 +25,24 @@
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 */
-package org.miaixz.bus.health.linux;
+package org.miaixz.bus.starter.annotation;
 
-import java.io.File;
+import java.lang.annotation.*;
 
-import org.miaixz.bus.core.lang.Normal;
-import org.miaixz.bus.core.lang.annotation.ThreadSafe;
-import org.miaixz.bus.core.lang.exception.NotFoundException;
-import org.miaixz.bus.health.Config;
+import org.miaixz.bus.starter.health.HealthConfiguration;
+import org.springframework.context.annotation.Import;
 
 /**
- * Provides constants for paths in the {@code /dev} filesystem on Linux. If the user desires to configure a custom
- * {@code /dev} path, it must be declared in the configuration file or updated in the {@link Config} class prior to
- * initializing this class.
+ * 开启健康检查
  *
  * @author Kimi Liu
  * @since Java 17+
  */
-@ThreadSafe
-public final class DevPath {
-
-    /**
-     * The /dev filesystem location.
-     */
-    public static final String DEV = queryDevConfig() + "/";
-
-    public static final String DISK_BY_UUID = DEV + "disk/by-uuid";
-    public static final String DM = DEV + "dm";
-    public static final String LOOP = DEV + "loop";
-    public static final String MAPPER = DEV + "mapper/";
-    public static final String RAM = DEV + "ram";
-
-    private static String queryDevConfig() {
-        String devPath = Config.get(Config._UTIL_DEV_PATH, "/dev");
-        // Ensure prefix begins with path separator, but doesn't end with one
-        devPath = '/' + devPath.replaceAll("/$|^/", Normal.EMPTY);
-        if (!new File(devPath).exists()) {
-            throw new NotFoundException(Config._UTIL_DEV_PATH, "The path does not exist");
-        }
-        return devPath;
-    }
+@Inherited
+@Documented
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+@Import({ HealthConfiguration.class })
+public @interface EnableHealth {
 
 }
