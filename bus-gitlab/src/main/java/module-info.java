@@ -3,7 +3,7 @@
  ~                                                                               ~
  ~ The MIT License (MIT)                                                         ~
  ~                                                                               ~
- ~ Copyright (c) 2015-2025 miaixz.org mybatis.io and other contributors.         ~
+ ~ Copyright (c) 2015-2025 miaixz.org and other contributors.                    ~
  ~                                                                               ~
  ~ Permission is hereby granted, free of charge, to any person obtaining a copy  ~
  ~ of this software and associated documentation files (the "Software"), to deal ~
@@ -25,58 +25,30 @@
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 */
-package org.miaixz.bus.pager.cache;
-
-import java.lang.reflect.Constructor;
-import java.util.Properties;
-
-import org.miaixz.bus.cache.CacheX;
-import org.miaixz.bus.core.lang.exception.PageException;
-import org.miaixz.bus.core.xyz.StringKit;
-import org.miaixz.bus.pager.Property;
-
 /**
- * CacheFactory
- *
+ * bus.gitlab
+ * 
  * @author Kimi Liu
  * @since Java 17+
  */
-public abstract class CacheFactory {
+module bus.gitlab {
 
-    /**
-     * 创建 SQL 缓存
-     *
-     * @param <K>           对象
-     * @param <V>           对象
-     * @param sqlCacheClass 对象
-     * @param prefix        前缀
-     * @param properties    属性
-     * @return the object
-     */
-    public static <K, V> CacheX<K, V> createCache(String sqlCacheClass, String prefix, Properties properties) {
-        if (StringKit.isEmpty(sqlCacheClass)) {
-            try {
-                return new GuavaCache<>(properties, prefix);
-            } catch (Throwable t) {
-                return new SimpleCache<>(properties, prefix);
-            }
-        } else {
-            try {
-                Class<? extends CacheX> clazz = (Class<? extends CacheX>) Class.forName(sqlCacheClass);
-                try {
-                    Constructor<? extends CacheX> constructor = clazz.getConstructor(Properties.class, String.class);
-                    return constructor.newInstance(properties, prefix);
-                } catch (Exception e) {
-                    CacheX cache = clazz.newInstance();
-                    if (cache instanceof Property) {
-                        ((Property) cache).setProperties(properties);
-                    }
-                    return cache;
-                }
-            } catch (Throwable t) {
-                throw new PageException("Created Sql Cache [" + sqlCacheClass + "] Error", t);
-            }
-        }
-    }
+    requires java.logging;
+
+    requires static jakarta.ws.rs;
+    requires static jakarta.servlet;
+    requires static jakarta.annotation;
+    requires static jersey.client;
+    requires static jersey.media.multipart;
+    requires static jersey.common;
+    requires static com.fasterxml.jackson.core;
+    requires static com.fasterxml.jackson.databind;
+
+    exports org.miaixz.bus.gitlab;
+    exports org.miaixz.bus.gitlab.hooks.system;
+    exports org.miaixz.bus.gitlab.hooks.web;
+    exports org.miaixz.bus.gitlab.models;
+    exports org.miaixz.bus.gitlab.services;
+    exports org.miaixz.bus.gitlab.support;
 
 }
