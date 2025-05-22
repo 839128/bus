@@ -3,7 +3,7 @@
  ~                                                                               ~
  ~ The MIT License (MIT)                                                         ~
  ~                                                                               ~
- ~ Copyright (c) 2015-2025 miaixz.org mybatis.io and other contributors.         ~
+ ~ Copyright (c) 2015-2025 miaixz.org and other contributors.                    ~
  ~                                                                               ~
  ~ Permission is hereby granted, free of charge, to any person obtaining a copy  ~
  ~ of this software and associated documentation files (the "Software"), to deal ~
@@ -25,40 +25,31 @@
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 */
-package org.miaixz.bus.mapper.builder;
+package org.miaixz.bus.mapper;
 
-import org.miaixz.bus.mapper.ORDER;
-import org.miaixz.bus.mapper.parsing.TableMeta;
+import org.miaixz.bus.core.lang.loader.spi.NormalSpiLoader;
+import org.miaixz.bus.mapper.builder.ColumnSchemaBuilder;
+import org.miaixz.bus.mapper.builder.ColumnSchemaChain;
+import org.miaixz.bus.mapper.builder.TableSchemaBuilder;
+import org.miaixz.bus.mapper.builder.TableSchemaChain;
 
 /**
- * 实体类信息工厂接口，可通过 SPI 加入处理链以扩展表信息创建逻辑
- *
+ * 工厂实例持有类，管理表工厂和列工厂的处理链
+ * 
  * @author Kimi Liu
  * @since Java 17+
  */
-public interface TableSchemaBuilder extends ORDER {
+public class Holder {
 
     /**
-     * 根据实体类创建表信息，仅返回表信息，不处理字段，可使用自定义注解实现
-     *
-     * @param entityClass 实体类类型
-     * @param chain       工厂链，用于调用下一个处理逻辑
-     * @return 实体类表信息
+     * 表工厂处理链，通过 SPI 加载
      */
-    TableMeta createTable(Class<?> entityClass, Chain chain);
-
+    public static final TableSchemaBuilder.Chain TABLE_SCHEMA_CHAIN = new TableSchemaChain(
+            NormalSpiLoader.loadList(false, TableSchemaBuilder.class));
     /**
-     * 工厂链接口，用于链式调用表信息创建逻辑
+     * 列工厂处理链，通过 SPI 加载
      */
-    interface Chain {
-
-        /**
-         * 根据实体类创建表信息，仅返回表信息，不处理字段
-         *
-         * @param entityClass 实体类类型
-         * @return 实体类表信息
-         */
-        TableMeta createTable(Class<?> entityClass);
-    }
+    public static final ColumnSchemaBuilder.Chain COLUMN_SCHEMA_CHAIN = new ColumnSchemaChain(
+            NormalSpiLoader.loadList(false, ColumnSchemaBuilder.class));
 
 }

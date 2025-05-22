@@ -25,58 +25,91 @@
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 */
-package org.miaixz.bus.mapper.builder;
+package org.miaixz.bus.mapper;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Properties;
 
-import org.miaixz.bus.mapper.parsing.TableMeta;
+import org.miaixz.bus.core.convert.Convert;
+import org.miaixz.bus.core.xyz.BooleanKit;
 
 /**
- * 支持缓存实体类信息的表工厂
+ * 配置属性管理类，用于加载和获取配置属性
  *
  * @author Kimi Liu
  * @since Java 17+
  */
-public class CachingTableSchemaBuilder implements TableSchemaBuilder {
+public class Context {
 
     /**
-     * 缓存实体类信息，键为实体类，值为对应的 MapperTable
+     * 全局唯一实例，静态初始化
      */
-    private final Map<Class<?>, TableMeta> ENTITY_CLASS_MAP = new ConcurrentHashMap<>();
+    public static final Context INSTANCE = new Context();
 
     /**
-     * 创建实体表信息，支持缓存以避免重复创建
-     *
-     * @param entityClass 实体类
-     * @param chain       表工厂链
-     * @return 实体表信息，失败时返回 null
+     * 存储配置属性的Properties对象
      */
-    @Override
-    public TableMeta createTable(Class<?> entityClass, Chain chain) {
-        if (ENTITY_CLASS_MAP.get(entityClass) == null) {
-            synchronized (entityClass) {
-                if (ENTITY_CLASS_MAP.get(entityClass) == null) {
-                    TableMeta entityTable = chain.createTable(entityClass);
-                    if (entityTable != null) {
-                        ENTITY_CLASS_MAP.put(entityClass, entityTable);
-                    } else {
-                        return null;
-                    }
-                }
-            }
-        }
-        return ENTITY_CLASS_MAP.get(entityClass);
+    private final Properties properties = new Properties();
+
+    /**
+     * 私有构造方法，防止外部实例化
+     */
+    private Context() {
     }
 
     /**
-     * 获取工厂的优先级顺序
-     *
-     * @return 优先级值，Integer.MAX_VALUE 表示最高优先级
+     * 设置配置属性，将外部Properties对象合并到内部
+     * 
+     * @param properties 外部配置属性
      */
-    @Override
-    public int order() {
-        return Integer.MAX_VALUE;
+    public void setProperties(Properties properties) {
+        this.properties.putAll(properties);
+    }
+
+    /**
+     * 获取指定键的属性值
+     * 
+     * @param key 属性键
+     * @return 属性值，若不存在返回null
+     */
+    public String getProperty(String key) {
+        return properties.getProperty(key);
+    }
+
+    /**
+     * 获取指定键的属性值，若不存在返回默认值
+     * 
+     * @param key          属性键
+     * @param defaultValue 默认值
+     * @return 属性值或默认值
+     */
+    public String getProperty(String key, String defaultValue) {
+        return this.properties.getProperty(key, defaultValue);
+    }
+
+    /**
+     * 获取指定键的整型属性值，若不存在或无法转换返回默认值
+     * 
+     * @param key          属性键
+     * @param defaultValue 默认值
+     * @return 整型属性值或默认值
+     */
+    public int getInt(String key, int defaultValue) {
+        return Convert.toInt(getProperty(key), defaultValue);
+    }
+
+    /**
+     * 获取指定键的布尔型属性值，若不存在返回默认值
+     * 
+     * @param key          属性键
+     * @param defaultValue 默认值
+     * @return 布尔型属性值或默认值
+     */
+    public boolean getBoolean(String key, boolean defaultValue) {
+        final String value = getProperty(key);
+        if (value == null) {
+            return defaultValue;
+        }
+        return BooleanKit.toBoolean(value);
     }
 
 }

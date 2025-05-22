@@ -3,7 +3,7 @@
  ~                                                                               ~
  ~ The MIT License (MIT)                                                         ~
  ~                                                                               ~
- ~ Copyright (c) 2015-2025 miaixz.org mybatis.io and other contributors.         ~
+ ~ Copyright (c) 2015-2025 miaixz.org and other contributors.                    ~
  ~                                                                               ~
  ~ Permission is hereby granted, free of charge, to any person obtaining a copy  ~
  ~ of this software and associated documentation files (the "Software"), to deal ~
@@ -25,40 +25,34 @@
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 */
-package org.miaixz.bus.mapper.builder;
-
-import org.miaixz.bus.mapper.ORDER;
-import org.miaixz.bus.mapper.parsing.TableMeta;
+package org.miaixz.bus.mapper.parsing;
 
 /**
- * 实体类信息工厂接口，可通过 SPI 加入处理链以扩展表信息创建逻辑
+ * 支持简便写法的 SQL 脚本接口
  *
  * @author Kimi Liu
  * @since Java 17+
  */
-public interface TableSchemaBuilder extends ORDER {
+public interface EasySqlScript extends SqlScript {
 
     /**
-     * 根据实体类创建表信息，仅返回表信息，不处理字段，可使用自定义注解实现
+     * 默认实现，委托给 getSql(entity, util)
      *
-     * @param entityClass 实体类类型
-     * @param chain       工厂链，用于调用下一个处理逻辑
-     * @return 实体类表信息
+     * @param entity 实体类信息
+     * @return XML SQL 脚本
      */
-    TableMeta createTable(Class<?> entityClass, Chain chain);
+    @Override
+    default String getSql(TableMeta entity) {
+        return getSql(entity, this);
+    }
 
     /**
-     * 工厂链接口，用于链式调用表信息创建逻辑
+     * 生成对应的 SQL，支持动态标签
+     *
+     * @param entity 实体类信息
+     * @param util   当前对象的引用，便于在 lambda 中使用当前对象的方法
+     * @return XML SQL 脚本
      */
-    interface Chain {
-
-        /**
-         * 根据实体类创建表信息，仅返回表信息，不处理字段
-         *
-         * @param entityClass 实体类类型
-         * @return 实体类表信息
-         */
-        TableMeta createTable(Class<?> entityClass);
-    }
+    String getSql(TableMeta entity, SqlScript util);
 
 }
