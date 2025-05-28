@@ -25,68 +25,109 @@
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 */
-package org.miaixz.bus.storage;
+package org.miaixz.bus.mapper.handler;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.experimental.SuperBuilder;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.ibatis.mapping.BoundSql;
+import org.apache.ibatis.mapping.ParameterMapping;
+import org.apache.ibatis.reflection.MetaObject;
 
 /**
+ * BoundSql的封装类，用于操作MyBatis的BoundSql对象
+ *
  * @author Kimi Liu
  * @since Java 17+
  */
-@Getter
-@Setter
-@SuperBuilder
-@NoArgsConstructor
-@AllArgsConstructor
-public class Context {
+public class MapperBoundSql {
 
     /**
-     * URL前缀
+     * BoundSql的反射元对象
      */
-    private String prefix;
+    private final MetaObject boundSql;
+
     /**
-     * 容器名称
+     * 原始BoundSql对象
      */
-    private String bucket;
+    private final BoundSql delegate;
+
     /**
-     * 服务端点
+     * 构造函数，初始化MapperBoundSql
+     * 
+     * @param boundSql 原始BoundSql对象
      */
-    private String endpoint;
+    MapperBoundSql(BoundSql boundSql) {
+        this.delegate = boundSql;
+        this.boundSql = AbstractSqlHandler.getMetaObject(boundSql);
+    }
+
     /**
-     * 访问key
+     * 获取SQL语句
+     * 
+     * @return SQL语句字符串
      */
-    private String accessKey;
+    public String sql() {
+        return delegate.getSql();
+    }
+
     /**
-     * 访问秘钥
+     * 设置SQL语句
+     * 
+     * @param sql 要设置的SQL语句
      */
-    private String secretKey;
+    public void sql(String sql) {
+        boundSql.setValue("sql", sql);
+    }
+
     /**
-     * 存储区域
+     * 获取参数映射列表
+     * 
+     * @return 参数映射列表的副本
      */
-    private String region;
+    public List<ParameterMapping> parameterMappings() {
+        List<ParameterMapping> parameterMappings = delegate.getParameterMappings();
+        return new ArrayList<>(parameterMappings);
+    }
+
     /**
-     * 是否私有
+     * 设置参数映射列表
+     * 
+     * @param parameterMappings 要设置的参数映射列表
      */
-    private boolean secure;
+    public void parameterMappings(List<ParameterMapping> parameterMappings) {
+        boundSql.setValue("parameterMappings", Collections.unmodifiableList(parameterMappings));
+    }
+
     /**
-     * 路径样式
+     * 获取参数对象
+     * 
+     * @return 参数对象
      */
-    private boolean pathStyle = true;
+    public Object parameterObject() {
+        return get("parameterObject");
+    }
+
     /**
-     * 连接超时
+     * 获取附加参数映射
+     * 
+     * @return 附加参数的Map
      */
-    private long connectTimeout;
+    public Map<String, Object> additionalParameters() {
+        return get("additionalParameters");
+    }
+
     /**
-     * 写入超时
+     * 通用获取属性方法
+     * 
+     * @param property 属性名称
+     * @return 属性值
+     * @param <T> 返回值类型
      */
-    private long writeTimeout;
-    /**
-     * 读取超时
-     */
-    private long readTimeout;
+    private <T> T get(String property) {
+        return (T) boundSql.getValue(property);
+    }
 
 }
