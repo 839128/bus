@@ -134,6 +134,7 @@ public class JdbcConfiguration {
         try {
             return bind((Class<? extends DataSource>) Class.forName(type), map);
         } catch (Exception e) {
+            Logger.error(e,e.getMessage());
             throw new IllegalArgumentException("Cannot resolve class with type: " + type);
         }
     }

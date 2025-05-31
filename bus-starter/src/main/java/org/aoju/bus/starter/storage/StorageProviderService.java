@@ -82,8 +82,8 @@ public class StorageProviderService {
         }
         if (Registry.ALIYUN.equals(type)) {
             return new AliYunOssProvider(context);
-        } else if (Registry.BAIDU.equals(type)) {
-            return new BaiduYunBosProvider(context);
+//        } else if (Registry.BAIDU.equals(type)) {
+//            return new BaiduYunBosProvider(context);
         } else if (Registry.HUAWEI.equals(type)) {
             return new HuaweiObsProvider(context);
         } else if (Registry.JD.equals(type)) {

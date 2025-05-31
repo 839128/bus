@@ -89,7 +89,7 @@ public class SensitiveStatementHandler extends AbstractSqlHandler implements Int
             return invocation.proceed();
         }
 
-        if (this.debug) {
+        if (!this.debug) {
             Sensitive sensitive = null != params ? params.getClass().getAnnotation(Sensitive.class) : null;
             if (ObjectKit.isNotEmpty(sensitive)) {
                 handleParameters(sensitive, mappedStatement.getConfiguration(), boundSql, params, commandType);

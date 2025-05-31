@@ -80,7 +80,7 @@ public class ExplainSqlHandler extends AbstractSqlParserHandler implements Inter
                                 sqlStringBuilder.append(this.processParser(statement));
                             }
                         }
-                        if (sqlStringBuilder.length() > 0) {
+                        if (!sqlStringBuilder.isEmpty()) {
                             sql = sqlStringBuilder.toString();
                             sqlChangedFlag = true;
                         }

@@ -80,7 +80,7 @@ public class SensitiveResultSetHandler extends AbstractSqlHandler implements Int
             return results;
         }
 
-        if (this.debug) {
+        if (!this.debug) {
             final ResultSetHandler statementHandler = realTarget(invocation.getTarget());
             final MetaObject metaObject = SystemMetaObject.forObject(statementHandler);
             final MappedStatement mappedStatement = getMappedStatement(metaObject, MAPPEDSTATEMENT);

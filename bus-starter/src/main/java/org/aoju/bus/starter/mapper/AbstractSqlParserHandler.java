@@ -73,7 +73,7 @@ public abstract class AbstractSqlParserHandler extends AbstractSqlHandler {
                         sqlStringBuilder.append(this.processParser(statement));
                     }
                 }
-                if (sqlStringBuilder.length() > 0) {
+                if (!sqlStringBuilder.isEmpty()) {
                     return sqlStringBuilder.toString();
                 }
             } catch (JSQLParserException e) {
@@ -99,9 +99,9 @@ public abstract class AbstractSqlParserHandler extends AbstractSqlHandler {
         } else if (statement instanceof Delete) {
             this.processDelete((Delete) statement);
         }
-        if (Logger.isDebug()) {
-            Logger.debug("Parser SQL: " + statement.toString());
-        }
+//        if (Logger.isDebug()) {
+//            Logger.debug("Parser SQL: " + statement.toString());
+//        }
         return statement.toString();
     }
 
