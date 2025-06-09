@@ -25,40 +25,29 @@
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 */
-package org.miaixz.bus.starter.auth;
+package org.miaixz.bus.pager.handler;
 
-import org.miaixz.bus.cache.metric.ExtendCache;
-import org.miaixz.bus.auth.cache.AuthCache;
-import org.miaixz.bus.spring.GeniusBuilder;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.annotation.Bean;
-
-import jakarta.annotation.Resource;
+import net.sf.jsqlparser.expression.Expression;
+import net.sf.jsqlparser.schema.Table;
 
 /**
- * 授权配置
+ * 数据权限提供者接口 定义数据权限SQL片段的生成逻辑
  *
  * @author Kimi Liu
  * @since Java 17+
  */
-@EnableConfigurationProperties(value = { AuthProperties.class })
-public class AuthConfiguration {
+public interface PermissionsProvider {
 
-    @Resource
-    AuthProperties properties;
-
-    @Bean
-    public AuthProviderService authProviderFactory(ExtendCache extendCache) {
-        return new AuthProviderService(this.properties, extendCache);
-    }
-
-    @Bean
-    @ConditionalOnMissingBean(ExtendCache.class)
-    @ConditionalOnProperty(name = GeniusBuilder.AUTH + ".cache.type", havingValue = "default", matchIfMissing = true)
-    public ExtendCache authCache() {
-        return AuthCache.INSTANCE;
+    /**
+     * 获取数据权限SQL片段
+     *
+     * @param table             数据库表信息，包含表名和别名
+     * @param where             原有WHERE条件
+     * @param mappedStatementId MyBatis MappedStatement ID，用于判断具体执行方法
+     * @return JSqlParser条件表达式，拼接在原有WHERE条件后，不覆盖原有表达式
+     */
+    default Expression getSqlSegment(final Table table, final Expression where, final String mappedStatementId) {
+        return where;
     }
 
 }
