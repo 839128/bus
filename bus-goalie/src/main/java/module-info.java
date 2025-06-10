@@ -37,31 +37,31 @@ module bus.goalie {
     requires bus.crypto;
     requires bus.extra;
     requires bus.http;
-
-    requires static lombok;
-    requires static jakarta.annotation;
-    requires static jakarta.servlet;
-    requires static spring.core;
-    requires static spring.beans;
-    requires static spring.web;
-    requires static spring.webmvc;
-    requires static spring.webflux;
-    requires static spring.boot;
-    requires static spring.boot.autoconfigure;
-    requires static reactor.core;
-    requires static reactor.netty.http;
-    requires static reactor.netty.core;
-    requires static io.netty.handler;
-    requires static org.reactivestreams;
-    requires static com.google.common;
     requires bus.logger;
+
+    requires lombok;
+    requires jakarta.annotation;
+    requires jakarta.servlet;
+    requires spring.core;
+    requires spring.beans;
+    requires spring.web;
+    requires spring.webmvc;
+    requires spring.webflux;
+    requires spring.boot;
+    requires spring.boot.autoconfigure;
+    requires reactor.core;
+    requires reactor.netty.http;
+    requires reactor.netty.core;
+    requires io.netty.handler;
+    requires org.reactivestreams;
+    requires com.google.common;
 
     exports org.miaixz.bus.goalie;
     exports org.miaixz.bus.goalie.annotation;
     exports org.miaixz.bus.goalie.filter;
     exports org.miaixz.bus.goalie.handler;
-    exports org.miaixz.bus.goalie.metric;
+    exports org.miaixz.bus.goalie.magic;
+    exports org.miaixz.bus.goalie.provider;
     exports org.miaixz.bus.goalie.registry;
-    exports org.miaixz.bus.goalie.support;
 
 }

@@ -27,6 +27,8 @@
 */
 package org.miaixz.bus.extra.nlp.provider.hanlp;
 
+import java.io.Serial;
+
 import org.miaixz.bus.extra.nlp.NLPWord;
 
 import com.hankcs.hanlp.seg.common.Term;
@@ -39,7 +41,8 @@ import com.hankcs.hanlp.seg.common.Term;
  */
 public class HanLPWord implements NLPWord {
 
-    private static final long serialVersionUID = -1L;
+    @Serial
+    private static final long serialVersionUID = 2852285886718L;
 
     private final Term term;
 

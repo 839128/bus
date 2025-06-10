@@ -31,10 +31,12 @@ import java.io.Serializable;
 import java.util.Date;
 
 import org.miaixz.bus.gitlab.support.JacksonJson;
+import java.io.Serial;
 
 public class RelatedEpicLink implements Serializable {
 
-    private static final long serialVersionUID = -1L;
+    @Serial
+    private static final long serialVersionUID = 2852279222688L;
 
     private Long id;
     private EpicInLink sourceEpic;

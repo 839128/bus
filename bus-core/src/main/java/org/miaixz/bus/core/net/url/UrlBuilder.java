@@ -27,6 +27,7 @@
 */
 package org.miaixz.bus.core.net.url;
 
+import java.io.Serial;
 import java.net.*;
 
 import org.miaixz.bus.core.Builder;
@@ -53,7 +54,8 @@ import org.miaixz.bus.core.xyz.UrlKit;
  */
 public final class UrlBuilder implements Builder<String> {
 
-    private static final long serialVersionUID = -1L;
+    @Serial
+    private static final long serialVersionUID = 2852231355809L;
 
     /**
      * 协议，例如http
@@ -492,7 +494,7 @@ public final class UrlBuilder implements Builder<String> {
         if (StringKit.isEmpty(fragment)) {
             this.fragment = null;
         }
-        this.fragment = StringKit.removePrefix(fragment, Symbol.SHAPE);
+        this.fragment = StringKit.removePrefix(fragment, Symbol.HASH);
         return this;
     }
 
@@ -564,7 +566,7 @@ public final class UrlBuilder implements Builder<String> {
 
         // fragment
         if (StringKit.isNotBlank(this.fragment)) {
-            fileBuilder.append(Symbol.C_SHAPE).append(getFragmentEncoded());
+            fileBuilder.append(Symbol.C_HASH).append(getFragmentEncoded());
         }
 
         try {

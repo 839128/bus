@@ -33,11 +33,10 @@ import org.apache.ibatis.builder.annotation.ProviderContext;
 import org.apache.ibatis.mapping.MappedStatement;
 import org.miaixz.bus.core.lang.loader.spi.NormalSpiLoader;
 import org.miaixz.bus.core.xyz.ListKit;
-import org.miaixz.bus.logger.Logger;
 import org.miaixz.bus.mapper.parsing.TableMeta;
 
 /**
- * 支持定制化处理 {@link MappedStatement} 的接口。
+ * 支持定制化处理 {@link MappedStatement} 的接口。 实现此接口，通过SPI形式注册，实现customize方法即可
  *
  * @author Kimi Liu
  * @since Java 17+
@@ -53,7 +52,6 @@ public interface Registry {
         @Override
         public void customize(TableMeta entity, MappedStatement ms, ProviderContext context) {
             for (Registry registry : registries) {
-                Logger.debug("Applying customization from registry: " + registry.getClass().getName());
                 registry.customize(entity, ms, context);
             }
         }

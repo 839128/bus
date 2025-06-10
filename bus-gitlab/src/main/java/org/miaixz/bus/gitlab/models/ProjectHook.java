@@ -31,10 +31,12 @@ import java.io.Serializable;
 import java.util.Date;
 
 import org.miaixz.bus.gitlab.support.JacksonJson;
+import java.io.Serial;
 
 public class ProjectHook implements Serializable {
 
-    private static final long serialVersionUID = -1L;
+    @Serial
+    private static final long serialVersionUID = 2852273671982L;
 
     private Boolean buildEvents;
     private Date createdAt;

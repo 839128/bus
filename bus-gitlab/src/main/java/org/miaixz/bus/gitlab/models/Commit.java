@@ -32,10 +32,12 @@ import java.util.Date;
 import java.util.List;
 
 import org.miaixz.bus.gitlab.support.JacksonJson;
+import java.io.Serial;
 
 public class Commit implements Serializable {
 
-    private static final long serialVersionUID = -1L;
+    @Serial
+    private static final long serialVersionUID = 2852239586962L;
 
     private Author author;
     private Date authoredDate;

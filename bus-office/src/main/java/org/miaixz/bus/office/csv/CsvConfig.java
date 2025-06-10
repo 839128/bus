@@ -27,6 +27,7 @@
 */
 package org.miaixz.bus.office.csv;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -42,7 +43,8 @@ import org.miaixz.bus.core.lang.Symbol;
  */
 public class CsvConfig<T extends CsvConfig<T>> implements Serializable {
 
-    private static final long serialVersionUID = -1L;
+    @Serial
+    private static final long serialVersionUID = 2852282577197L;
 
     /**
      * 字段分隔符，默认逗号','
@@ -55,7 +57,7 @@ public class CsvConfig<T extends CsvConfig<T>> implements Serializable {
     /**
      * 注释符号，用于区分注释行，默认'#'
      */
-    protected Character commentCharacter = Symbol.C_SHAPE;
+    protected Character commentCharacter = Symbol.C_HASH;
     /**
      * 标题别名
      */

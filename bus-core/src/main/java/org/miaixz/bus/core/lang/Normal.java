@@ -535,6 +535,11 @@ public class Normal {
     public static final String EMPTY = "";
 
     /**
+     * 字符串:none
+     */
+    public static final String NONE = "none";
+
+    /**
      * 字符串:null
      */
     public static final String NULL = "null";
@@ -618,6 +623,11 @@ public class Normal {
      * 针对ClassPath路径的伪协议前缀: "classpath:"
      */
     public static final String CLASSPATH = "classpath:";
+
+    /**
+     * 针对project路径的伪协议前缀: "project:"
+     */
+    public static final String PROJECT_URL_PREFIX = "project:";
 
     /**
      * 元数据: "META-INF"

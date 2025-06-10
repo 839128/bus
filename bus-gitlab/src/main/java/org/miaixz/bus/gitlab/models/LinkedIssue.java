@@ -30,8 +30,12 @@ package org.miaixz.bus.gitlab.models;
 import java.util.Date;
 
 import org.miaixz.bus.gitlab.support.JacksonJson;
+import java.io.Serial;
 
 public class LinkedIssue extends AbstractIssue {
+
+    @Serial
+    private static final long serialVersionUID = 2852260826605L;
 
     private Long issueLinkId;
     private LinkType linkType;

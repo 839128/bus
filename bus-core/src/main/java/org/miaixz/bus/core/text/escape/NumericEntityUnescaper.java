@@ -27,6 +27,8 @@
 */
 package org.miaixz.bus.core.text.escape;
 
+import java.io.Serial;
+
 import org.miaixz.bus.core.lang.Symbol;
 import org.miaixz.bus.core.text.replacer.StringReplacer;
 import org.miaixz.bus.core.xyz.CharKit;
@@ -39,13 +41,14 @@ import org.miaixz.bus.core.xyz.CharKit;
  */
 public class NumericEntityUnescaper extends StringReplacer {
 
-    private static final long serialVersionUID = -1L;
+    @Serial
+    private static final long serialVersionUID = 2852236101870L;
 
     @Override
     protected int replace(final CharSequence text, final int pos, final StringBuilder out) {
         final int len = text.length();
         // 检查以确保以&#开头
-        if (text.charAt(pos) == Symbol.C_AND && pos < len - 2 && text.charAt(pos + 1) == Symbol.C_SHAPE) {
+        if (text.charAt(pos) == Symbol.C_AND && pos < len - 2 && text.charAt(pos + 1) == Symbol.C_HASH) {
             int start = pos + 2;
             boolean isHex = false;
             final char firstChar = text.charAt(start);
