@@ -25,41 +25,63 @@
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 */
-package org.miaixz.bus.notify.metric.baidu;
+package org.miaixz.bus.core.basic.normal;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import org.miaixz.bus.core.basic.entity.Message;
-import org.miaixz.bus.extra.json.JsonKit;
-import org.miaixz.bus.http.Httpx;
-import org.miaixz.bus.notify.Context;
-import org.miaixz.bus.notify.magic.ErrorCode;
-import org.miaixz.bus.notify.metric.AbstractProvider;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 
 /**
- * 百度云短信
+ * 基础错误码类，可被继承以定义具体错误码
  *
  * @author Kimi Liu
  * @since Java 17+
  */
-public class BaiduSmsProvider extends AbstractProvider<BaiduMaterial, Context> {
+@Getter
+@Setter
+@SuperBuilder
+public class ErrorRegistry implements Errors {
 
-    public BaiduSmsProvider(Context context) {
-        super(context);
+    /**
+     * 错误码
+     */
+    private final String key;
+
+    /**
+     * 错误信息
+     */
+    private final String value;
+
+    /**
+     * 构造方法，创建并注册错误码
+     *
+     * @param key   错误码
+     * @param value 错误信息
+     */
+    protected ErrorRegistry(String key, String value) {
+        this.key = key;
+        this.value = value;
+        this.register();
     }
 
+    /**
+     * 获取错误码
+     *
+     * @return 错误码
+     */
     @Override
-    public Message send(BaiduMaterial entity) {
-        Map<String, String> bodys = new HashMap<>();
-        bodys.put("mobile", entity.getReceive());
-        bodys.put("template", entity.getTemplate());
-        bodys.put("signatureId", entity.getSignature());
-        bodys.put("contentVar", entity.getParams());
-        String response = Httpx.post(this.getUrl(entity), bodys);
-        String errcode = JsonKit.getValue(response, "errcode");
-        return Message.builder().errcode("200".equals(errcode) ? ErrorCode._SUCCESS.getKey() : errcode)
-                .errmsg(JsonKit.getValue(response, "errmsg")).build();
+    public String getKey() {
+        return this.key;
+    }
+
+    /**
+     * 获取错误信息
+     *
+     * @return 错误信息
+     */
+    @Override
+    public String getValue() {
+        return this.value;
     }
 
 }
