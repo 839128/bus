@@ -42,7 +42,7 @@ import org.miaixz.bus.core.xyz.StringKit;
  * @author Kimi Liu
  * @since Java 17+
  */
-public class AuthorizeBuilder {
+public class Authorizer {
 
     /**
      * 认证来源（如 TWITTER、SAML）
@@ -64,7 +64,7 @@ public class AuthorizeBuilder {
     /**
      * 私有构造函数，防止直接实例化。
      */
-    private AuthorizeBuilder() {
+    private Authorizer() {
 
     }
 
@@ -73,8 +73,8 @@ public class AuthorizeBuilder {
      *
      * @return 新创建的 Authorize 实例
      */
-    public static AuthorizeBuilder builder() {
-        return new AuthorizeBuilder();
+    public static Authorizer builder() {
+        return new Authorizer();
     }
 
     /**
@@ -83,7 +83,7 @@ public class AuthorizeBuilder {
      * @param source 认证来源（如 TWITTER、SAML_EXAMPLE）
      * @return 当前 Authorize 实例
      */
-    public AuthorizeBuilder source(String source) {
+    public Authorizer source(String source) {
         this.source = source;
         return this;
     }
@@ -94,7 +94,7 @@ public class AuthorizeBuilder {
      * @param context 上下文配置对象
      * @return 当前 Authorize 实例
      */
-    public AuthorizeBuilder context(Context context) {
+    public Authorizer context(Context context) {
         this.context = context;
         return this;
     }
@@ -105,7 +105,7 @@ public class AuthorizeBuilder {
      * @param context 函数，根据 source 生成上下文配置
      * @return 当前 Authorize 实例
      */
-    public AuthorizeBuilder context(Function<String, Context> context) {
+    public Authorizer context(Function<String, Context> context) {
         this.context = context.apply(this.source);
         return this;
     }
@@ -116,7 +116,7 @@ public class AuthorizeBuilder {
      * @param cache 缓存对象
      * @return 当前 Authorize 实例
      */
-    public AuthorizeBuilder cache(ExtendCache cache) {
+    public Authorizer cache(ExtendCache cache) {
         this.cache = cache;
         return this;
     }
@@ -127,7 +127,7 @@ public class AuthorizeBuilder {
      * @param complex 协议配置数组
      * @return 当前 Authorize 实例
      */
-    public AuthorizeBuilder complex(Complex... complex) {
+    public Authorizer complex(Complex... complex) {
         this.complex = complex;
         return this;
     }
@@ -141,7 +141,7 @@ public class AuthorizeBuilder {
     public Provider build() {
         // 验证 source 和 context 是否已设置
         if (StringKit.isEmpty(this.source) || null == this.context) {
-            throw new AuthorizedException(ErrorCode.NOT_IMPLEMENTED.getCode());
+            throw new AuthorizedException(ErrorCode._NOT_IMPLEMENTED.getKey());
         }
 
         // 合并默认的 Registry 和自定义 Complex
@@ -150,12 +150,12 @@ public class AuthorizeBuilder {
         // 筛选符合 source 的 Complex
         Complex complex = Arrays.stream(complexes).distinct()
                 .filter(authSource -> authSource.getName().equalsIgnoreCase(this.source)).findAny()
-                .orElseThrow(() -> new AuthorizedException(ErrorCode.NOT_IMPLEMENTED.getCode()));
+                .orElseThrow(() -> new AuthorizedException(ErrorCode._NOT_IMPLEMENTED.getKey()));
 
         // 获取提供者类
         Class<? extends AbstractProvider> targetClass = complex.getTargetClass();
         if (null == targetClass) {
-            throw new AuthorizedException(ErrorCode.NOT_IMPLEMENTED.getCode());
+            throw new AuthorizedException(ErrorCode._NOT_IMPLEMENTED.getKey());
         }
 
         // 动态创建提供者实例
@@ -168,7 +168,7 @@ public class AuthorizeBuilder {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            throw new AuthorizedException(ErrorCode.NOT_IMPLEMENTED.getCode());
+            throw new AuthorizedException(ErrorCode._NOT_IMPLEMENTED.getKey());
         }
     }
 

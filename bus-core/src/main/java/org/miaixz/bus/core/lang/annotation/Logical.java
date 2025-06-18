@@ -25,41 +25,25 @@
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 */
-package org.miaixz.bus.notify.metric.baidu;
+package org.miaixz.bus.core.lang.annotation;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-import org.miaixz.bus.core.basic.entity.Message;
-import org.miaixz.bus.extra.json.JsonKit;
-import org.miaixz.bus.http.Httpx;
-import org.miaixz.bus.notify.Context;
-import org.miaixz.bus.notify.magic.ErrorCode;
-import org.miaixz.bus.notify.metric.AbstractProvider;
+import org.miaixz.bus.core.lang.Normal;
 
 /**
- * 百度云短信
- *
- * @author Kimi Liu
- * @since Java 17+
+ * 标记该字段为逻辑状态列
  */
-public class BaiduSmsProvider extends AbstractProvider<BaiduMaterial, Context> {
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.FIELD)
+public @interface Logical {
 
-    public BaiduSmsProvider(Context context) {
-        super(context);
-    }
-
-    @Override
-    public Message send(BaiduMaterial entity) {
-        Map<String, String> bodys = new HashMap<>();
-        bodys.put("mobile", entity.getReceive());
-        bodys.put("template", entity.getTemplate());
-        bodys.put("signatureId", entity.getSignature());
-        bodys.put("contentVar", entity.getParams());
-        String response = Httpx.post(this.getUrl(entity), bodys);
-        String errcode = JsonKit.getValue(response, "errcode");
-        return Message.builder().errcode("200".equals(errcode) ? ErrorCode._SUCCESS.getKey() : errcode)
-                .errmsg(JsonKit.getValue(response, "errmsg")).build();
-    }
+    /**
+     * 表示逻辑删除的值，比如null、-1
+     */
+    String value() default Normal.EMPTY + Normal.__1;
 
 }

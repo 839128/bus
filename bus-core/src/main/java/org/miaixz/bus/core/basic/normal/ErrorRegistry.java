@@ -25,25 +25,63 @@
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 */
-package org.miaixz.bus.mapper.annotation;
+package org.miaixz.bus.core.basic.normal;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-
-import org.miaixz.bus.core.lang.Normal;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 
 /**
- * 标记该字段为逻辑状态列
+ * 基础错误码类，可被继承以定义具体错误码
+ *
+ * @author Kimi Liu
+ * @since Java 17+
  */
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.FIELD)
-public @interface Logical {
+@Getter
+@Setter
+@SuperBuilder
+public class ErrorRegistry implements Errors {
 
     /**
-     * 表示逻辑删除的值，比如null、-1
+     * 错误码
      */
-    String value() default Normal.EMPTY + Normal.__1;
+    private final String key;
+
+    /**
+     * 错误信息
+     */
+    private final String value;
+
+    /**
+     * 构造方法，创建并注册错误码
+     *
+     * @param key   错误码
+     * @param value 错误信息
+     */
+    protected ErrorRegistry(String key, String value) {
+        this.key = key;
+        this.value = value;
+        this.register();
+    }
+
+    /**
+     * 获取错误码
+     *
+     * @return 错误码
+     */
+    @Override
+    public String getKey() {
+        return this.key;
+    }
+
+    /**
+     * 获取错误信息
+     *
+     * @return 错误信息
+     */
+    @Override
+    public String getValue() {
+        return this.value;
+    }
 
 }

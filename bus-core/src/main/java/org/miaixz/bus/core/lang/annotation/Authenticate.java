@@ -25,41 +25,20 @@
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 */
-package org.miaixz.bus.notify.metric.baidu;
+package org.miaixz.bus.core.lang.annotation;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import org.miaixz.bus.core.basic.entity.Message;
-import org.miaixz.bus.extra.json.JsonKit;
-import org.miaixz.bus.http.Httpx;
-import org.miaixz.bus.notify.Context;
-import org.miaixz.bus.notify.magic.ErrorCode;
-import org.miaixz.bus.notify.metric.AbstractProvider;
+import java.lang.annotation.*;
 
 /**
- * 百度云短信
+ * 注解: 需要经过授权/许可的
  *
  * @author Kimi Liu
  * @since Java 17+
  */
-public class BaiduSmsProvider extends AbstractProvider<BaiduMaterial, Context> {
-
-    public BaiduSmsProvider(Context context) {
-        super(context);
-    }
-
-    @Override
-    public Message send(BaiduMaterial entity) {
-        Map<String, String> bodys = new HashMap<>();
-        bodys.put("mobile", entity.getReceive());
-        bodys.put("template", entity.getTemplate());
-        bodys.put("signatureId", entity.getSignature());
-        bodys.put("contentVar", entity.getParams());
-        String response = Httpx.post(this.getUrl(entity), bodys);
-        String errcode = JsonKit.getValue(response, "errcode");
-        return Message.builder().errcode("200".equals(errcode) ? ErrorCode._SUCCESS.getKey() : errcode)
-                .errmsg(JsonKit.getValue(response, "errmsg")).build();
-    }
+@Inherited
+@Documented
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ ElementType.PARAMETER, ElementType.METHOD })
+public @interface Authenticate {
 
 }

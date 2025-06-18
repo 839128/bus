@@ -25,41 +25,35 @@
  ~                                                                               ~
  ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 */
-package org.miaixz.bus.notify.metric.baidu;
+package org.miaixz.bus.starter.auth;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import org.miaixz.bus.core.basic.entity.Message;
-import org.miaixz.bus.extra.json.JsonKit;
-import org.miaixz.bus.http.Httpx;
-import org.miaixz.bus.notify.Context;
-import org.miaixz.bus.notify.magic.ErrorCode;
-import org.miaixz.bus.notify.metric.AbstractProvider;
+import org.miaixz.bus.core.basic.entity.Authorize;
+import org.miaixz.bus.core.lang.annotation.Authenticate;
+import org.miaixz.bus.spring.ContextBuilder;
+import org.springframework.core.MethodParameter;
+import org.springframework.web.bind.support.WebDataBinderFactory;
+import org.springframework.web.context.request.NativeWebRequest;
+import org.springframework.web.method.support.HandlerMethodArgumentResolver;
+import org.springframework.web.method.support.ModelAndViewContainer;
 
 /**
- * 百度云短信
+ * 将含有 @Authenticate 注解的方法参数注入当前登录用户
  *
  * @author Kimi Liu
  * @since Java 17+
  */
-public class BaiduSmsProvider extends AbstractProvider<BaiduMaterial, Context> {
+public class AuthorizerMethodResolver implements HandlerMethodArgumentResolver {
 
-    public BaiduSmsProvider(Context context) {
-        super(context);
+    @Override
+    public boolean supportsParameter(MethodParameter parameter) {
+        return parameter.getParameterType().isAssignableFrom(Authorize.class)
+                && parameter.hasParameterAnnotation(Authenticate.class);
     }
 
     @Override
-    public Message send(BaiduMaterial entity) {
-        Map<String, String> bodys = new HashMap<>();
-        bodys.put("mobile", entity.getReceive());
-        bodys.put("template", entity.getTemplate());
-        bodys.put("signatureId", entity.getSignature());
-        bodys.put("contentVar", entity.getParams());
-        String response = Httpx.post(this.getUrl(entity), bodys);
-        String errcode = JsonKit.getValue(response, "errcode");
-        return Message.builder().errcode("200".equals(errcode) ? ErrorCode._SUCCESS.getKey() : errcode)
-                .errmsg(JsonKit.getValue(response, "errmsg")).build();
+    public Object resolveArgument(MethodParameter parameter, ModelAndViewContainer modelAndViewContainer,
+            NativeWebRequest nativeWebRequest, WebDataBinderFactory webDataBinderFactory) {
+        return ContextBuilder.getCurrentUser();
     }
 
 }
